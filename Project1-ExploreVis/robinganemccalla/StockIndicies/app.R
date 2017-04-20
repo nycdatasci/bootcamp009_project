@@ -19,7 +19,7 @@
 library(shiny)
 library(dplyr)
 NASDAQ$MonthOfYear = strftime(NASDAQ$Date, '%m')
-formatData = function(indexTable,indexName){
+formatData = function(indexTable){
   indexTable$Date = as.Date(indexTable$Date,"%Y-%m-%d")
   #something to convert Date from character here
   #we add the day of the week as a number to make sorting easier
@@ -33,8 +33,12 @@ formatData = function(indexTable,indexName){
   #NASDAQ %>% group_by(DayOfWeek) %>% summarize(avgClose =mean(Close)) %>% arrange(DayOfWeek)
   #we get the change from the previous day
   indexTable$CloseChange = c(0,diff(indexTable$Close))
+  indexTable$PercentCloseChange = 100* (indexTable$CloseChange/lag(indexTable$Close-1))
+  #remove the first row to get rid of the NA value
+  indexTable = indexTable[-1,]
+  #indexTable$PercentCloseChange = c(0,diff(indexTable$Close)/indexTable$Close)
   #we add the name of the index so we can specify it when we join
-  colnames(indexTable)[7] = paste(colnames(indexTable)[7],indexName)
+  #colnames(indexTable)[7] = paste(colnames(indexTable)[7],indexName)
   #colnames(indexTable)[10] = paste(colnames(indexTable)[10],indexName)
   return (indexTable)
 }
@@ -42,9 +46,9 @@ NASDAQ = read.csv("./NASDAQ.csv")
 SandP = read.csv("./SandP.csv")
 DowJones = read.csv("./dow_jones.csv")
 
-NASDAQ = formatData(NASDAQ,"NASDAQ")
-SandP = formatData(SandP,"SandP")
-DowJones = formatData(DowJones,"DowJones")
+NASDAQ = formatData(NASDAQ)
+SandP = formatData(SandP)
+DowJones = formatData(DowJones)
 
 #FirstJoin = inner_join(NASDAQ,SandP, by = "Date")
 #AllData = inner_join(FirstJoin,DowJones, by="Date")
@@ -68,7 +72,7 @@ ui <- fluidPage(
                       choices= c("DayOfWeek","Monthly","Yearly")),
        selectInput(inputId = "Observation",
                    label = "Observation",
-                   choices = c("CloseChange","High","Low","Volume"))
+                   choices = c("CloseChange","High","Low","Volume","PercentCloseChange"))
      ),
      mainPanel = mainPanel(plotOutput("Values"),
                            textOutput("text1")
@@ -90,18 +94,29 @@ server <- function(input, output, session) {
            "Monthly" = "MonthOfYear",
            "Yearly" = "Year")
   })
-  ggplot(data = NASDAQ, aes_string(x="Year",y="CloseChange")) + geom_boxplot()
+  zoom = reactive({
+  mean(datasetInput()[,input$Observation] - .1 * mean(datasetInput()[,input$Observation]))
+  lowerZoom = mean(datasetInput()[,input$Observation] - .1 * mean(datasetInput()[,input$Observation]))
+  return (coord_cartesian(ylim=c(  mean(datasetInput()[,input$Observation] - .1 * mean(datasetInput()[,input$Observation]))
+,mean(datasetInput()[,input$Observation] - .1 * mean(datasetInput()[,input$Observation])))))
+  })
   head(NASDAQ$MonthOfYear)
   head(NASDAQ$Year)
   #input$Index, {choices = c("NASDAQ","S&P","Dow Jones")}
    output$Values <- renderPlot({
      #dataGraph %>%
        #filter()
-     ggplot(data = datasetInput(), aes_string(x=timeInput(),y="CloseChange")) + geom_boxplot()
+     ggplot(data = datasetInput(), 
+            aes_string(x=timeInput(),y=input$Observation)) +
+       #this enables a zoom but it's hard to make it look good
+       #coord_cartesian(ylim=c(mean(datasetInput()[,input$Observation]) - (.5 * mean(datasetInput()[,input$Observation])), mean(datasetInput()[,input$Observation]) + (.5 * mean(datasetInput()[,input$Observation])))) +
+     geom_boxplot() 
    })
    output$text1 = renderText({
      #paste("test")
-     timeInput()
+     mean(datasetInput()[,input$Observation]) - (.5 *mean(datasetInput()[,input$Observation]))
+     mean(datasetInput()[,input$Observation]) + (.5 *mean(datasetInput()[,input$Observation]))
+     
    })
 }
 
