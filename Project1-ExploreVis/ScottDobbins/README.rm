@@ -1,6 +1,6 @@
 @author Scott Dobbins
-@version 0.3.1
-@date 2017-04-20 18:06
+@version 0.3.2
+@date 2017-04-20 18:51
 
 
 ## Version history: ###
@@ -28,6 +28,8 @@ Major changes: tooltips
 	Fixed leaflet tile attributions (sort of) and removed htmlEscapes
 	Added app_id and app_code for HERE map usage
 	Removed redundant initial drawings of map and labels
+0.3.2	Made code much more readable with line breaks
+	Edited formatting of popup labels
 
 **Future version plans:
 **Tabs for exploring each separate conflict on its own in detail
@@ -41,16 +43,10 @@ Major changes: tooltips
 
 
 ### Thomas recommendations ###
-# separate code into separate lines
-# separate into 3 files
 # maybe do SQLite
 # do random sample instead of first x lines
 # maybe add pictures to pop up
 # maybe add hyperlinks to various Wikipedia pages
 # definitely add plots and summary stats
-# use HTML in escapehtml() to format text better
-# maybe add some line breaks here and there
-# put code graveyard into separate code_graveyard.txt file
-# put version history into README.rm
 
 ### end ###
