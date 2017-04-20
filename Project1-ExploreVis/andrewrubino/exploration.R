@@ -112,6 +112,8 @@ ggplot(by_date, aes(x = Month_Yr, y = n, color = Claim.Type, group = Claim.Type)
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 # sort of hard to interpret, except that claims have been pretty steady for the past 
 # few years. What if we do it by month only.
+claims$Month <- month(claims$Incident.Date)
+
 
 by_month <- claims %>% group_by(Month, Claim.Type) %>%
   filter(Claim.Type != "Compliment") %>%
