@@ -12,28 +12,91 @@ shinyUI(dashboardPage(
     ),
   dashboardBody(
     tabItems(
+      #1) Class individual stats and info
+      #2) Class total stats and info
       tabItem(tabName = "classes",
               #Choice of meteor class for information display
-              fluidRow(selectizeInput(inputId = "meteor_class", 
+              #Can add wiki link (NASA or open) to the right of selection
+              fluidPage(tabBox(id = "tabset1", width = 12,
+                       tabPanel("Class descriptions and statistics",
+                         fluidRow(box(
+                           selectizeInput(inputId = "meteor_class", 
                                       label = "Meteor Class",
                                       #should arrange alphabetically eventually
                                       choices = meteor_descriptions$meteor_classes, 
-                                      selected = 'ATE')),
-              
-              #Equations of definition
-              #fluidRow(box(textOutput("class_definition"))),
-              
-              #Want characteristic plots of 'a' and 'q'
-              fluidRow(box(htmlOutput("characteristic_plot_a")),
-                       box(htmlOutput("characteristic_plot_q"))),
-              
-              #Class descriptions and prerendered image
-              fluidRow(box(textOutput("class_description")),
-                       box(plotOutput("class_image"))
-                       )
-              ),
+                                      selected = 'APO'), width = 2, height = 75)),
+                         
+                         #Equations of definition
+                         #fluidRow(box(textOutput("class_definition"))),
+                         
+                         #Class descriptions and prerendered image
+                         fluidRow(box(textOutput("class_description"),
+                                      width = 4),
+                                  box(htmlOutput(outputId="class_image"),
+                                      width = 4),
+                                  box(plotlyOutput("diameter_plot"),
+                                      title = 'Count v. Diameter',
+                                      status = 'primary',
+                                      solidHeader = TRUE,
+                                      width = 4)
+                         ),
+                         
+                         #Want characteristic plots of 'a' and 'q'
+                         fluidRow(box(plotlyOutput("characteristic_plot_a"),
+                                    title = 'Semi-major axis (a)',
+                                    status = 'primary',
+                                    solidHeader = TRUE),
+                                box(plotlyOutput("characteristic_plot_q"),
+                                    title = 'Aphelion distance (q)',
+                                    status = 'primary',
+                                    solidHeader = TRUE)),
+                         fluidRow(box('Will add description of a here',
+                                      width = 6),
+                                  box('Will add description of q here',
+                                      width = 6))
+                       ),
+                       
+                       tabPanel("Population statistics",
+                                fluidRow(
+                                  box(plotlyOutput("total_diameter_plot"),
+                                      title = 'Diameter-Count Statistics',
+                                      status = 'primary',
+                                      solidHeader = TRUE,
+                                      width = 6),
+                                  box(plotlyOutput("kepler_plot"),
+                                      title = 'Kepler\'s Third Law',
+                                      status = 'primary',
+                                      solidHeader = TRUE,
+                                      width = 6)
+                                  ))
+                       ))),
+                         
+
       tabItem(tabName = "impacts",
-              "To be replaced with potential impact information, graphs, etc.")
+              fluidPage(tabBox(id = "tabset1", width = 12,
+                               tabPanel("Info on Potentially Dangerous Objects",
+                                        fluidRow(
+                                          box("To be replaced with object statistics")
+                                          )
+                                        ),
+                               tabPanel("Crater Application",
+                                        fluidRow(
+                                          box(selectizeInput(inputId = "target_material", 
+                                                             label = "Target material",
+                                                             choices = materials$name, 
+                                                             selected = "cold ice"), width = 4, height = 75),
+                                          box(selectizeInput(inputId = "meteor_material",
+                                                             label = "Meteor material",
+                                                             choices = impactor$name,
+                                                             selected = "c-type"))
+                                          ),
+                                        fluidRow(
+                                          box(textOutput("crater"))
+                                          )
+                                        )
+                               )
+              )
+      )
     )
   )
 ))
