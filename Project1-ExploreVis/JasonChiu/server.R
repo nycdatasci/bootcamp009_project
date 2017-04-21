@@ -16,9 +16,24 @@ server <- function(input, output) {
            "Smoking" = 21,
            "No Exercise" = 22,
            "Obesity" = 24,
+<<<<<<< HEAD
            "Insufficient Sleep" = 25)
   )
   
+=======
+           "Insufficient Sleep" = 25,
+           "High Bloodpressure Prevalence" = 27,
+           "Cancer Prevalence" = 28,
+           "Asthma Prevalence" = 29,
+           "Coronary Heart Disease Prevalence" = 30,
+           "Chronic Obstructive Pulmonary Disease Prevalence" = 31,
+           "Diabetes Prevalence" = 32, 
+           "High Cholesterol" = 33,
+           "Mental Health Condition Prevalence" = 34,
+           "Stroke Prevalence" = 35)
+  )
+
+>>>>>>> ef6b0d9d111f070a260be6500e4502ce5e9d1e6a
   output$boxplot <- renderPlot(
     ggplot(data = graph_hosp, aes(x = factor(graph_hosp$overall_f), y = graph_hosp[,varbox()])) +
       geom_boxplot() +
@@ -36,6 +51,7 @@ server <- function(input, output) {
   )
   
   mapdata <- reactive({
+<<<<<<< HEAD
     df <- exclude %>% filter(hcoverage >= input$insurance,
                              CHECKUP_city >= input$checkup,
                              CHOLSCREEN_city >= input$chol,
@@ -47,12 +63,107 @@ server <- function(input, output) {
   })
   
   output$number <- renderText(paste(input$checkGroup[1], "HOW MANY?"))
+=======
+    df <- switch(input$graph_v,
+                 "Mean" = exclude %>% filter(hcoverage >= input$insurance,
+                                             CHECKUP_city >= input$checkup,
+                                             CHOLSCREEN_city >= input$chol,
+                                             COREM_city >= input$elderly,
+                                             COREW_city >= input$elderlyf,
+                                             mean_star %in% input$checkGroup),
+                 "Median" = exclude %>% filter(hcoverage >= input$insurance,
+                                               CHECKUP_city >= input$checkup,
+                                               CHOLSCREEN_city >= input$chol,
+                                               COREM_city >= input$elderly,
+                                               COREW_city >= input$elderlyf,
+                                               median_star %in% input$checkGroup))
+  })
+  
+  mvalue <- reactive({
+    switch(input$graph_v,
+           "Mean" = "mean_star",
+           "Median" = "median_star")
+  })
+>>>>>>> ef6b0d9d111f070a260be6500e4502ce5e9d1e6a
   
   output$map <- renderLeaflet(
     leaflet(data = mapdata()) %>%
       addProviderTiles("Esri.WorldGrayCanvas") %>%  # Add default OpenStreetMap map tiles
       addCircleMarkers(lng = mapdata()$long, lat = mapdata()$lati, label = mapdata()$PlaceName,
+<<<<<<< HEAD
                        radius = mapdata()$count_hosp, color = ifelse(mapdata()$mean_star==5,"Blue",ifelse(mapdata()$mean_star==4,"Green",ifelse(mapdata()$mean_star==3,"Gold",ifelse(mapdata()$mean_star==2,"Orange","Red")))))
   )
+=======
+                       radius = mapdata()$count_hosp, color = ifelse(mapdata()[,mvalue()]==5,"Blue",ifelse(mapdata()[,mvalue()]==4,"Green",ifelse(mapdata()[,mvalue()]==3,"Gold",ifelse(mapdata()[,mvalue()]==2,"Orange","Red")))))
+  )
+  
+  mvalue1 <- reactive({
+    switch(input$graph_v1,
+           "Mean" = "mean_star",
+           "Median" = "median_star")
+  })
+  
+  mapdata_h <- reactive({
+    df <- switch(input$graph_v1,
+                 "Mean" = exclude %>% filter(BINGE_city >= input$binge,
+                                             CSMOKING_city>= input$smoking,
+                                             LPA_city >= input$exercise,
+                                             SLEEP_city >= input$sleep,
+                                             OBESITY_city >= input$obesity,
+                                             mean_star %in% input$checkGroup1),
+                 "Median" = exclude %>% filter(BINGE_city >= input$binge,
+                                               CSMOKING_city>= input$smoking,
+                                               LPA_city >= input$exercise,
+                                               SLEEP_city >= input$sleep,
+                                               OBESITY_city >= input$obesity,
+                                               median_star %in% input$checkGroup1))
+  })
+  
+  output$map_h <- renderLeaflet(
+    leaflet(data = mapdata_h()) %>%
+      addProviderTiles("Esri.WorldGrayCanvas") %>%  # Add default OpenStreetMap map tiles
+      addCircleMarkers(lng = mapdata_h()$long, lat = mapdata_h()$lati, label = mapdata_h()$PlaceName,
+                       radius = mapdata_h()$count_hosp,
+                       color = ifelse(mapdata_h()[,mvalue1()]==5,"Blue",ifelse(mapdata_h()[,mvalue1()]==4,"Green",ifelse(mapdata_h()[,mvalue1()]==3,"Gold",ifelse(mapdata_h()[,mvalue1()]==2,"Orange","Red")))))
+  )
+  
+  mvalue2 <- reactive({
+    switch(input$graph_v2,
+           "Mean" = "mean_star",
+           "Median" = "median_star")})
+  
+  mapdata_d <- reactive({
+    df <- switch(input$graph_v2,
+                 "Mean" = exclude %>% filter(BPHIGH_city >= input$hbp,
+                                             CANCER_city >= input$cancer,
+                                             CASTHMA_city >= input$asthma,
+                                             CHD_city >= input$chd,
+                                             COPD_city >= input$copd,
+                                             DIABETES_city >= input$dia,
+                                             HIGHICHOL_city >= input$hc,
+                                             MHLTH_city >= input$mh,
+                                             STROKE_city >= input$stk,
+                                             mean_star %in% input$checkGroup2),
+                 "Median" = exclude %>% filter(BPHIGH_city >= input$hbp,
+                                               CANCER_city >= input$cancer,
+                                               CASTHMA_city >= input$asthma,
+                                               CHD_city >= input$chd,
+                                               COPD_city >= input$copd,
+                                               DIABETES_city >= input$dia,
+                                               HIGHICHOL_city >= input$hc,
+                                               MHLTH_city >= input$mh,
+                                               STROKE_city >= input$stk,
+                                               median_star %in% input$checkGroup2))
+  })
+  
+  output$map_d <- renderLeaflet(
+    leaflet(data = mapdata_d()) %>%
+      addProviderTiles("Esri.WorldGrayCanvas") %>%  # Add default OpenStreetMap map tiles
+      addCircleMarkers(lng = mapdata_d()$long, lat = mapdata_d()$lati, label = mapdata_d()$PlaceName,
+                       radius = mapdata_d()$count_hosp,
+                       color = ifelse(mapdata_d()[,mvalue2()]==5,"Blue",ifelse(mapdata_d()[,mvalue2()]==4,"Green",ifelse(mapdata_d()[,mvalue2()]==3,"Gold",ifelse(mapdata_d()[,mvalue2()]==2,"Orange","Red")))))
+  )
+  
+>>>>>>> ef6b0d9d111f070a260be6500e4502ce5e9d1e6a
 }
 

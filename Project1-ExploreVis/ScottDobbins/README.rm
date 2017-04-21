@@ -1,6 +1,6 @@
 @author Scott Dobbins
-@version 0.4
-@date 2017-04-20 23:51
+@version 0.5
+@date 2017-04-21 18:53
 
 
 ## Version history ###
@@ -37,6 +37,12 @@ This version maps out all semi-cleaned longitudinal and latitudinal target data
   onto a selection of maps with map label options and clickable, detailed tooltips.
 Major changes: big data clean; incorporation of all Vietnam and Korea data
 
+0.5
+This version maps out all semi-cleaned longitudinal and latitudinal target data
+  from the United States Airforce in 4 major conflicts during the 20th century
+  onto a selection of maps with map label options and clickable, well-formatted, 
+  detailed tooltips using speed advantages brought to it by data table functions.
+Major changes: help cleaning and formatting with helper.R; speed-optimized with data table
 
 **Future version plans:
 **Tabs for exploring each separate conflict on its own in detail
@@ -79,14 +85,20 @@ data origin URL: https://insight.livestories.com/s/v2/vietnam/48973b96-8add-4898
 
 ***** PRIORITIES *****
 
+A. get working version
+B. make it work in dashboard
+
 1. figure out exactly what some column variables are and rename accordingly
 2. further clean the data
-3. get the program to write a better csv file that's processed by me
+3. get the program to write a better csv file that's processed nicely by me
+	(for quick import for Shiny server use or even SQLite)
 4. ensure that all data tables are in third normal form and coordinate with glossary tables
 5. add tabs for individual conflicts
+
+6. get rid of all lapply statements in data cleaning section
 
 
 *** eventually ***
 - use branching to develop new features on local repository
-- remove debug features from a branched version
+- remove debug features from a branched final dev version
 

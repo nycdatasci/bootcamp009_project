@@ -6,6 +6,10 @@ library(tidyr)
 library(lubridate)
 library(ggplot2)
 library(maps)
+library(plotly)
+library(dygraphs)
+library(xts) # as.Date is masked by zoo!!
+library(reshape2)
 
 claims <- read.table("tidy_claims.tsv", header = T, sep = " ") # space separated for some reason
 
@@ -104,22 +108,38 @@ claims <- claims %>% mutate(Total.Claims  = Audio.Video +
 # How bout by month. Need to create a month column from the incident date
 claims$Month_Yr <- format(as.Date(claims$Incident.Date), "%Y-%m")
 claims$Year <- year(claims$Incident.Date)
+claims$Month.Dot.Year <- gsub("-", ".", claims$Month_Yr)
+claims$Month.Dot.Year <- as.numeric(claims$Month.Dot.Year)
 
-by_date <- claims %>% group_by(Month_Yr, Claim.Type) %>%
+by_date <- claims %>% filter(Claim.Type != "Compliment") %>%
+  group_by(Month_Yr, Claim.Type) %>%
   summarise(n = n()) %>%
   arrange(Month_Yr)
+
+by_date$Full.Date <- paste0(by_date$Month_Yr, "-01")
+by_date$Full.Date <- as.Date(as.character(by_date$Full.Date))
+
+x = by_date
+x$Month_Yr <- NULL
+x <- as.data.frame(x)
+
+x <- dcast(x, Full.Date ~ Claim.Type, value.var = "n")
+
+
+x_by_date <- xts(x, order.by = x$Full.Date)
 
 # sort of hard to interpret, except that claims have been pretty steady for the past 
 # few years. What if we do it by month only.
 claims$Month <- month(claims$Incident.Date)
 
-by_month <- claims %>% group_by(Month, Claim.Type) %>%
+by_month <- claims %>% filter(Claim.Type != "Compliment") %>%
+  group_by(Month, Claim.Type, Year) %>%
   filter(Claim.Type != "Compliment") %>%
   summarise(avg_claim_amount = mean(Total.Claims),
             median_claim_amount = median(Total.Claims))
 
-ggplot(by_month, aes(x = Month, y = avg_claim_amount)) + 
-  geom_histogram(binwidth = 0.2, stat = "identity") + facet_wrap( ~ Claim.Type)
+
+
 # Kind of surprising, I thought there'd be more during November-December, but the avg
 # claims looks to be pretty even across the board. What if we look at the same plot, 
 # but with Airlines and Airports? Maybe it'll be good to get the ratio of claims/flights\
@@ -137,72 +157,81 @@ claims %>% group_by(Airport.Code, Claim.Type) %>%
 
 
 
-# I want to see the counts of each item!! How many of what was lost
-# View(claims %>% group_by(Airline.Name) %>%
-#        summarise(audio_video = sum(Audio.Video),
-#                  automobile = sum(Automobile.Parts.Accessories),
-#                  baggage = sum(Baggage.Cases.Purses),
-#                  books = sum(Books.Magazines.Other),
-#                  cameras = sum(Cameras),
-#                  clothing = sum(Clothing),
-#                  computer = sum(Computer.Accessories),
-#                  cosmetics = sum(Cosmetics.Grooming),
-#                  crafting = sum(Crafting.Hobby),
-#                  currency = sum(Currency),
-#                  food = sum(Food.Drink),
-#                  home_decor = sum(Home.Decor),
-#                  household_items = sum(Household.Items),
-#                  hunting_items = sum(Hunting.Fishing.Items),
-#                  jewelry = sum(Jewelry.Watches),
-#                  medical = sum(Medical.Science),
-#                  music_instruments = sum(Musical.Instruments.Accessories),
-#                  office_supplies = sum(Office.Equipment.Supplies),
-#                  other = sum(Other),
-#                  outdoor_items = sum(Outdoor.Items),
-#                  pers_accessories = sum(Personal.Accessories),
-#                  pers_electronics = sum(Personal.Electronics),
-#                  pers_navigation = sum(Personal.Navigation),
-#                  sport_supplies = sum(Sporting.Equipment.Supplies),
-#                  home_improve_supplies = sum(Tools.Home.Improvement.Supplies),
-#                  toys = sum(Toys.Games),
-#                  travel_accessories = sum(Travel.Accessories),
-#                  total_claims = sum(Total.Claims)))
+# I want to see the counts of each item!! How many of what was lost by Airport
+items_by_airport <- claims %>% filter(Airport.Code %in% c("ATL", "LAX", "ORD", "DFW", "JFK", 
+                                     "DEN", "SFO", "CLT", "LAS", "PHX")) %>% 
+  group_by(Airport.Code, Year, Disposition) %>% 
+  summarise(audio_video = sum(Audio.Video),
+                 automobile = sum(Automobile.Parts.Accessories),
+                 baggage = sum(Baggage.Cases.Purses),
+                 books = sum(Books.Magazines.Other),
+                 cameras = sum(Cameras),
+                 clothing = sum(Clothing),
+                 computer = sum(Computer.Accessories),
+                 cosmetics = sum(Cosmetics.Grooming),
+                 crafting = sum(Crafting.Hobby),
+                 currency = sum(Currency),
+                 food = sum(Food.Drink),
+                 home_decor = sum(Home.Decor),
+                 household_items = sum(Household.Items),
+                 hunting_items = sum(Hunting.Fishing.Items),
+                 jewelry = sum(Jewelry.Watches),
+                 medical = sum(Medical.Science),
+                 music_instruments = sum(Musical.Instruments.Accessories),
+                 office_supplies = sum(Office.Equipment.Supplies),
+                 outdoor_items = sum(Outdoor.Items),
+                 pers_accessories = sum(Personal.Accessories),
+                 pers_electronics = sum(Personal.Electronics),
+                 pers_navigation = sum(Personal.Navigation),
+                 sport_supplies = sum(Sporting.Equipment.Supplies),
+                 home_improve_supplies = sum(Tools.Home.Improvement.Supplies),
+                 toys = sum(Toys.Games),
+                 travel_accessories = sum(Travel.Accessories))
+
+
+
+
+### by airline
+
+items_by_airline <- claims %>% filter(Airline.Name %like% "^American Airlines" |
+                                      Airline.Name %like% "Southwest Airlines" |
+                                      Airline.Name %like% "Delta Air Lines" |
+                                      Airline.Name %like% "UAL" |
+                                      Airline.Name %like% "Jet Blue" |
+                                      Airline.Name %like% "Alaska Airlines" |
+                                      Airline.Name %like% "Spirit Airlines") %>% 
+  group_by(Airline.Name, Year, Disposition) %>% 
+  summarise(audio_video = sum(Audio.Video),
+            automobile = sum(Automobile.Parts.Accessories),
+            baggage = sum(Baggage.Cases.Purses),
+            books = sum(Books.Magazines.Other),
+            cameras = sum(Cameras),
+            clothing = sum(Clothing),
+            computer = sum(Computer.Accessories),
+            cosmetics = sum(Cosmetics.Grooming),
+            crafting = sum(Crafting.Hobby),
+            currency = sum(Currency),
+            food = sum(Food.Drink),
+            home_decor = sum(Home.Decor),
+            household_items = sum(Household.Items),
+            hunting_items = sum(Hunting.Fishing.Items),
+            jewelry = sum(Jewelry.Watches),
+            medical = sum(Medical.Science),
+            music_instruments = sum(Musical.Instruments.Accessories),
+            office_supplies = sum(Office.Equipment.Supplies),
+            outdoor_items = sum(Outdoor.Items),
+            pers_accessories = sum(Personal.Accessories),
+            pers_electronics = sum(Personal.Electronics),
+            pers_navigation = sum(Personal.Navigation),
+            sport_supplies = sum(Sporting.Equipment.Supplies),
+            home_improve_supplies = sum(Tools.Home.Improvement.Supplies),
+            toys = sum(Toys.Games),
+            travel_accessories = sum(Travel.Accessories))
+
+# create a heatmap with dataframe using plotly.
+
 
 # Top 5 airline claims: Delta, Southwest, American, UAL, USAir. Now by Airport
-
-# View(claims %>% group_by(Airport.Code) %>%
-#        summarise(audio_video = sum(Audio.Video),
-#                  automobile = sum(Automobile.Parts.Accessories),
-#                  baggage = sum(Baggage.Cases.Purses),
-#                  books = sum(Books.Magazines.Other),
-#                  cameras = sum(Cameras),
-#                  clothing = sum(Clothing),
-#                  computer = sum(Computer.Accessories),
-#                  cosmetics = sum(Cosmetics.Grooming),
-#                  crafting = sum(Crafting.Hobby),
-#                  currency = sum(Currency),
-#                  food = sum(Food.Drink),
-#                  home_decor = sum(Home.Decor),
-#                  household_items = sum(Household.Items),
-#                  hunting_items = sum(Hunting.Fishing.Items),
-#                  jewelry = sum(Jewelry.Watches),
-#                  medical = sum(Medical.Science),
-#                  music_instruments = sum(Musical.Instruments.Accessories),
-#                  office_supplies = sum(Office.Equipment.Supplies),
-#                  other = sum(Other),
-#                  outdoor_items = sum(Outdoor.Items),
-#                  pers_accessories = sum(Personal.Accessories),
-#                  pers_electronics = sum(Personal.Electronics),
-#                  pers_navigation = sum(Personal.Navigation),
-#                  sport_supplies = sum(Sporting.Equipment.Supplies),
-#                  home_improve_supplies = sum(Tools.Home.Improvement.Supplies),
-#                  toys = sum(Toys.Games),
-#                  travel_accessories = sum(Travel.Accessories),
-#                  total_claims = sum(Total.Claims)))
-
-# Note on above. We can plot this several ways. One way I was thinkg was if you want to 
-# include this in a map, you'd have a filter for the Claim Type, and a RATIO (do calculations)
-# will show up based on Airport.Name/Code.
 
 
 # Let's join the lat lon from the other file with the airport codes in this file

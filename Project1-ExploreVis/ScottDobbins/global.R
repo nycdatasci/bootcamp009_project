@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.4
-# @date 2017-04-20 23:51
+# @version 0.5
+# @date 2017-04-21 18:53
 
 ### import useful packages ###
 # shiny
@@ -9,6 +9,21 @@ library(shiny)
 # import data analytic extensions
 library(data.table) # helps with data input
 library(dplyr)      # helps with data cleaning
+library(tidyr)      # helps with data tidying
+
+# refresh_data = TRUE
+# 
+# if(refresh_data) {
+#   # source helper functions
+#   source(file = 'helper.R')
+#   source(file = 'cleaner.R')
+# } else {
+#   WW1_sample <- fread(file = 'WW1_sample.csv', sep = ',', sep2 = '\n', header = TRUE, stringsAsFactors = FALSE)
+#   WW2_sample <- fread(file = 'WW2_sample.csv', sep = ',', sep2 = '\n', header = TRUE, stringsAsFactors = FALSE)
+#   Korea_sample <- fread(file = 'Korea_sample.csv', sep = ',', sep2 = '\n', header = TRUE, stringsAsFactors = FALSE)
+#   Vietnam_sample <- fread(file = 'Vietnam_sample.csv', sep = ',', sep2 = '\n', header = TRUE, stringsAsFactors = FALSE)
+# }
+
 
 ### debug control ###
 debug_mode_on = TRUE
@@ -30,18 +45,18 @@ aircraft_glossary_name <- 'aircraft.csv'
 weapons_glossary_name <- 'weapons.csv'
 
 # specific file names
-WW1_bombs <- 'WW1_bombs.csv'
-WW2_bombs <- 'WW2_bombs.csv'
-Korea_bombs1 <- 'Korea_bombs1.csv'
-Korea_bombs2 <- 'Korea_bombs2.csv'
-Vietnam_bombs <- 'Vietnam_bombs.csv'
+WW1_bombs_filename <- 'WW1_bombs.csv'
+WW2_bombs_filename <- 'WW2_bombs.csv'
+Korea_bombs1_filename <- 'Korea_bombs1.csv'
+Korea_bombs2_filename <- 'Korea_bombs2.csv'
+Vietnam_bombs_filename <- 'Vietnam_bombs.csv'
 
 # total file paths
-WW1_bombs_filepath <- paste0(WW1_directory, data_infix, WW1_bombs)
-WW2_bombs_filepath <- paste0(WW2_directory, data_infix, WW2_bombs)
-Korea_bombs1_filepath <- paste0(Korea_directory, data_infix, Korea_bombs1)
-Korea_bombs2_filepath <- paste0(Korea_directory, data_infix, Korea_bombs2)
-Vietnam_bombs_filepath <- paste0(Vietnam_directory, data_infix, Vietnam_bombs)
+WW1_bombs_filepath <- paste0(WW1_directory, data_infix, WW1_bombs_filename)
+WW2_bombs_filepath <- paste0(WW2_directory, data_infix, WW2_bombs_filename)
+Korea_bombs1_filepath <- paste0(Korea_directory, data_infix, Korea_bombs1_filename)
+Korea_bombs2_filepath <- paste0(Korea_directory, data_infix, Korea_bombs2_filename)
+Vietnam_bombs_filepath <- paste0(Vietnam_directory, data_infix, Vietnam_bombs_filename)
 
 WW1_aircraft_glossary_filepath <- paste0(WW1_directory, glossary_infix, aircraft_glossary_name)
 WW1_weapons_glossary_filepath <- paste0(WW1_directory, glossary_infix, weapons_glossary_name)
@@ -59,59 +74,70 @@ Vietnam_weapons_glossary_filepath <- paste0(Vietnam_directory, glossary_infix, w
 WW1_col_classes <- c("numeric", rep("character", 6), "numeric", rep("character", 2), "numeric", "character", "numeric", "character", rep("numeric", 4), rep("character", 4), rep("numeric", 2), rep("character", 4), "numeric", rep("character", 2), "numeric")
 WW2_col_classes <- c(rep("numeric", 2), rep("character", 4), "numeric", rep("character", 3), rep("numeric", 2), "character", rep("numeric", 5), rep("character", 2), rep("numeric", 2), "character", rep("numeric", 4), "character", rep("numeric", 3), "character", rep("numeric", 3), "character", rep("numeric", 4), rep("character", 2), rep("numeric", 6), "character", "numeric", rep("character", 3), rep("numeric", 5), rep("character", 4))
 Korea_col_classes1 <- c(rep("character", 4), "numeric", rep("character", 5), rep("numeric", 2), "character", rep("numeric", 16))
-Korea_col_classes2 <- c(rep("numeric", 2), rep("character", 4), rep("numeric", 4), rep("character", 9), "numeric", rep("character", 2), rep("numeric", 2), "character", "numeric", rep("character", 4), "numeric", "character")
+Korea_col_classes2 <- c(rep("numeric", 2), rep("character", 4), rep("numeric", 4), rep("character", 9), "numeric", rep("character", 2), rep("numeric", 2), rep("character", 6), "numeric", "character")
 Vietnam_col_classes <- c("numeric", rep("character", 3), "numeric", rep("character", 3), rep("numeric", 2), "character", "numeric", rep("character", 3), "numeric", rep("character", 5), "numeric", rep("character", 3), "numeric", rep("character", 6), "numeric", rep("character", 7), rep("numeric", 4), rep("character", 2), "numeric")
 
 # read files
-WW1_raw <- fread(file =  WW1_bombs_filepath, 
-                 sep = ',', 
-                 sep2 = '\n', 
-                 header = TRUE, 
-                 stringsAsFactors = FALSE, 
-                 blank.lines.skip = TRUE, 
-                 #drop = , 
-                 colClasses = WW1_col_classes
-                 )
+if(debug_mode_on) print("reading WW1")
+WW1_bombs <- fread(file =  WW1_bombs_filepath, 
+                   sep = ',', 
+                   sep2 = '\n', 
+                   header = TRUE, 
+                   stringsAsFactors = FALSE, 
+                   blank.lines.skip = TRUE, 
+                   #drop = c(), 
+                   colClasses = WW1_col_classes
+                   )
 
-WW2_raw <- fread(file =  WW2_bombs_filepath, 
-                 sep = ',', 
-                 sep2 = '\n', 
-                 header = TRUE, 
-                 stringsAsFactors = FALSE, 
-                 blank.lines.skip = TRUE, 
-                 #drop = , 
-                 colClasses = WW2_col_classes
-                 )
+if(debug_mode_on) print("reading WW2")
+WW2_bombs <- fread(file =  WW2_bombs_filepath, 
+                   sep = ',', 
+                   sep2 = '\n', 
+                   header = TRUE, 
+                   stringsAsFactors = FALSE, 
+                   blank.lines.skip = TRUE, 
+                   colClasses = WW2_col_classes, 
+                   drop = c("SOURCE_LATITUDE", 
+                            "SOURCE_LONGITUDE")
+                   )
 
-Korea_raw1 <- fread(file =  Korea_bombs1_filepath, 
-                    sep = ',',
-                    sep2 = '\n', 
-                    header = TRUE, 
-                    stringsAsFactors = FALSE, 
-                    blank.lines.skip = TRUE, 
-                    #drop = , 
-                    colClasses = Korea_col_classes1
-                    )
+if(debug_mode_on) print("reading Korea1")
+Korea_bombs1 <- fread(file =  Korea_bombs1_filepath, 
+                      sep = ',',
+                      sep2 = '\n', 
+                      header = TRUE, 
+                      stringsAsFactors = FALSE, 
+                      blank.lines.skip = TRUE, 
+                      #drop = , 
+                      colClasses = Korea_col_classes1
+                      )
 
-Korea_raw2 <- fread(file =  Korea_bombs2_filepath, 
-                    sep = ',',
-                    sep2 = '\n', 
-                    header = TRUE, 
-                    stringsAsFactors = FALSE, 
-                    blank.lines.skip = TRUE, 
-                    #drop = , 
-                    colClasses = Korea_col_classes2
-                    )
+if(debug_mode_on) print("reading Korea2")
+Korea_bombs2 <- fread(file =  Korea_bombs2_filepath, 
+                      sep = ',',
+                      sep2 = '\n', 
+                      header = TRUE, 
+                      stringsAsFactors = FALSE, 
+                      blank.lines.skip = TRUE, 
+                      colClasses = Korea_col_classes2, 
+                      drop = c("SOURCE_UTM_JAPAN_B", 
+                               "SOURCE_TGT_UTM", 
+                               "TGT_MGRS", 
+                               "SOURCE_TGT_LAT", 
+                               "SOURCE_TGT_LONG")
+                      )
 
-Vietnam_raw <- fread(file =  Vietnam_bombs_filepath, 
-                     sep = ',', 
-                     sep2 = '\n', 
-                     header = TRUE, 
-                     stringsAsFactors = FALSE, 
-                     blank.lines.skip = TRUE, 
-                     #drop = , 
-                     colClasses = Vietnam_col_classes
-                     )
+if(debug_mode_on) print("reading Vietnam")
+Vietnam_bombs <- fread(file =  Vietnam_bombs_filepath, 
+                       sep = ',', 
+                       sep2 = '\n', 
+                       header = TRUE, 
+                       stringsAsFactors = FALSE, 
+                       blank.lines.skip = TRUE, 
+                       colClasses = Vietnam_col_classes, 
+                       drop = c("TGTORIGCOORDS", 
+                                "TGTORIGCOORDSFORMAT")
+                       )
 
 ### change column names ###
 
@@ -161,8 +187,8 @@ WW2_col_names <- c("ID",
                    "Target.ID",
                    "Target.Industry.Code",
                    "Target.Industry",
-                   "Source.Latitude",
-                   "Source.Longitude",
+                   #"Target.Latitude.Nonconverted",
+                   #"Target.Longitude.Nonconverted",
                    "Target.Latitude",
                    "Target.Longitude",
                    "Unit.ID",
@@ -244,7 +270,7 @@ Korea_col_names1 <- c("ID",
 Korea_col_names2 <- c("Row.Number",
                       "Mission.Number",
                       "Unit.Order",
-                      "Unit.?",
+                      "Unit.Group",
                       "Mission.Date",
                       "Aircraft.Type",
                       "Aircraft.Attacking.Num",
@@ -253,20 +279,20 @@ Korea_col_names2 <- c("Row.Number",
                       "Aircraft.Lost.Num",
                       "Target.Name",
                       "Target.Type",
-                      "Something.JapanB",
-                      "Something.UTM.Target?",
-                      "Target.MGRS",
+                      #"Target.JapanB",           # dropped while reading
+                      #"Target.UTM",              # dropped while reading
+                      #"Target.MGRS",             # dropped while reading
                       "Target.Latitude",
                       "Target.Longitude",
-                      "Target.Latitude.Source",
-                      "Target.Longitude.Source",
+                      #"Target.Latitude.Source",  # dropped while reading
+                      #"Target.Longitude.Source", # dropped while reading
                       "Weapons.Num",
                       "Weapons.Type",
                       "Bomb.Sighting.Method",
                       "Aircraft.Bombload.Pounds",
                       "Aircraft.Total.Weight?",
                       "Mission.Type",
-                      "Bomb.Altitude.Feet",
+                      "Bomb.Altitude.Feet.Range",
                       "Callsign",
                       "Bomb.Damage.Assessment",
                       "Nose.Fuze",
@@ -307,13 +333,13 @@ Vietnam_col_names <- c("ID",
                        "Target.Control",
                        "Target.Country",
                        "Target.ID",
-                       "Target.Origin.Coordinates",
-                       "Target.Origin.Coordinates.Format",
+                       #"Target.Origin.Coordinates",          # dropped while reading
+                       #"Target.Origin.Coordinates.Format",   # dropped while reading
                        "Target.Weather",
                        "Additional.Info",
                        "Target.Geozone",
                        "ID2",
-                       "Mission.Function.Description.Class",
+                       "Weapons.Class",
                        "Weapons.Jettisoned.Num",
                        "Weapons.Returned.Num",
                        "Bomb.Altitude",
@@ -322,112 +348,174 @@ Vietnam_col_names <- c("ID",
                        "Target.Time.Off",
                        "Weapons.Weight.Loaded")
 
-colnames(WW1_raw) <- WW1_col_names
-colnames(WW2_raw) <- WW2_col_names
-colnames(Korea_raw1) <- Korea_col_names1
-colnames(Korea_raw2) <- Korea_col_names2
-colnames(Vietnam_raw) <- Vietnam_col_names
+colnames(WW1_bombs) <- WW1_col_names
+colnames(WW2_bombs) <- WW2_col_names
+colnames(Korea_bombs1) <- Korea_col_names1
+colnames(Korea_bombs2) <- Korea_col_names2
+colnames(Vietnam_bombs) <- Vietnam_col_names
 
 
 ### fix data types ###
 
 # fix date columns
-WW1_raw$Mission.Date <- as.Date(WW1_raw$Mission.Date, format = "%Y-%m-%d")
-WW2_raw$Mission.Date <- as.Date(WW2_raw$Mission.Date, format = "%m/%d/%Y")
-Korea_raw1$Mission.Date <- as.Date(Korea_raw1$Mission.Date, format = "%m/%d/%y")
-Korea_raw2$Mission.Date <- as.Date(Korea_raw2$Mission.Date, format = "%m/%d/%y")
-Vietnam_raw$Mission.Date <- as.Date(Vietnam_raw$Mission.Date, format = "%Y-%m-%d")
+if(debug_mode_on) print("fixing date columns")
+WW1_bombs[, Mission.Date := .(as.Date(Mission.Date, format = "%Y-%m-%d"))]
+WW2_bombs[, Mission.Date := .(as.Date(Mission.Date, format = "%m/%d/%Y"))]
+Korea_bombs1[, Mission.Date := .(as.Date(Mission.Date, format = "%m/%d/%y"))]
+Korea_bombs2[, Mission.Date := .(as.Date(Mission.Date, format = "%m/%d/%y"))]
+Vietnam_bombs[, Mission.Date := .(as.Date(Mission.Date, format = "%Y-%m-%d"))]
 
+# sort by mission date for efficient searching
+if(debug_mode_on) print("setting keys")
+setkey(WW1_bombs, Mission.Date)
+setkey(WW2_bombs, Mission.Date)
+setkey(Korea_bombs1, Mission.Date)
+setkey(Korea_bombs2, Mission.Date)
+setkey(Vietnam_bombs, Mission.Date)
 
 ### fix actual data where necessary ###
 
-WW1_raw$Takeoff.Time <- tolower(WW1_raw$Takeoff.Time)
-WW1_raw$Aircraft.Bombload <- as.integer(round(WW1_raw$Aircraft.Bombload))
-WW1_raw$Target.Location <- paste0(substring(WW1_raw$Target.Location, 1, 1), 
-                                    tolower(substring(WW1_raw$Target.Location, 2)))
-WW1_raw$Target.Country <- paste0(substring(WW1_raw$Target.Country, 1, 1), 
-                                   tolower(substring(WW1_raw$Target.Country, 2)))
-WW1_raw$Target.Type <- tolower(WW1_raw$Target.Type)
+if(debug_mode_on) print("fixing WW1")
+WW1_bombs[, Takeoff.Time := .(tolower(Takeoff.Time))]
+print("1")
+WW1_bombs[, Aircraft.Bombload := .(as.integer(round(Aircraft.Bombload)))]
+print("2")
+WW1_bombs[, Target.City := lapply(remove_nonASCII_chars(Target.City), proper_noun_phrase)]
+print("3")
+WW1_bombs[, Target.Country := .(capitalize_from_caps(Target.Country))]
+print("4")
+WW1_bombs[, Target.Type := .(tolower(Target.Type))]
+print("5")
+WW1_bombs[, Takeoff.Base := lapply(remove_nonASCII_chars(Takeoff.Base), proper_noun_phrase)]
+print("6")
 
-Korea_raw2 <- mutate(Korea_raw2, 
-                    Target.Latitude = as.numeric(substr(Target.Latitude, 1, nchar(Target.Latitude)-1)), 
-                    Target.Longitude = as.numeric(substr(Target.Longitude, 1, nchar(Target.Longitude)-1)))
+if(debug_mode_on) print("fixing WW2")
+WW2_bombs[, Unit.Country := lapply(Unit.Country, proper_noun_phrase)]
+print("1")
+WW2_bombs[, Target.Country := lapply(Target.Country, proper_noun_phrase)]
+print("2")
+WW2_bombs[, Target.Location := lapply(remove_nonASCII_chars(remove_quotes(Target.Location)), proper_noun_phrase)]
+print("3")
+WW2_bombs[, Target.Type := .(tolower(Target.Type))]
+print("4")
+WW2_bombs[, Target.Industry := lapply(remove_quotes(Target.Industry), proper_noun_phrase)]
+print("5")
 
-Vietnam_raw$Target.Type <- tolower(Vietnam_raw$Target.Type)
+if(debug_mode_on) print("fixing Korea2")
+Korea_bombs2[, Target.Latitude := .(as.numeric(substr(Target.Latitude, 1, nchar(Target.Latitude)-1)))]
+print("1")
+Korea_bombs2[, Target.Longitude := .(as.numeric(substr(Target.Longitude, 1, nchar(Target.Longitude)-1)))]
+print("2")
+Korea_bombs2 <- separate(data = Korea_bombs2, 
+                         col = Bomb.Altitude.Feet.Range, 
+                         into = c("Bomb.Altitude.Feet.Low", "Bomb.Altitude.Feet.High"), 
+                         sep = '-', 
+                         extra = 'merge', 
+                         fill = 'right')
+print("3")
 
-### clean out obviously wrong values ###
-
-WW1_clean <- data.table(filter(WW1_raw, 
-                               Target.Latitude <= 90 & Target.Latitude >= -90 
-                               & Target.Longitude <= 180 & Target.Longitude >= -180))
-
-WW2_clean <- data.table(filter(WW2_raw, 
-                               Target.Latitude <= 90 & Target.Latitude >= -90 
-                               & Target.Longitude <= 180 & Target.Longitude >= -180))
-
-Korea_clean2 <- data.table(filter(Korea_raw2, 
-                                  Target.Latitude <= 90 & Target.Latitude >= -90 
-                                  & Target.Longitude <= 180 & Target.Longitude >= -180))
-
-Vietnam_clean <- data.table(filter(Vietnam_raw, 
-                                   Target.Latitude <= 90 & Target.Latitude >= -90 
-                                   & Target.Longitude <= 180 & Target.Longitude >= -180))
+if(debug_mode_on) print("fixing Vietnam")
+#Vietnam_bombs[, Unit.Country := lapply(Unit.Country, proper_noun_phrase)]         # this takes way too long
+print("1")
+#Vietnam_bombs[, Takeoff.Location := lapply(Takeoff.Location, proper_noun_phrase)] # this takes way too long
+print("2")
+Vietnam_bombs[, Target.Type := .(tolower(gsub(pattern = '\\\\', replacement = '/', Target.Type)))]
+print("3")
+Vietnam_bombs[, Mission.Function.Description := .(tolower(Mission.Function.Description))]
+print("4")
+Vietnam_bombs[, Operation.Supported := .(tolower(Operation.Supported))]
+print("5")
+Vietnam_bombs[, Target.CloudCover := .(tolower(Target.CloudCover))]
+print("6")
+#Vietnam_bombs[, Target.Country := lapply(Target.Country, proper_noun_phrase)]     # this takes way too long
+print("7")
+Vietnam_bombs[, Weapons.Class := .(tolower(Weapons.Class))]
+print("8")
+Vietnam_bombs[Weapons.Weight.Loaded == -1, c("Weapons.Weight.Loaded")] <- NA
 
 
 ### add useful columns ###
 
-WW2_clean$Service <- ifelse(WW2_clean$Country == "USA", 
-                            paste(WW2_clean$Country, WW2_clean$Air.Force), 
-                            WW2_clean$Air.Force)
-WW2_clean$Target.City <- paste0(substring(WW2_clean$Target.City, 1, 1), 
-                                tolower(substring(WW2_clean$Target.City, 2)))
-WW2_clean$Target.Country <- paste0(substring(WW2_clean$Target.Country, 1, 1), 
-                                   tolower(substring(WW2_clean$Target.Country, 2)))
-WW2_clean$Target.Type <- tolower(WW2_clean$Target.Type)
-WW2_clean$Target.Industry <- tolower(WW2_clean$Target.Industry)
-WW2_clean$Aircraft.Total <- ifelse(!is.na(WW2_clean$Bombing.Aircraft), 
-                                   WW2_clean$Bombing.Aircraft, 
-                                   ifelse(!is.na(WW2_clean$Attacking.Aircraft), 
-                                          WW2_clean$Attacking.Aircraft, 
-                                          ifelse(!is.na(WW2_clean$Airborne.Aircraft), 
-                                                 WW2_clean$Airborne.Aircraft, "some")))
+if(debug_mode_on) print("adding to WW1")
+WW2_bombs[, Unit.Service.Title := .(ifelse(Unit.Country == "USA", paste(Unit.Country, Unit.Service), Unit.Service))]
+WW2_bombs[, Aircraft.Total := .(ifelse(!is.na(Aircraft.Attacking.Num), Aircraft.Attacking.Num, 
+                                       ifelse(!is.na(Aircraft.Dropping.Num), Aircraft.Dropping.Num, 
+                                              ifelse(!is.na(Aircraft.Airborne.Num), Aircraft.Airborne.Num, "some"))))]
+
+
+### clean out obviously wrong values ###
+
+if(debug_mode_on) print("cleaning WW1")
+WW1_clean <- WW1_bombs[Target.Latitude <= 90 & Target.Latitude >= -90 
+                       & Target.Longitude <= 180 & Target.Longitude >= -180,]
+
+if(debug_mode_on) print("cleaning WW2")
+WW2_clean <- WW2_bombs[Target.Latitude <= 90 & Target.Latitude >= -90 
+                       & Target.Longitude <= 180 & Target.Longitude >= -180,]
+
+if(debug_mode_on) print("cleaning Korea2")
+Korea_clean2 <- Korea_bombs2[Target.Latitude <= 90 & Target.Latitude >= -90 
+                             & Target.Longitude <= 180 & Target.Longitude >= -180,]
+
+if(debug_mode_on) print("cleaning Vietnam")
+Vietnam_clean <- Vietnam_bombs[Target.Latitude <= 90 & Target.Latitude >= -90 
+                               & Target.Longitude <= 180 & Target.Longitude >= -180,]
+
 
 ### add tooltips ###
 
-WW1_clean$tooltip <- paste0("On ", WW1_clean$Mission.Date, " during the ", WW1_clean$Takeoff.Time, ",<br>", 
-                            WW1_clean$Aircraft.Attacking.Num, " ", WW1_clean$Unit.Service, " ", WW1_clean$Aircraft.Type, "s dropped <br>", 
-                            WW1_clean$Aircraft.Bombload, " lbs of bombs on <br>", 
-                            WW1_clean$Target.Type, "<br>", 
-                            "in ", WW1_clean$Target.Location, ', ', WW1_clean$Target.Country)
+if(debug_mode_on) print("tooltips WW1")
+WW1_clean[, tooltip := .(paste0("On ", Mission.Date, " during the ", Takeoff.Time, ",<br>", 
+                                Aircraft.Attacking.Num, " ", Unit.Service, " ", Aircraft.Type, "s dropped <br>", 
+                                Aircraft.Bombload, " lbs of bombs on <br>", 
+                                Target.Type, "<br>", 
+                                "in ", Target.Location, ', ', Target.Country))]
 
-WW2_clean$tooltip <- paste0("On ", WW2_clean$Mission.Date, ",<br>", 
-                            WW2_clean$Aircraft.Total, " ", WW2_clean$Unit.Service, " ", WW2_clean$Aircraft.Series, "s dropped <br>", 
-                            WW2_clean$Aircraft.Total.Tons, " tons of bombs on <br>", 
-                            WW2_clean$Target.Type, "<br>", 
-                            "in ", WW2_clean$Target.City, ", ", WW2_clean$Target.Country)
+if(debug_mode_on) print("tooltips WW2")
+WW2_clean[, tooltip := .(paste0("On ", Mission.Date, ",<br>", 
+                                Aircraft.Total, " ", Unit.Service, " ", Aircraft.Series, "s dropped <br>", 
+                                Aircraft.Total.Tons, " tons of bombs on <br>", 
+                                Target.Type, "<br>", 
+                                "in ", Target.City, ", ", Target.Country))]
 
-Korea_clean2$tooltip <- paste0("On ", Korea_clean2$Mission.Date, ",<br>", 
-                               Korea_clean2$Aircraft.Attacking.Num, " ", Korea_clean2$Unit, " ", Korea_clean2$Aircraft.Type, "s dropped <br>", 
-                               Korea_clean2$Aircraft.Bombload.Calculated.Pounds, " pounds of bombs on <br>", 
-                               Korea_clean2$Target.Type, "<br>", 
-                               "in ", Korea_clean2$Target.Name)
+if(debug_mode_on) print("tooltips Korea2")
+Korea_clean2[, tooltip := .(paste0("On ", Mission.Date, ",<br>", 
+                                   Aircraft.Attacking.Num, " ", Unit, " ", Aircraft.Type, "s dropped <br>", 
+                                   Aircraft.Bombload.Calculated.Pounds, " pounds of bombs on <br>", 
+                                   Target.Type, "<br>", 
+                                   "in ", Target.Name))]
 
-Vietnam_clean$tooltip <- paste0("On ", Vietnam_clean$Mission.Date, ",<br>", 
-                                Vietnam_clean$Aircraft.Num, " ", Vietnam_clean$Unit.Service, " ", Vietnam_clean$Aircraft.Root.Valid, "s dropped bombs on <br>", 
-                                Vietnam_clean$Target.Type, "<br>", 
-                                "in ", Vietnam_clean$Target.Country)
+if(debug_mode_on) print("tooltips Vietnam")
+Vietnam_clean[, tooltip := .(paste0("On ", Mission.Date, ",<br>", 
+                                    Aircraft.Num, " ", Unit.Service, " ", Aircraft.Root.Valid, "s dropped bombs on <br>", 
+                                    Target.Type, "<br>", 
+                                    "in ", Target.Country))]
+
 
 ### find unique targets etc ###
-
+if(debug_mode_on) print("unique WW1")
 WW1_unique_target <- unique(WW1_clean, by = c("Target.Latitude", "Target.Longitude"))
+if(debug_mode_on) print("unique WW2")
 WW2_unique_target <- unique(WW2_clean, by = c("Target.Latitude", "Target.Longitude"))
+#if(debug_mode_on) print("unique Korea1")
 #Korea_unique_target1 <- unique(Korea_clean1, by = c("Target.Latitude", "Target.Longitude"))
+if(debug_mode_on) print("unique Korea2")
 Korea_unique_target2 <- unique(Korea_clean2, by = c("Target.Latitude", "Target.Longitude"))
+if(debug_mode_on) print("unique Vietnam")
 Vietnam_unique_target <- unique(Vietnam_clean, by = c("Target.Latitude", "Target.Longitude"))
 
 ### sample ###
-
+if(debug_mode_on) print("sampling WW1")
 WW1_sample <- WW1_unique_target#[sample(x = c(TRUE, FALSE), replace = TRUE, prob = c(1000/nrow(WW1_unique_target), 1-1000/nrow(WW1_unique_target))),]
+if(debug_mode_on) print("sampling WW2")
 WW2_sample <- sample_n(WW2_unique_target, size = 1000)#[sample(x = c(TRUE, FALSE), replace = TRUE, prob = c(1000/nrow(WW2_unique_target), 1-1000/nrow(WW2_unique_target))),]
+if(debug_mode_on) print("sampling Korea2")
 Korea_sample <- sample_n(Korea_unique_target2, size = 1000)#[sample(x = c(TRUE, FALSE), replace = TRUE, prob = c(1000/nrow(Korea_unique_target2), 1-1000/nrow(Korea_unique_target2))),]
+if(debug_mode_on) print("sampling Vietnam")
 Vietnam_sample <- sample_n(Vietnam_unique_target, size = 1000)#[sample(x = c(TRUE, FALSE), replace = TRUE, prob = c(1000/nrow(Vietnam_unique_target), 1-1000/nrow(Vietnam_unique_target))),]
+
+### can write samples for quick tests ###
+write.csv(x = WW1_sample, file = 'WW1_sample.csv', quote = TRUE, sep = ',')
+write.csv(x = WW2_sample, file = 'WW2_sample.csv', quote = TRUE, sep = ',')
+write.csv(x = Korea_sample, file = 'Korea_sample.csv', quote = TRUE, sep = ',')
+write.csv(x = Vietnam_sample, file = 'Vietnam_sample.csv', quote = TRUE, sep = ',')
