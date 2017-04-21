@@ -31,7 +31,6 @@ formatData = function(indexTable){
   indexTable$PercentCloseChange = 100* (indexTable$CloseChange/lag(indexTable$Close-1))
   #remove the first row to get rid of the NA value
   indexTable = indexTable[-1,]
-  #we add the name of the index so we can specify it when we join
   return (indexTable)
 }
 NASDAQ = read.csv("./NASDAQ.csv")
@@ -59,7 +58,7 @@ ui <- fluidPage(
                       choices= c("DayOfWeek","Monthly","Yearly")),
        selectInput(inputId = "Observation",
                    label = "Observation",
-                   choices = c("CloseChange","High","Low","Volume","PercentCloseChange")),
+                   choices = c("CloseChange","High","Volume","PercentCloseChange")),
        dateInput(inputId = "startDate",
                  label = "Start Date",
                  value = "1987-04-13",
@@ -73,7 +72,7 @@ ui <- fluidPage(
        
      ),
      mainPanel = mainPanel(plotOutput("Values"),
-                           textOutput("text1")
+                           tableOutput("text1")
      )
 )
 )
@@ -93,16 +92,7 @@ server <- function(input, output, session) {
            "Monthly" = "MonthOfYear",
            "Yearly" = "Year")
   })
-  
-  zoom = reactive({
-  mean(datasetInput()[,input$Observation] - .1 * mean(datasetInput()[,input$Observation]))
-  lowerZoom = mean(datasetInput()[,input$Observation] - .1 * mean(datasetInput()[,input$Observation]))
-  return (coord_cartesian(ylim=c(  mean(datasetInput()[,input$Observation] - .1 * mean(datasetInput()[,input$Observation]))
-,mean(datasetInput()[,input$Observation] - .1 * mean(datasetInput()[,input$Observation])))))
-  })
-  head(NASDAQ$MonthOfYear)
-  head(NASDAQ$Year)
-  #input$Index, {choices = c("NASDAQ","S&P","Dow Jones")}
+
    output$Values <- renderPlot({
      #dataGraph %>%
        #filter()
@@ -116,11 +106,13 @@ server <- function(input, output, session) {
       
        #geom_tufteboxplot()
    })
-   output$text1 = renderPrint({
-     paste("test")
+   output$text1 = renderTable({
+     #paste("test")
      #mean(datasetInput()[,input$Observation]) - (.5 *mean(datasetInput()[,input$Observation]))
      #mean(datasetInput()[,input$Observation]) + (.5 *mean(datasetInput()[,input$Observation]))
      #summary(aov(NASDAQ$Close ~ NASDAQ$MonthOfYear))
+     as.data.frame(summary(aov(datasetInput()[,input$Observation] ~ datasetInput()[,timeInput()]))[[1]])
+     
      
    })
 }
