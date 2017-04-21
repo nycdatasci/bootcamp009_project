@@ -30,7 +30,7 @@ shinyServer(function(input, output, session) {
       scale_y_continuous(labels=function(x) x/1000) +
       ylab('Count (K)') +
       ggtitle('Noise vs Street/Traffic Count Comparison By Year',
-              subtitle = 'Note: Partial year counts (i.e. 2017) were excluded from this yearly trend analysis')
+              subtitle = 'Note: Partial year counts (i.e. 2017) were excluded from this graphic')
   }) 
 
 ## "Top 10 Complaints By Year"
@@ -43,12 +43,12 @@ shinyServer(function(input, output, session) {
   
   output$top10 <- renderGvis({
     gvisLineChart(sliderValues(),
-                  options=list(width = 1150,
-                               height = 625,
-                               title = '311 Service Requests (2010-2016)',
+                  options=list(width = 1000,
+                               height = 600,
+                               title = '311 Service Requests Counts (2010-2016)',
                                titleTextStyle = "{ color: 'black',
                                fontSize: '24',
-                               bold: 'TRUE' }",
+                               bold: 'FALSE' }",
                                hAxis = "{ title: 'Year',
                                ticks: [2010, 2011, 2012, 2013, 2014, 2015, 2016],
                                format: ''}",
@@ -84,7 +84,7 @@ shinyServer(function(input, output, session) {
       scale_y_continuous(labels=function(x) x/1000) +
       ylab('Count (K)') +
       ggtitle('Noise vs Illegal Parking Count Comparison By Year',
-              subtitle = 'Note: Partial year counts (i.e. 2017) were excluded from this yearly trend analysis')
+              subtitle = 'Note: Partial year counts (i.e. 2017) were excluded from this graphic')
     
   }) 
   
