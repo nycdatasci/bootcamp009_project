@@ -1,0 +1,92 @@
+@author Scott Dobbins
+@version 0.4
+@date 2017-04-20 23:51
+
+
+## Version history ###
+
+0.1
+This version mapped out semi-cleaned longitudinal and latitudinal target data
+  from the United States Airforce in WW2 onto one color map with map labels.
+Major changes: implemented basic data cleaning and basic plotting
+
+
+0.2
+This version mapped out semi-cleaned longitudinal and latitudinal target data
+  from the United States Airforce in 4 major conflicts during the 20th century
+  onto a selection of maps with map label options.
+Major changes: added other datasets; added other maps and map options
+
+
+0.3
+This version maps out semi-cleaned longitudinal and latitudinal target data
+  from the United States Airforce in 4 major conflicts during the 20th century
+  onto a selection of maps with map label options and clickable, detailed tooltips.
+Major changes: tooltips
+
+0.3.1	Separated scripts into Shiny 3-file structure (with README.rm and code_graveyard.txt)
+	Fixed leaflet tile attributions (sort of) and removed htmlEscapes
+	Added app_id and app_code for HERE map usage
+	Removed redundant initial drawings of map and labels
+0.3.2	Made code much more readable with line breaks
+	Edited formatting of popup labels
+
+0.4
+This version maps out all semi-cleaned longitudinal and latitudinal target data
+  from the United States Airforce in 4 major conflicts during the 20th century
+  onto a selection of maps with map label options and clickable, detailed tooltips.
+Major changes: big data clean; incorporation of all Vietnam and Korea data
+
+
+**Future version plans:
+**Tabs for exploring each separate conflict on its own in detail
+**Lots of ggplots, maybe a self-playing gif of bombs droppedover time for each conflict
+**Further clean/process the data
+**Fix some buggy tooltips (number agreement, NAs, capitalization, etc.)
+**Make efficient for use on shinyapps.io through SQLite
+**Maybe match (or fail to match) the data with the historical record.
+**Could also allow users to link (using html) to relevant Wikipedia articles on
+  certain aspects of the conflicts (airframes, campaigns, etc.)
+
+### notes on data sources ###
+
+WW1
+data source: data.mil
+data origin URL: https://insight.livestories.com/s/v2/world-war-i/5be11be2-83c7-4d20-b5bc-05b3dc325d7e/
+
+WW2
+data source: data.mil
+data origin URL: https://insight.livestories.com/s/v2/world-war-ii/3262351e-df74-437c-8624-0c3b623064b5/
+
+Korea
+data source: data.mil
+data origin URL: https://insight.livestories.com/s/v2/korea/ff390af4-7ee7-4742-a404-2c3490f6ed96/
+
+Vietnam
+data source: data.mil
+data origin URL: https://insight.livestories.com/s/v2/vietnam/48973b96-8add-4898-9b33-af2a676b10bb/
+
+
+### Thomas recommendations ###
+# maybe do SQLite
+# maybe add pictures to pop up
+# maybe add hyperlinks to various Wikipedia pages
+# definitely add plots and summary stats
+
+### end ###
+
+
+
+***** PRIORITIES *****
+
+1. figure out exactly what some column variables are and rename accordingly
+2. further clean the data
+3. get the program to write a better csv file that's processed by me
+4. ensure that all data tables are in third normal form and coordinate with glossary tables
+5. add tabs for individual conflicts
+
+
+*** eventually ***
+- use branching to develop new features on local repository
+- remove debug features from a branched version
+
