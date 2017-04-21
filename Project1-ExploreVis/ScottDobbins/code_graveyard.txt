@@ -1,0 +1,71 @@
+### Code Graveyard ###
+# where buggy or formerly useful but now unnecessary code lays to rest
+# can resurrect if necessary
+
+checkboxInput(inputId = "show_labels", label = "Show Labels", value = TRUE),
+checkboxGroupInput(inputId = "show_bombings", label = "Show Data Options", choiceNames = c("Show WW1", "Show WW2", "Show Korea", "Show Vietnam"), choiceValues = c("show_WW1", "show_WW2", "show_Korea", "show_Vietnam"))
+
+observeEvent(input$show_map, {
+  if(debug_mode_on) print("combo pressed")
+  proxy <- leafletProxy("mymap")
+  if("show_watercolor" %in% input$show_map) {
+    if(debug_mode_on) print("watercolor pressed")
+    if("show_borders" %in% input$show_map) {
+      proxy %>% addProviderTiles("Stamen.Watercolor", layerId = "watercolor") %>% addProviderTiles("Stamen.TonerHybrid", layerId = "borders")
+    } else {
+      proxy %>% addProviderTiles("Stamen.Watercolor", layerId = "watercolor")
+    }
+  } else {
+    if(debug_mode_on) print("labels pressed")
+    if("show_borders" %in% input$show_map) {
+      proxy %>% clearTiles() %>% addProviderTiles("Stamen.TonerHybrid", layerId = "borders")
+    } else {
+      proxy %>% clearTiles()
+    }
+  }
+})
+
+if(input$show_watercolor) {
+  if(input$show_borders) {
+    proxy %>% addProviderTiles("Stamen.Watercolor", layerId = "watercolor") %>% addProviderTiles("Stamen.TonerHybrid", layerId = "borders")
+  } else {
+    proxy %>% addProviderTiles("Stamen.Watercolor", layerId = "watercolor")
+  }
+} else {
+  if(input$show_borders) {
+    proxy %>% clearTiles() %>% addProviderTiles("Stamen.TonerHybrid", layerId = "borders")
+  } else {
+    proxy %>% clearTiles()
+  }
+}
+
+observeEvent(input$show_bombings, {
+  if(debug_mode_on) print("bombings pressed")
+  proxy <- leafletProxy("mymap")
+  if("show_WW1" %in% input$show_bombings) {
+    if(debug_mode_on) print("WW1 pressed")
+    proxy %>% addCircles(data = WW1_unique_target, lat = ~Target.Latitude, lng = ~Target.Longitude, color = "blue", weight = 5, opacity = 0.5, fill = TRUE, group = "WW1_unique_targets")
+  } else {
+    proxy %>% clearGroup(group = "WW1_unique_targets")
+  }
+  if("show_WW2" %in% input$show_bombings) {
+    if(debug_mode_on) print("WW2 pressed")
+    proxy %>% addCircles(data = WW2_unique_target, lat = ~Target.Latitude, lng = ~Target.Longitude, color = "red", weight = 5, opacity = 0.5, fill = TRUE, group = "WW2_unique_targets")
+  } else {
+    proxy %>% clearGroup(group = "WW2_unique_targets")
+  }
+  if("show_Korea" %in% input$show_bombings) {
+    if(debug_mode_on) print("Korea pressed")
+    proxy %>% addCircles(data = Korea_unique_target, lat = ~Target.Latitude, lng = ~Target.Longitude, color = "yellow", weight = 5, opacity = 0.5, fill = TRUE, group = "Korea_unique_targets")
+  } else {
+    proxy %>% clearGroup(group = "Korea_unique_targets")
+  }
+  if("show_Vietnam" %in% input$show_bombings) {
+    if(debug_mode_on) print("Vietnam pressed")
+    proxy %>% addCircles(data = Vietnam_unique_target, lat = ~Target.Latitude, lng = ~Target.Longitude, color = "green", weight = 5, opacity = 0.5, fill = TRUE, group = "Vietnam_unique_targets")
+  } else {
+    proxy %>% clearGroup(group = "Vietnam_unique_targets")
+  }
+})
+
+### end ###
