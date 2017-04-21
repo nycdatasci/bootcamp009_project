@@ -1,18 +1,17 @@
-library(ggplot2)
-library(googleVis)
-library(leaflet)
-library(DT)
-
 shinyServer(function(input, output, session) {
   
 ## "Top 20 Complaints Total"
   output$top20 <- renderPlot({
-    ggplot(top20, aes(x = reorder(type, count), y = count)) +
+    ggplot(top20, aes(x = reorder(type, count), y = count, fill = count)) +
       geom_bar(stat='identity') +
+      scale_fill_gradient(low = "green", high = "red") +
       scale_y_continuous(labels=function(x) x/1000) +
       xlab('Complaint Category') +
-      ylab('Count (in thousands)') +
-      ggtitle('Top 311 Service Request (2010-Present)') +
+      theme(text = element_text(size=20),
+            axis.text.x = element_text(angle=0, hjust=1)) +
+      ylab('Count (K)') +
+      ggtitle('New York City\'s Top 311 Complaint Categories', 
+              subtitle = 'Total Counts from Jan 2010 to April 2017') +
       coord_flip()
   })
   
@@ -24,18 +23,28 @@ shinyServer(function(input, output, session) {
   output$noise_traffic <- renderPlot({
     ggplot(noisetrafficbyyr, aes(x = year, y = count, color = type)) +
       geom_point() +
-      geom_smooth(method = "lm", se = FALSE)
+      geom_smooth(method = "lm", se = FALSE) +
+      theme(text = element_text(size=20),
+            axis.text.x = element_text(angle=0, hjust=1)) +
+      scale_x_continuous(breaks = round(seq(min(2010), max(2016), by = 1))) +
+      scale_y_continuous(labels=function(x) x/1000) +
+      ylab('Count (K)') +
+      ggtitle('Noise vs Street/Traffic Count Comparison By Year',
+              subtitle = 'Note: Partial year counts (i.e. 2017) were excluded from this yearly trend analysis')
   }) 
-  
-  output$noise_traffic_data <- DT::renderDataTable({
-    datatable(noisetrafficbyyr, rownames=FALSE)
-  })
 
 ## "Top 10 Complaints By Year"
+  
+  sliderValues <- reactive({
+    
+    # Compose data frame
+    top10byyr[year %in% input$range[1]:input$range[2], ]
+  })
+  
   output$top10 <- renderGvis({
-    gvisLineChart(top10byyr,
-                  options=list(width = 1400,
-                               height = 800,
+    gvisLineChart(sliderValues(),
+                  options=list(width = 1150,
+                               height = 625,
                                title = '311 Service Requests (2010-2016)',
                                titleTextStyle = "{ color: 'black',
                                fontSize: '24',
@@ -68,12 +77,16 @@ shinyServer(function(input, output, session) {
   output$noise_parking <- renderPlot({
     ggplot(noiseparkbyyr, aes(x = year, y = count, color = type)) +
       geom_point() +
-      geom_smooth(method = "lm", se = FALSE)
+      geom_smooth(method = "lm", se = FALSE) +
+      theme(text = element_text(size=20),
+            axis.text.x = element_text(angle=0, hjust=1)) +
+      scale_x_continuous(breaks = round(seq(min(2010), max(2016), by = 1))) +
+      scale_y_continuous(labels=function(x) x/1000) +
+      ylab('Count (K)') +
+      ggtitle('Noise vs Illegal Parking Count Comparison By Year',
+              subtitle = 'Note: Partial year counts (i.e. 2017) were excluded from this yearly trend analysis')
+    
   }) 
-  
-  output$noise_parking_data <- DT::renderDataTable({
-    datatable(noiseparkbyyr, rownames=FALSE)
-  })
   
 ## "Noise vs Illegal P. - Heatmap"
   
@@ -88,7 +101,8 @@ shinyServer(function(input, output, session) {
       domain = leafletpark[, input$year])
     
     leaflet(zipshapefile) %>% 
-      addTiles() %>% 
+      addTiles() %>%
+      setView(lat = 40.699429, lng = -73.959209, zoom = 11) %>% 
       addPolygons(color = "#444444",
                   fillColor = pal_noise(leafletnoise[, input$year]),
                   weight = 1.0,

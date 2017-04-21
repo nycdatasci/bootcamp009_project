@@ -1,9 +1,12 @@
-library(shinydashboard)
-
 shinyUI(dashboardPage(
   dashboardHeader(title = 'My Dashboard'),
   dashboardSidebar(
-    sidebarUserPanel("Jack Yip",
+    sidebarUserPanel(
+      tags$head(tags$style(HTML('
+                              .info {
+                                background-color: transparent;
+                                }'))),
+      name = 'Jack Yip', 
                      image = "https://media.licdn.com/mpr/mpr/shrinknp_100_100/p/2/005/09b/2d1/0089217.jpg"),
     sidebarMenu(
       menuItem("Top 20 Complaints Total", tabName = "top20", icon = icon("map")),
@@ -16,23 +19,21 @@ shinyUI(dashboardPage(
   dashboardBody(
     tabItems(
       tabItem(tabName = "top20",
-              fluidRow(plotOutput("top20"), height = 600, width = 600)),
+              fluidRow(plotOutput("top20", height = 700, width = 1100))),
       tabItem(tabName = "noise_traffic",
-              fluidRow(plotOutput("noise_traffic"), height = 600, width = 600),
-              fluidRow(box(DT::dataTableOutput("noise_traffic_data"),
-                           width = 12))),
+              fluidRow(plotOutput("noise_traffic", height = 600, width = 1100))),
       tabItem(tabName = "top10",
-              fluidRow(htmlOutput("top10"), height = 300),
-                           width = 12),
+              sliderInput("range", "Select Year(s) Range",
+                          min = 2010, max = 2016, value = c(2010, 2016)),
+              fluidRow(htmlOutput("top10"))),
       tabItem(tabName = "noise_parking",
-              fluidRow(plotOutput("noise_parking"), height = 600, width = 600),
-              fluidRow(box(DT::dataTableOutput("noise_parking_data"),
-                           width = 12))),
+              fluidRow(plotOutput("noise_parking", height = 600, width = 1100))),
       tabItem(tabName = "heatmap",
+              h3("Yearly Density of Noise & Illegal Parking 311 Complaint Counts by Neighborhood"),
               selectizeInput("year",
-                             "Select Item to Display",
+                             "Select Year",
                              colnames(leafletnoise)[3:10]),
-              fluidRow(leafletOutput("heatmap", height = 1000)))
+              fluidRow(leafletOutput("heatmap", height = 800)))
     )
   )
 ))
