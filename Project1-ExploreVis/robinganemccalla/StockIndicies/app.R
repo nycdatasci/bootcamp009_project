@@ -8,59 +8,27 @@
 #
 
 #things to add
-<<<<<<< HEAD
-#zoom
-#statistical analysis of differences
 #other types of graph
-#axis and title labels on graph
-#get ranges of dates
+#identify points
 library(shiny)
 library(dplyr)
-library(ggthemes)
-formatData = function(indexTable){
-  #something to convert Date from character here
-  indexTable$Date = as.Date(indexTable$Date,"%Y-%m-%d")
-  #we add the day of the week as a number to make sorting easier
-=======
-#colors 
-#zoom
-#statistical analysis of differences
-#other types of graph
-#volume selector
-#% change in closing
-#axis and title labels on graph
 
-library(shiny)
-library(dplyr)
-NASDAQ$MonthOfYear = strftime(NASDAQ$Date, '%m')
 formatData = function(indexTable){
   indexTable$Date = as.Date(indexTable$Date,"%Y-%m-%d")
   #something to convert Date from character here
   #we add the day of the week as a number to make sorting easier
   #perhaps we can reformulate later
->>>>>>> d87acca93047f5d9d71ae8db64b8f624aae14e08
   indexTable$DayOfWeek = strftime(indexTable$Date, '%w---%A')
   indexTable$MonthOfYear = strftime(indexTable$Date, '%m')
   indexTable$Year = strftime(indexTable$Date, '%Y')
   #we arrange them starting at the begining to make our analysis more intuitive
   indexTable = arrange(indexTable,Date)
   #a basic sum, not incredibly useful
-<<<<<<< HEAD
-=======
-  #NASDAQ %>% group_by(DayOfWeek) %>% summarize(avgClose =mean(Close)) %>% arrange(DayOfWeek)
->>>>>>> d87acca93047f5d9d71ae8db64b8f624aae14e08
   #we get the change from the previous day
   indexTable$CloseChange = c(0,diff(indexTable$Close))
   indexTable$PercentCloseChange = 100* (indexTable$CloseChange/lag(indexTable$Close-1))
   #remove the first row to get rid of the NA value
   indexTable = indexTable[-1,]
-<<<<<<< HEAD
-=======
-  #indexTable$PercentCloseChange = c(0,diff(indexTable$Close)/indexTable$Close)
-  #we add the name of the index so we can specify it when we join
-  #colnames(indexTable)[7] = paste(colnames(indexTable)[7],indexName)
-  #colnames(indexTable)[10] = paste(colnames(indexTable)[10],indexName)
->>>>>>> d87acca93047f5d9d71ae8db64b8f624aae14e08
   return (indexTable)
 }
 NASDAQ = read.csv("./NASDAQ.csv")
@@ -71,26 +39,11 @@ NASDAQ = formatData(NASDAQ)
 SandP = formatData(SandP)
 DowJones = formatData(DowJones)
 
-<<<<<<< HEAD
 
-# Define UI for application
-=======
-#FirstJoin = inner_join(NASDAQ,SandP, by = "Date")
-#AllData = inner_join(FirstJoin,DowJones, by="Date")
-#NASDAQ %>% group_by(DayOfWeek) %>% summarize(mean(CloseChange)) %>% arrange(DayOfWeek)
-
-
-# Define UI for application that draws a histogram
->>>>>>> d87acca93047f5d9d71ae8db64b8f624aae14e08
 ui <- fluidPage(
    
    # Application title
    titlePanel("Patterns in Stock Indicies"),
-   
-<<<<<<< HEAD
-=======
-   # Sidebar with a slider input for number of bins 
->>>>>>> d87acca93047f5d9d71ae8db64b8f624aae14e08
    sidebarLayout(
      sidebarPanel = sidebarPanel(
        selectInput(inputId = "Index", 
@@ -101,7 +54,6 @@ ui <- fluidPage(
                       choices= c("DayOfWeek","Monthly","Yearly")),
        selectInput(inputId = "Observation",
                    label = "Observation",
-<<<<<<< HEAD
                    choices = c("CloseChange","High","Volume","PercentCloseChange")),
        dateInput(inputId = "startDate",
                  label = "Start Date",
@@ -117,31 +69,22 @@ ui <- fluidPage(
      ),
      mainPanel = mainPanel(plotOutput("Values"),
                            tableOutput("text1")
-=======
-                   choices = c("CloseChange","High","Low","Volume","PercentCloseChange"))
      ),
-     mainPanel = mainPanel(plotOutput("Values"),
-                           textOutput("text1")
->>>>>>> d87acca93047f5d9d71ae8db64b8f624aae14e08
+
      )
 )
-)
+
 
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
   datasetInput <- reactive({
-<<<<<<< HEAD
+
     dataset = switch(input$Index,
               "NASDAQ" = NASDAQ,
               "S&P" = SandP,
               "Dow Jones" = DowJones)
     filter(dataset, input$startDate < dataset[,"Date"] & dataset[,"Date"] < input$endDate)
-=======
-    switch(input$Index,
-           "NASDAQ" = NASDAQ,
-           "S&P" = SandP,
-           "Dow Jones" = DowJones)
->>>>>>> d87acca93047f5d9d71ae8db64b8f624aae14e08
+    
   })
   timeInput = reactive({
     switch(input$TimePeriod,
@@ -149,24 +92,11 @@ server <- function(input, output, session) {
            "Monthly" = "MonthOfYear",
            "Yearly" = "Year")
   })
-<<<<<<< HEAD
 
-=======
-  zoom = reactive({
-  mean(datasetInput()[,input$Observation] - .1 * mean(datasetInput()[,input$Observation]))
-  lowerZoom = mean(datasetInput()[,input$Observation] - .1 * mean(datasetInput()[,input$Observation]))
-  return (coord_cartesian(ylim=c(  mean(datasetInput()[,input$Observation] - .1 * mean(datasetInput()[,input$Observation]))
-,mean(datasetInput()[,input$Observation] - .1 * mean(datasetInput()[,input$Observation])))))
-  })
-  head(NASDAQ$MonthOfYear)
-  head(NASDAQ$Year)
-  #input$Index, {choices = c("NASDAQ","S&P","Dow Jones")}
->>>>>>> d87acca93047f5d9d71ae8db64b8f624aae14e08
+
    output$Values <- renderPlot({
-     #dataGraph %>%
-       #filter()
+
      ggplot(data = datasetInput(), 
-<<<<<<< HEAD
             aes_string(x=timeInput(),y=input$Observation,color=timeInput())) +
        #this enables a zoom but it's hard to make it look good
        #coord_cartesian(ylim=c(mean(datasetInput()[,input$Observation]) - (2 * mean(datasetInput()[,input$Observation])), mean(datasetInput()[,input$Observation]) + (2 * mean(datasetInput()[,input$Observation])))) +
@@ -182,20 +112,9 @@ server <- function(input, output, session) {
      #mean(datasetInput()[,input$Observation]) + (.5 *mean(datasetInput()[,input$Observation]))
      #summary(aov(NASDAQ$Close ~ NASDAQ$MonthOfYear))
      as.data.frame(summary(aov(datasetInput()[,input$Observation] ~ datasetInput()[,timeInput()]))[[1]])
-     
-=======
-            aes_string(x=timeInput(),y=input$Observation)) +
-       #this enables a zoom but it's hard to make it look good
-       #coord_cartesian(ylim=c(mean(datasetInput()[,input$Observation]) - (.5 * mean(datasetInput()[,input$Observation])), mean(datasetInput()[,input$Observation]) + (.5 * mean(datasetInput()[,input$Observation])))) +
-     geom_boxplot() 
+
    })
-   output$text1 = renderText({
-     #paste("test")
-     mean(datasetInput()[,input$Observation]) - (.5 *mean(datasetInput()[,input$Observation]))
-     mean(datasetInput()[,input$Observation]) + (.5 *mean(datasetInput()[,input$Observation]))
->>>>>>> d87acca93047f5d9d71ae8db64b8f624aae14e08
-     
-   })
+
 }
 
 # Run the application 
