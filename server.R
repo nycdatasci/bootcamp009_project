@@ -60,10 +60,6 @@ shinyServer(function(input, output, session) {
                                10: { pointShape: 'star' }
                                }"))
   }) 
-  
-  output$top10_data <- DT::renderDataTable({
-    datatable(top10byyr, rownames=FALSE)
-  })
 
   
 
@@ -125,12 +121,7 @@ shinyServer(function(input, output, session) {
     
   }) 
   
-  output$noise_traffic_data <- DT::renderDataTable({
-    datatable(noisetrafficbyyr, rownames=FALSE)
-  })
-  
   
 })
-
 
 # appendix

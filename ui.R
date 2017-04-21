@@ -16,17 +16,14 @@ shinyUI(dashboardPage(
   dashboardBody(
     tabItems(
       tabItem(tabName = "top20",
-              fluidRow(plotOutput("top20"), height = 600, width = 600),
-              fluidRow(box(DT::dataTableOutput("top20_data"),
-                           width = 12))),
+              fluidRow(plotOutput("top20"), height = 600, width = 600)),
       tabItem(tabName = "noise_traffic",
               fluidRow(plotOutput("noise_traffic"), height = 600, width = 600),
               fluidRow(box(DT::dataTableOutput("noise_traffic_data"),
                            width = 12))),
       tabItem(tabName = "top10",
               fluidRow(htmlOutput("top10"), height = 300),
-              fluidRow(box(DT::dataTableOutput("top10_data"),
-                           width = 12))),
+                           width = 12),
       tabItem(tabName = "noise_parking",
               fluidRow(plotOutput("noise_parking"), height = 600, width = 600),
               fluidRow(box(DT::dataTableOutput("noise_parking_data"),
@@ -35,11 +32,7 @@ shinyUI(dashboardPage(
               selectizeInput("year",
                              "Select Item to Display",
                              colnames(leafletnoise)[3:10]),
-              fluidRow(leafletOutput("heatmap"),
-                       br(),
-                       checkboxInput("show", "Show Heatmap", value = FALSE)),
-              fluidRow(box(DT::dataTableOutput("heatmap_data"),
-                           width = 12)))
+              fluidRow(leafletOutput("heatmap", height = 1000)))
     )
   )
 ))
