@@ -1,8 +1,11 @@
-library(dplyr)
-library(dbplyr)
-library(tidyr)
+
 
 getFaresData = function() {
+  
+  require(dplyr)
+  require(dbplyr)
+  require(tidyr)
+  
   dbname = "db.sqlite"
   conn = DBI::dbConnect(RSQLite::SQLite(), dbname)
   
@@ -47,4 +50,17 @@ getFaresData = function() {
     summarise_all(max)
   
   fares_by_date
-}
+} # returns a df of maximum fare card's sold per station per type
+
+
+getMTAStations = function() {
+  
+  require(dplyr)
+  
+  station_info = paste(getwd(),"data","Stations.csv",sep = "/")
+  station_info = data.table::fread(input = station_info, sep = ",") %>%
+    mutate(LatLong = paste(`GTFS Latitude`,`GTFS Longitude`, sep=":"))
+  
+  station_info
+} # returns df of every subway stop (including GTFS data) 
+
