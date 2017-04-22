@@ -1,9 +1,10 @@
 # @author Scott Dobbins
-# @version 0.3.2
-# @date 2017-04-20 18:51
+# @version 0.5
+# @date 2017-04-21 18:53
 
 ### import useful packages ###
 library(shiny)
+library(leaflet)
 
 ### UI component ###
 ui <- fluidPage(

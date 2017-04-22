@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.3.2
-# @date 2017-04-20 18:51
+# @version 0.5
+# @date 2017-04-21 18:53
 
 ### import useful packages ###
 # shiny
@@ -11,8 +11,6 @@ library(leaflet)    # helps with maps
 library(maps)       # also helps with maps
 library(htmltools)  # helps with tooltips
 
-# master debug mode control
-debug_mode_on = TRUE
 
 ### server component ###
 
@@ -166,7 +164,7 @@ server <- function(input, output, session) {#***session is still currently unuse
     
     if(input$show_WW1) {
       
-      proxy %>% addCircles(data = WW1_unique_target, 
+      proxy %>% addCircles(data = WW1_sample, 
                            lat = ~Target.Latitude, 
                            lng = ~Target.Longitude, 
                            color = "darkblue", 
@@ -194,7 +192,7 @@ server <- function(input, output, session) {#***session is still currently unuse
     
     if(input$show_WW2) {
       
-      proxy %>% addCircles(data = WW2_unique_target, 
+      proxy %>% addCircles(data = WW2_sample, 
                            lat = ~Target.Latitude, 
                            lng = ~Target.Longitude, 
                            color = "darkred", 
@@ -221,7 +219,7 @@ server <- function(input, output, session) {#***session is still currently unuse
     
     if(input$show_Korea) {
       
-      proxy %>% addCircles(data = Korea_unique_target, 
+      proxy %>% addCircles(data = Korea_sample, 
                            lat = ~Target.Latitude, 
                            lng = ~Target.Longitude, 
                            color = "yellow", 
@@ -248,7 +246,7 @@ server <- function(input, output, session) {#***session is still currently unuse
     
     if(input$show_Vietnam) {
       
-      proxy %>% addCircles(data = Vietnam_unique_target, 
+      proxy %>% addCircles(data = Vietnam_sample, 
                            lat = ~Target.Latitude, 
                            lng = ~Target.Longitude, 
                            color = "darkgreen", 

@@ -5,24 +5,62 @@ library(plotly)
 library(akima)
 library(shinydashboard)
 
-setwd('~/Desktop/nycdsa/shiny_comet/comet_app/')
+setwd('~/Desktop/nycdsa/shiny_comet/meteor_app/')
 
+#Full data sets
 #small_body_dt <- fread(file = "./small_body_dt.dt")
-
 small_body_join <- fread(file = "./small_body_join.dt")
+#sentry_dt <- fread(file = "./sentry_dt.dt")
+#sbdt_summary <- fread(file = "./sbdt_summary.dt")
+#mba_dt <- fread(file = "./mba_dt.dt")
 
-sentry_dt <- fread(file = "./sentry_dt.dt")
-
+#For class information page
 meteor_descriptions <- fread(file = "./meteor_descriptions")
 
+#For crater formation
+impactor <- fread(file = "./impactor")
+materials <- fread(file = "./materials")
+
+#Commonly used color map
 class_temp <- unique(small_body_join$class)
 col_temp <- heat.colors(length(class_temp), alpha=NULL)
-class_col = c(class_temp=col_temp)
+class_col <- c(class_temp=col_temp)
 
-#r <- 1
-#theta <- seq(0, 2*pi, length.out = 100)
-#phi <- seq(0, 2*pi, length.out = 100)
-#x1 <- r*outer(cos(theta), sin(phi))
-#y1 <- r*outer(sin(theta), sin(phi))
-#z1 <- r*outer(seq(1,1,length.out=100), cos(phi))
-#df <- data.frame(split(x1, 1), split(y1, 1), split(z1, 1))
+#Crater formation equation
+crater_formation <- function(a_s, u_s, rho_t, delta_s, y_t, mu, nu, k_1, k_2, k_r, k_d){
+  g = 980.7 #cm/s^2
+  #Coefficient calc pi_2
+  pi_2 <- g*a_s/u_s**2
+  
+  #Coefficient calc pi_3
+  pi_3 <- y_t/(rho_t*u_s**2)
+  
+  #Coefficient calc pi_v
+  pi_v <- k_1*(pi_2(g, a_s, u_s)*(rho_t/delta_s)**((6*nu-2-mu)/(3*mu)) +
+                 (k_2*pi_3(y_t, rho_t, u_s)*(rho_t/delta_s)**((6*nu-2)/(3*mu)))**((2+mu)/2))**(-3*mu/(2+mu))
+  
+  #Crater volume V_cr
+  V_cr <- pi_v*(pi*(4/3)*(a_s)**3 * delta_s)/rho_t
+  
+  #Crater radius r_cr
+  r_cr <- k_r*V_cr**(1/3)
+  
+  #Crater depth d_cr
+  d_cr <- k_d*V_cr**(1/3)
+  
+  V_ej = 0.8*V_cr #ejected volume
+  
+  T_form = 0.8*(V_cr**(1/3)/g)**0.5 #Formation time
+  
+  value_cm <- c(V_cr, V_ej, r_cr, d_cr, T_form)
+  value_km <- value_cm*c((1e-5)**3, (1e-5)**3, 1e-5, 1e-5, 1)
+  value_mi <- value_km*c(0.6124**3, 0.6124**3, 0.6124, 0.6124, 1)
+  
+  output <- data.frame(name=c('V_cr', 'V_ej', 'r_cr', 'd_cr', 'T_form'),
+                       value_cm=value_cm,
+                       value_km=value_km,
+                       value_mi=value_mi,
+                       stringsAsFactors = F)
+  
+  return(output)
+}

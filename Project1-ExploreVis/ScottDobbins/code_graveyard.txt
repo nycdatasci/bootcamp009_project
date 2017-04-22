@@ -1,3 +1,7 @@
+@author Scott Dobbins
+@version 0.5
+@date 2017-04-21 16:30
+
 ### Code Graveyard ###
 # where buggy or formerly useful but now unnecessary code lays to rest
 # can resurrect if necessary
@@ -67,5 +71,32 @@ observeEvent(input$show_bombings, {
     proxy %>% clearGroup(group = "Vietnam_unique_targets")
   }
 })
+
+col_num_missing_values <- vector(mode='integer', length(WW2_extra))
+
+for(c in 1:length(WW2_extra)) {
+  print("hello")
+  if(class(WW2_extra[[c]]) == "numeric" | class(WW2_extra[[c]]) == "integer" | class(WW2_extra[[c]]) == "Date") {
+    col_num_missing_values[c] <- sum(is.na(WW2_extra[[c]]))
+  } else if(class(WW2_extra[[c]]) == "character") {
+    col_num_missing_values[c] <- sum(WW2_extra[[c]] == '')
+  } else if(class(WW2_extra[[c]]) == 'logical') {
+    col_num_missing_values[c] <- sum(!WW2_extra[[c]])
+  }
+}
+
+remove_quote_padding <- function(cell) {
+  if(cell[1] == "\"" & cell[nchar(cell)] == "\"") {
+    return(remove_quote_padding(substring(cell, 2, nchar(cell)-1)))
+  } else {
+    return(cell)
+  }
+}
+
+WW1_raw$Mission.Date <- as.Date(WW1_raw$Mission.Date, format = "%Y-%m-%d")
+WW2_raw$Mission.Date <- as.Date(WW2_raw$Mission.Date, format = "%m/%d/%Y")
+Korea_raw1$Mission.Date <- as.Date(Korea_raw1$Mission.Date, format = "%m/%d/%y")
+Korea_raw2$Mission.Date <- as.Date(Korea_raw2$Mission.Date, format = "%m/%d/%y")
+Vietnam_raw$Mission.Date <- as.Date(Vietnam_raw$Mission.Date, format = "%Y-%m-%d")
 
 ### end ###
