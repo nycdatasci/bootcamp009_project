@@ -4,9 +4,9 @@
 library(shinydashboard)
 
 shinyUI(dashboardPage(
-  dashboardHeader(title="Lending Club"),
+  dashboardHeader(title="Lending Club 07-11"),
   dashboardSidebar(
-    sidebarUserPanel("Bo"),
+    sidebarUserPanel("Kim"),
     sidebarMenu(
       menuItem("Map", tabName = "map", icon = icon("map")),
       menuItem("Data", tabName = "data", icon = icon("database"))),
