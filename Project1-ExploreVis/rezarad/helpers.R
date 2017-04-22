@@ -1,4 +1,6 @@
-
+library(dplyr)
+library(dbplyr)
+library(tidyr)
 
 getFaresData = function() {
   dbname = "db.sqlite"
