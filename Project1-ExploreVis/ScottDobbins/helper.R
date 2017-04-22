@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.5
-# @date 2017-04-21 18:53
+# @version 0.6
+# @date 2017-04-21 23:58
 
 ### text formatting functions ###
 
@@ -21,10 +21,10 @@ proper_noun <- function(word) {
       return(paste0(substring(word, 1, first_letter-1), proper_noun(substring(word, first_letter))))
     } else {
       word = tolower(word)
-      if(any(word %in% c("e", "n", "ne", "nw", "s", "se", "sw", "w"))) {
+      if(any(word %in% c("e", "n", "ne", "nw", "s", "se", "sw", "w", "uk", "usa"))) {#, "i", "ii", "iii", "iv", "v", "vi", "vii", "vii", "ix", "x", "xi", "xii", "xiii"))) {
         return(toupper(word))
       } else {
-        if(any(word %in% c("and", "aux", "di", "in", "of", "on", "or", "the", "km", "mi", "m"))) {
+        if(any(word %in% c("and", "aux", "di", "in", "of", "on", "or", "the", "to", "km", "mi", "m", "st", "nd", "rd", "th"))) {
           return(word)
         } else {
           return(capitalize(word))

@@ -1,6 +1,6 @@
 @author Scott Dobbins
-@version 0.5
-@date 2017-04-21 18:53
+@version 0.6
+@date 2017-04-21 23:58
 
 
 ## Version history ###
@@ -44,11 +44,23 @@ This version maps out all semi-cleaned longitudinal and latitudinal target data
   detailed tooltips using speed advantages brought to it by data table functions.
 Major changes: help cleaning and formatting with helper.R; speed-optimized with data table
 
+0.6
+This version maps out all semi-cleaned longitudinal and latitudinal target data
+  from the United States Airforce in 4 major conflicts during the 20th century
+  onto a selection of maps with map label options and clickable, well-formatted, 
+  detailed tooltips using speed advantages brought to it by data table functions
+  and cached outputs (while still enabling full refreshes of the displayed data).
+Major changes: further organized code with cleaner.R; development-friendly caching
+
 **Future version plans:
 **Tabs for exploring each separate conflict on its own in detail
 **Lots of ggplots, maybe a self-playing gif of bombs droppedover time for each conflict
-**Further clean/process the data
 **Fix some buggy tooltips (number agreement, NAs, capitalization, etc.)
+	WW2 cities in all caps
+	separate "time" into actual time and day/night--process this
+	Korea target types should be all lower, not capitalized
+	Korea cities and such are mostly invisible
+	and, of course, number agreement
 **Make efficient for use on shinyapps.io through SQLite
 **Maybe match (or fail to match) the data with the historical record.
 **Could also allow users to link (using html) to relevant Wikipedia articles on
@@ -85,17 +97,10 @@ data origin URL: https://insight.livestories.com/s/v2/vietnam/48973b96-8add-4898
 
 ***** PRIORITIES *****
 
-A. get working version
-B. make it work in dashboard
-
-1. figure out exactly what some column variables are and rename accordingly
-2. further clean the data
-3. get the program to write a better csv file that's processed nicely by me
-	(for quick import for Shiny server use or even SQLite)
-4. ensure that all data tables are in third normal form and coordinate with glossary tables
-5. add tabs for individual conflicts
-
-6. get rid of all lapply statements in data cleaning section
+1. make it work in dashboard
+2. add tabs for individual conflicts
+3. ensure that all data tables are in third normal form and coordinate with glossary tables
+4. get rid of all lapply statements in data cleaning section
 
 
 *** eventually ***
