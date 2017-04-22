@@ -1,20 +1,9 @@
 #enable small_body_dt in global and dataframe selection for final submission
 
 shinyServer(function(input, output, session) {
-  output$class_definition <- renderText({
-    #TBD
-    #1 or 2 equations/statements on definition
-  })
-  
   output$class_description <- renderText({
-    meteor_descriptions$meteor_blurb[meteor_descriptions$meteor_classes == input$meteor_class]
-  })
-  
-  output$class_image <- renderImage({
-    filename <- meteor_descriptions$meteor_img[meteor_descriptions$meteor_classes == input$meteor_class]
     
-    list(src = filename)
-    }, deleteFile = FALSE)
+  })
   
   output$characteristic_plot_a <- renderPlotly({
     class_select() %>% 
@@ -70,10 +59,6 @@ shinyServer(function(input, output, session) {
       ggplotly()
   })
   
-  output$Kformula <- renderPrint({
-    '$$x$$ test'
-  })
-  
   output$diameter_plot <- renderPlotly({
     ggplotly(class_select() %>% 
       filter(!is.na(diameter)) %>% 
@@ -99,95 +84,104 @@ shinyServer(function(input, output, session) {
       geom_histogram(binwidth = 0.25)
   })
   
-  output$class_image <- renderText({
-    src = 'http://www.permanent.com/images/a-amor-apollo-aten.gif'
-    paste('<img src="',src,'">')
-    })
+  meteor_select_reactive <- reactive({
+    small_body_join %>% 
+      filter(Object.Designation.. == input$crater_name)
+  })
   
-  output$crater <- renderText({
-    target <- target_choice()
+  crater <- eventReactive({input$target_material
+                          input$meteor_material
+                          input$crater_name},{
+    target <- materials %>% filter(name == input$target_material)
+
+    meteor_vel <- meteor_select_reactive() %>% 
+        select(Vinfinity) %>% as.numeric()
     
-    meteor_vel <- small_body_join[1, Vinfinity]
-    meteor_diam <- small_body_join[1, Estimated.Diameter]
-    
+    meteor_diam <- meteor_select_reactive() %>% 
+      select(Estimated.Diameter) %>% as.numeric()
+
     #crater_formation output: 
     #output <- data.frame(name=c('V_cr', 'V_ej', 'r_cr', 'd_cr', 'T_form'),
     #                     value_cm=value_cm,
     #                     value_km=value_km,
     #                     value_mi=value_mi)
-    crater <- crater_formation(k_1 = target$k_1,
-                               k_2 = target$k_2,
-                               mu = target$mu,
-                               nu = target$nu,
-                               rho_t = target$rho_t,
-                               y_t = target$y_t,
-                               k_r = target$k_r,
-                               k_d = target$k_d,
-                               u_s = 1e5*meteor_vel, #Meteor velocity in km/s trans to cm/s
-                               a_s = 0.5e5*meteor_diam, #Meteor diameter in km trans to radius of cm
-                               delta_s = impactor[name == input$meteor_material, delta_s])
+
+    crater_formation(k_1 = target$k_1,
+                     k_2 = target$k_2,
+                     mu = target$mu,
+                     nu = target$nu,
+                     rho_t = target$rho_t,
+                     y_t = target$y_t,
+                     k_r = target$k_r,
+                     k_d = target$k_d,
+                     u_s = 1e5*meteor_vel, #Meteor velocity in km/s trans to cm/s
+                     a_s = 0.5e5*meteor_diam, #Meteor diameter in km trans to radius of cm
+                     delta_s = impactor[name == input$meteor_material, delta_s])
+  })
+
+  output$crater_map <- renderLeaflet({
+    city <- city_dt %>% filter(name == input$city)
+    crater_diam <- crater()$value_km[3]
     
-    paste("Testing crater volume (cubic miles) = ", round(crater$value_mi[3],2))
+    leaflet() %>%
+      addTiles() %>% 
+      fitBounds(lng1 = city$lon-crater_diam*0.6124/55,
+                lat1 = city$lat-crater_diam*0.6124/37,
+                lng2 = city$lon+crater_diam*0.6124/55,
+                lat2 = city$lat+crater_diam*0.6124/37) %>% 
+      addCircles(lng = city$lon, lat = city$lat, radius = crater_diam*1e3) %>% 
+      addPopups(lng = city$lon, lat = city$lat,
+                popup=paste(city$name, '-- Crater diameter (km) = ', round(crater_diam,2)))
   })
   
-target_choice <- reactive({
-  materials %>% 
-    filter(materials_name == input$target_material)
+  output$valuebox1 <- renderValueBox({
+    valueBox("Crater radius (miles)",
+            value = round(crater()$value_mi[3],2),
+            color = "red")
+  })
+  
+  output$valuebox2 <- renderValueBox({
+    valueBox("Crater depth (miles)",
+            value = round(crater()$value_mi[4],2),
+            color = "red")
+  })
+  
+  output$valuebox3 <- renderValueBox({
+    valueBox("Time (s) for crater formation",
+            value = round(crater()$value_mi[5],2),
+            color = "red")
   })
 
+  output$valuebox4 <- renderValueBox({
+    valueBox("Meteor diameter (miles)",
+            value = round(meteor_select_reactive() %>% 
+              select(Estimated.Diameter) %>%
+              as.numeric(),
+              2),
+            color = "aqua")
+  })
   
+  output$valuebox5 <- renderValueBox({
+    valueBox("Meteor velocity (Thousand mph)",
+            value = round(meteor_select_reactive() %>% 
+              select(Vinfinity) %>%
+              as.numeric()*2.237,
+              2),
+            color = "aqua")
+  })
+  
+  output$valuebox6 <- renderValueBox({
+    valueBox("Impact Probability (Thousandths of percent)",
+            value = round(meteor_select_reactive() %>% 
+              select(Impact.Probability) %>%
+              as.numeric()*1e5,
+              1),
+            color = "aqua")
+  })
+  
+  output$class_description <- renderUI({
+    #str1 <- strsplit(temp[1], split = '\\n')[1]
+    #str2 <- strsplit(temp[1], split = '\\n')[3]
+    HTML(meteor_descriptions$meteor_blurb[meteor_descriptions$meteor_classes == input$meteor_class])
+  })
 })
-  
-  
-  
-  
-  #For web-hosted images
-  #output$image <- renderUI({
-  #src = input$image_url
-  #tags$img(src=src)
-  #})
-  
-#  column_select <- reactive({
-#    dots = paste0("mean(", input$plot_column, ")")
-#    small_body_join %>%
-#      group_by(class) %>%
-#      dplyr::summarise_(., .dots = setNames(dots, "mean")) 
-#  })
-  
-#  output$histogram1 <- renderGvis({
-#    column_select() %>% 
-#      gvisColumnChart(.,
-#                      xvar='class',
-#                      yvar='mean')
-#  })
-  
-#  radius_select <- reactive({
-#    dots <- paste0("radius < ", input$radius)
-#    small_body_join %>% 
-#      filter_(.dots = dots)
-#  })
-  
-#  output$cartesianplot <- renderPlotly({
-#    radius_select() %>% 
-#      plot_ly(., x=~x, y=~y, z=~z) %>% 
-#      add_markers()
-#  })
-
-#  radial_range <- reactive({
-#    dots = paste0("radius > ", input$r_range[1], " & radius < ", input$r_range[2])
-#    small_body_join %>% 
-#      filter_(.dots = dots)
-#  })
-  
-#  output$radialplot <- renderPlotly({
-#    radial_range() %>% 
-#      plot_ly(., x=~x, y=~y) %>%
-#      add_markers() 
-#  })
-
-  
-  #output$heatplot <- renderPlotly({
-  #  
-  #})
-  
-#})

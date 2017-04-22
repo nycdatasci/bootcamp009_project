@@ -4,14 +4,15 @@ library(googleVis)
 library(plotly)
 library(akima)
 library(shinydashboard)
+library(leaflet)
 
 setwd('~/Desktop/nycdsa/shiny_comet/meteor_app/')
 
 #Full data sets
-#small_body_dt <- fread(file = "./small_body_dt.dt")
+small_body_dt <- fread(file = "./small_body_dt.dt")
 small_body_join <- fread(file = "./small_body_join.dt")
-#sentry_dt <- fread(file = "./sentry_dt.dt")
-#sbdt_summary <- fread(file = "./sbdt_summary.dt")
+sentry_dt <- fread(file = "./sentry_dt.dt")
+sbdt_summary <- fread(file = "./sbdt_summary.dt")
 #mba_dt <- fread(file = "./mba_dt.dt")
 
 #For class information page
@@ -20,6 +21,7 @@ meteor_descriptions <- fread(file = "./meteor_descriptions")
 #For crater formation
 impactor <- fread(file = "./impactor")
 materials <- fread(file = "./materials")
+city_dt <- fread(file = "./city_dt.dt")
 
 #Commonly used color map
 class_temp <- unique(small_body_join$class)
@@ -36,8 +38,8 @@ crater_formation <- function(a_s, u_s, rho_t, delta_s, y_t, mu, nu, k_1, k_2, k_
   pi_3 <- y_t/(rho_t*u_s**2)
   
   #Coefficient calc pi_v
-  pi_v <- k_1*(pi_2(g, a_s, u_s)*(rho_t/delta_s)**((6*nu-2-mu)/(3*mu)) +
-                 (k_2*pi_3(y_t, rho_t, u_s)*(rho_t/delta_s)**((6*nu-2)/(3*mu)))**((2+mu)/2))**(-3*mu/(2+mu))
+  pi_v <- k_1*(pi_2*(rho_t/delta_s)**((6*nu-2-mu)/(3*mu)) +
+                 (k_2*pi_3*(rho_t/delta_s)**((6*nu-2)/(3*mu)))**((2+mu)/2))**(-3*mu/(2+mu))
   
   #Crater volume V_cr
   V_cr <- pi_v*(pi*(4/3)*(a_s)**3 * delta_s)/rho_t
