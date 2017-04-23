@@ -49,9 +49,9 @@ shinyServer(function(input, output, session) {
         p <- sectorData() %>% 
                 plot_ly(x = ~Ticker, y = ~ZScore, alpha = 0.5) 
         subplot(
-                    add_markers(p, color = ~factor(ZScore), 
+                add_markers(p, color = ~factor(ZScore), 
                                 colors = colorRamp(c("red", "blue"))
-                                )
+                        )
         ) %>% 
             layout(title = input$selectSector,
                    margin = list(t = 30, r = 0, b = 80, l= 35, pad = 0),
@@ -62,6 +62,8 @@ shinyServer(function(input, output, session) {
                  
     })
     output$company <- renderPlotly({
+        companyData() %>% 
+            plot_ly(x = ~ZScore, y = ~Close) 
        
     })
     
