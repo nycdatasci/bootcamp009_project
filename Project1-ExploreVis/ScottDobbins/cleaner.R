@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.6.1
-# @date 2017-04-22 17:35
+# @version 0.8
+# @date 2017-04-23 01:30
 
 ### import useful packages ###
 
@@ -621,4 +621,4 @@ if(debug_mode_on) print("writing Vietnam")
 write.csv(x = data.frame(Vietnam_sample), file = 'saves/Vietnam_sample.csv', quote = TRUE)
 if(full_write) write.csv(x = data.frame(Vietnam_clean), file = 'saves/Vietnam_clean.csv', quote = TRUE)
 if(full_write) save(Vietnam_bombs, file = 'saves/Vietnam_bombs.Rda')
-if(full_write) save.image(file = 'saves/Shiny 2017-04-22.RData')
+if(full_write) save.image(file = 'saves/Shiny_2017-04-22.RData')

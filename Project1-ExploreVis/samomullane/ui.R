@@ -17,19 +17,55 @@ shinyUI(dashboardPage(
     tabItems(
       tabItem(tabName = "overview",
               fluidPage(tabBox(id = 'tabset5', width = 12,
-                fluidRow(box("Will include introduction info")),
-                fluidRow(box(plotlyOutput("all_class_orbits"))),
+                tabPanel("Base Information",
+                               fluidRow(box(tags$div(
+                                 'Meteors are mainly classified by the perihelion distance and
+                                 semi-major axis of their orbit. As seen in the class-specific
+                                 plots, these are artificial definitions which can lead to
+                                 one-sided normal distributions of orbital parameters.',
+                                 tags$br(),
+                                 'Two distint datasets were used for this project:',
+                                 tags$br(),
+                                 tags$b('1. Small body object database'),
+                                 tags$ul(
+                                   tags$li('a) Contains info on all observed asteroids and 
+                                           comets in the solar system'),
+                                   tags$li('b) Focuses on orbital parameters and classification info')),
+                                 tags$br(),
+                                 tags$b('2. Sentry potential impact detection database'),
+                                 tags$ul(
+                                   tags$li('a) Contains info on only NEOs that could impact Earth'),
+                                   tags$li('b) Does not have detailed orbit info'),
+                                   tags$li('c) Provides info on probability of impact, velocity,
+                                           estimated year range of impact')),
+                                 'By combining these datasets, we gain an understanding of potential risk
+                                 due to meteor impact. Included is an interactive application for plausible
+                                 impacts that calculates potential crater depth and radius.'
+                               ), width = 12)),
+                
+                fluidRow(box(imageOutput("orbital_parameters"), width = 8, height = 220),
+                         box(plotlyOutput("inner_orbits"), width = 4, height = 220)),
+                
                 fluidRow(box(plotlyOutput("total_diameter_plot"),
-                               title = 'Diameter-Count Statistics',
+                               title = tags$div(
+                                 'Diameter of Meteor (km) v.', 
+                                 tags$br(),
+                                 'Observed Distance from Sun (AU, calculated)'),
                                status = 'primary',
                                solidHeader = TRUE,
                                width = 6),
                          box(plotlyOutput("kepler_plot"),
-                               title = 'Kepler\'s Third Law',
+                               title = tags$div('Kepler\'s Third Law', tags$br(),
+                                                'Orbital Period (y) v. Semi-Major Axis (AU)'),
                                status = 'primary',
                                solidHeader = TRUE,
                                width = 6)
                          )
+                ),
+                tabPanel("Meteor infographic",
+                         fluidRow(box(h2("Infographic from the American Meteor Society"), width = 12, align = 'center')),
+                         fluidRow(box(imageOutput("meteor_image"), width = 12, height = 1000))
+                )
               ))),
       #1) Class individual stats and info
       #2) Class total stats and info
@@ -39,19 +75,28 @@ shinyUI(dashboardPage(
               fluidPage(tabBox(id = "tabset1", width = 12,
                        tabPanel("Class descriptions and statistics",
                          fluidRow(
-                           box(selectizeInput(inputId = "meteor_class", 
+                           box(tags$div(selectizeInput(inputId = "meteor_class", 
                                               label = "Meteor Class",
                                               #should arrange alphabetically eventually
                                               choices = meteor_descriptions[order(meteor_classes),1], 
-                                              selected = 'APO'), width = 2, height = 210),
+                                              selected = 'APO'), 
+                                        tags$b('Legend for orbit schematic'),
+                                        tags$br(),
+                                        tags$span(style="color:blue", 'Earth'),
+                                        tags$br(),
+                                        tags$span(style="color:red", 'Mars'),
+                                        tags$br(),
+                                        tags$span(style="color:purple", 'Jupiter')),
+                           width = 2, height = 210),
+                           
+                           #Orbit plot
+                           box(plotlyOutput("single_class_orbits"),
+                               width = 3, height = 210),
                            
                            #Class descriptions
                            box(htmlOutput("class_description"),
                                h6('(from Wikipedia)'),
-                               width = 7, height = 210),
-                           #Orbit plot
-                           box(plotlyOutput("single_class_orbits"),
-                               width = 3, height = 210)
+                               width = 7, height = 210)
                          ),
                          
                          #Want characteristic plots of 'a' and 'q', and 'd' counts
@@ -120,11 +165,17 @@ shinyUI(dashboardPage(
                                           box(selectizeInput(inputId = "city",
                                                              label = "Impact city",
                                                              choices = city_dt$name,
-                                                             selected = "New York"), width = 3, height = 75),
+                                                             selected = "New York"), width = 2, height = 75),
                                           box(selectizeInput(inputId = "crater_name",
                                                              label = "Meteor name",
                                                              choices = small_body_join$Object.Designation..,
-                                                             selected = "1950 DA"), width = 3, height = 75)
+                                                             selected = "1950 DA"), width = 2, height = 75),
+                                          box(sliderInput(inputId = "theta_in",
+                                                          label = "Angle of impact",
+                                                          min = 10,
+                                                          max = 90,
+                                                          value = 90,
+                                                          step = 5), width = 2, height = 75)
                                           ),
                                         fluidRow(
                                           valueBoxOutput("valuebox1", width = 2),

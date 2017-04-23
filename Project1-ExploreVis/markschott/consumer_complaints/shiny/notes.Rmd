@@ -1,0 +1,69 @@
+---
+title: "shiny_poj_notes"
+author: "Mark Schott"
+date: "April 20, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Exploratory Data Analysis on the Consumer Complaint Database regarding US Financial Products and Services
+
+
+## Using rgdal to handle SpatialPolygonDataFrames
+
+So after reading <http://zevross.com/blog/2015/10/14/manipulating-and-mapping-us-census-data-in-r-using-the-acs-tigris-and-leaflet-packages-3/>, shown to me by Chao. It seems that handling SpatialPolygonDataFrames (SPDF) is easier than I was doing earlier which manually converted the object to a data frame, merged, then recast back to a SPDF. 
+```{r SPDF, eval = F}
+library(rgdal)
+states = readOGR('states.json')
+states@data = merge(states@data, other_df, by = 'common header')
+```
+
+## Dealing with the large CSV
+
+I'm also having trouble considering how to initially load the data into my shiny app. Currently I'm manually loading the csv into a data frame but the csv is quite large (around 300M). This clearly is not an acceptable solution for production. I could save it as an .rda or .rds and load it which may be much faster. Ideally, I would be making specific queries into a relational database using SQLite or MYSQL but the syntax for shiny is annoying to provide the flexibility which I desire. 
+
+These are the list of the data files I need
+1. Consumer complaints database
+2. Abbreviations dataframe
+3. Population information
+4. json spatial object of us states and territories
+
+## Other plots to use
+
+I think that plotting the word count for a specific company versus the number of complaints could be an interesting plot
+
+## Things to do
+
+1. Subset inputs per tab    (Done)
+2. Add legend to map        (Done)
+3. Change labels of bar plots    (Done)
+4. Incorporate mosaic plots
+5. Handle the wells fargo freeze up for the word map
+6. Remove obvious financial related words
+7. Get date slider to work properly for map        (Done)
+8. Get leaflet proxy to work
+9. Plot just latitude and longitude points
+10. Sentiment analysis on word cloud
+11. Add title of company to word cloud, Add text displaying total word count by the word cloud
+12. Change label so that it shows up clearly on the map.    (Done)
+13. Assemble slides into cohesive story, thinking something to do with states and company
+14. Display counts in map by company make one input for that     (Done)
+15. Change company selector from drop down to search input     (Done)
+16. Analyze difference from Date.received to Date.sent.to.company    (Nope)
+17. Mosaic plot pick two variables to sample and display (too large too display all?)
+18. Change max n to adjust for dates                    (Done, removed from bar plot)
+19. Add second variable to bar plots                    (Done)
+20. Remove companies who have no text                   (Done)
+21. Show word bubble by state and do random sampling of text
+22. Plot word counts versus complaint counts. (More complaints more words... so?)
+23. Hide/Change legend position for bar plot        (Done)
+24. Change bar plot y label to Total Count          (Done)
+25. Add plot to map tab that shows count by date by State            (Done)
+26. Analyze time series data
+    a. Day of the week, group by month analysis
+      - Frequency by day of the week/month
+    b. group data into weeks/months to smooth out deviations
+      

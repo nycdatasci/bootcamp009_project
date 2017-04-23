@@ -1,6 +1,6 @@
 @author Scott Dobbins
-@version 0.6.1
-# @date 2017-04-22 17:35
+@version 0.8
+# @date 2017-04-23 01:30
 
 ### Code Graveyard ###
 # where buggy or formerly useful but now unnecessary code lays to rest
@@ -109,37 +109,131 @@ Vietnam_sample <- Vietnam_unique_target[sample(x = c(TRUE, FALSE), replace = TRU
   Korea_sample <- fread(file = 'Korea_sample.csv', sep = ',', sep2 = '\n', header = TRUE, stringsAsFactors = FALSE)
   Vietnam_sample <- fread(file = 'Vietnam_sample.csv', sep = ',', sep2 = '\n', header = TRUE, stringsAsFactors = FALSE)
 
-WW1_col_classes <- c("integer",
-                     "character",
-                     "character",
-                     "character",
-                     "character",
-                     "character",
-                     "character",
-                     "integer",
-                     "character",
-                     "character",
-                     "integer",
-                     "character",
-                     "integer",
-                     "character",
-                     "integer",
-                     "double",
-                     "double",
-                     "double",
-                     "character",
-                     "character",
-                     "character",
-                     "character",
-                     "double",
-                     "double",
-                     "character",
-                     "character",
-                     "character",
-                     "character",
-                     "integer",
-                     "character",
-                     "character",
-                     "integer")
+  # handler for WW1 data plotting
+  observeEvent(eventExpr = input$show_WW1, ignoreNULL = FALSE, ignoreInit = TRUE, handlerExpr = {
+
+    if(debug_mode_on) print("WW1 selected")
+
+    proxy <- leafletProxy("overview_map")
+
+    if(input$show_WW1) {
+
+      proxy %>% addCircles(data = WW1_sample,
+                           lat = ~Target.Latitude,
+                           lng = ~Target.Longitude,
+                           color = "darkblue",
+                           weight = 5,
+                           opacity = 0.5,
+                           fill = TRUE,
+                           fillColor = "darkblue",
+                           fillOpacity = 0.5,
+                           popup = ~tooltip,
+                           group = "WW1_unique_targets")
+
+    } else {
+
+      proxy %>% clearGroup(group = "WW1_unique_targets")
+
+    }
+  })
+
+  # handler for WW2 data plotting
+  observeEvent(eventExpr = input$show_WW2, ignoreNULL = FALSE, ignoreInit = TRUE, handlerExpr = {
+
+    if(debug_mode_on) print("WW2 selected")
+
+    proxy <- leafletProxy("overview_map")
+
+    if(input$show_WW2) {
+
+      proxy %>% addCircles(data = WW2_sample,
+                           lat = ~Target.Latitude,
+                           lng = ~Target.Longitude,
+                           color = "darkred",
+                           weight = 5,
+                           opacity = 0.5,
+                           fill = TRUE,
+                           fillColor = "darkred",
+                           popup = ~tooltip,
+                           group = "WW2_unique_targets")
+
+    } else {
+
+      proxy %>% clearGroup(group = "WW2_unique_targets")
+
+    }
+  })
+
+  # handler for Korea data plotting
+  observeEvent(eventExpr = input$show_Korea, ignoreNULL = FALSE, ignoreInit = TRUE, handlerExpr = {
+
+    if(debug_mode_on) print("Korea selected")
+
+    proxy <- leafletProxy("overview_map")
+
+    if(input$show_Korea) {
+
+      proxy %>% addCircles(data = Korea_sample,
+                           lat = ~Target.Latitude,
+                           lng = ~Target.Longitude,
+                           color = "yellow",
+                           weight = 5,
+                           opacity = 0.5,
+                           fill = TRUE,
+                           fillColor = "yellow",
+                           popup = ~tooltip,
+                           group = "Korea_unique_targets")
+
+    } else {
+
+      proxy %>% clearGroup(group = "Korea_unique_targets")
+
+    }
+  })
+
+  # handler for Vietnam data plotting
+  observeEvent(eventExpr = input$show_Vietnam, ignoreNULL = FALSE, ignoreInit = TRUE, handlerExpr = {
+
+    if(debug_mode_on) print("Vietnam selected")
+
+    proxy <- leafletProxy("overview_map")
+
+    if(input$show_Vietnam) {
+
+      proxy %>% addCircles(data = Vietnam_sample,
+                           lat = ~Target.Latitude,
+                           lng = ~Target.Longitude,
+                           color = "darkgreen",
+                           weight = 5,
+                           opacity = 0.5,
+                           fill = TRUE,
+                           fillColor = "darkgreen",
+                           popup = ~tooltip,
+                           group = "Vietnam_unique_targets")
+
+    } else {
+
+      proxy %>% clearGroup(group = "Vietnam_unique_targets")
+
+    }
+  })
+
+    # I had to keep these checkboxInputs separate (i.e. not a groupCheckboxInput)
+    # so that only redraws of the just-changed aspects occur (i.e. to avoid buggy redrawing)
+    checkboxInput(inputId = "show_WW1",
+                  label = "Show WW1 Bombings",
+                  value = FALSE),
+
+    checkboxInput(inputId = "show_WW2",
+                  label = "Show WW2 Bombings",
+                  value = FALSE),
+
+    checkboxInput(inputId = "show_Korea",
+                  label = "Show Korea Bombings",
+                  value = FALSE),
+
+    checkboxInput(inputId = "show_Vietnam",
+                  label = "Show Vietnam Bombings",
+                  value = FALSE),
 
 ### end ###

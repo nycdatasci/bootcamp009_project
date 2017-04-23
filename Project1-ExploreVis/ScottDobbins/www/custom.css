@@ -1,0 +1,16 @@
+.main-header .logo {
+  font-family: "Georgia", Times, "Times New Roman", serif;
+  font-weight: bold;
+  font-size: 20px;
+}
+.sidebar .widget {
+  margin-bottom: 10px;
+  padding: 10px;
+}
+.content {
+  padding-top: 0px;
+  padding-bottom: 0px;
+}
+.selectize-dropdown, .selectize-input { 
+  line-height: 14px; 
+}
