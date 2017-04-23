@@ -6,10 +6,15 @@ fillPage(theme = shinytheme("simplex"),
     includeCSS("./www/custom.css"),
     leafletOutput("mtamap", height = "100%", width = "100%"),
     absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
-                  draggable = TRUE, top = 60, left = "auto", right = 20, bottom = "auto",
-                  width = 330, height = "auto",
-                  selectizeInput("do", "Train Line", names(mta_lines))
-    )
+                  draggable = TRUE, top = 40, left = "auto", right = 40, bottom = "auto",
+                  width = 330,
+                  selectizeInput("do", "MTA Subway Line", names(mta_lines),
+                                 options = list(
+                                   "color" = "white"
+                                 )),
+                  textOutput("station_stats")
+                  )
+                
   )
   
     # dashboardSidebar

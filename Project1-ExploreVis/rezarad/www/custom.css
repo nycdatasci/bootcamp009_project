@@ -1,6 +1,6 @@
 #controls {
   /* Appearance */
-  background-color: lightgray;
+  background-color: lightslategrey;
   padding: 0 0 10px 10px;
   cursor: move;
   /* Fade out while not hovering */
@@ -10,7 +10,10 @@
 }
 #controls:hover {
   /* Fade in while hovering */
-  opacity: 0.65;
+  opacity: 0.85;
   transition-delay: 0;
 }
 
+#h7 {
+    color: black
+}
