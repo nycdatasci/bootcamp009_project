@@ -37,25 +37,7 @@ function(input, output){
     
   }) 
   
-  # # show map using googleVis
-  # output$map <- renderGvis({
-  #   gvisGeoChart(state_stat, "state.name", input$selected,
-  #                options=list(region="US", displayMode="regions", 
-  #                             resolution="provinces",
-  #                             width="auto", height="auto"))
-  # })
-  # 
-  # # show histogram using googleVis
-  # output$hist <- renderGvis({
-  #   gvisHistogram(state_stat[,input$selected, drop=FALSE])
-  # })
-  # 
-  # 
-  # # show data using DataTable
-  # output$table <- DT::renderDataTable({
-  #   datatable(state_stat, rownames=FALSE) %>% 
-  #     formatStyle(input$selected, background="skyblue", fontWeight='bold')
-  # })
+ 
   
   # show statistics using infoBox
   output$X_Square<- renderInfoBox({

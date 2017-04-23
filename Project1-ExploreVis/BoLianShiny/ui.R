@@ -31,12 +31,7 @@ dashboardPage(
     tabItems(
  
       tabItem(tabName = "population", 
-              # fluidRow(infoBoxOutput("maxBox"),
-              #          infoBoxOutput("minBox"),
-              #          infoBoxOutput("avgBox")),
-              # fluidRow(box(htmlOutput("map"), height = 300),
-              #          box(htmlOutput("hist"), height = 300))
-              
+             
             fluidRow(box(plotOutput("population"), height = 500),
                         box(plotOutput("US_state"), height = 500))
 
@@ -57,9 +52,7 @@ dashboardPage(
               
               )
       
-      # tabItem(tabName = "age",
-                
-      #         fluidRow(box(DT::dataTableOutput("table"), width = 12)))
+    
     )
   )
 )
