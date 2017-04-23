@@ -1,101 +1,134 @@
 # @author Scott Dobbins
-# @version 0.7
-# @date 2017-04-22 20:50
+# @version 0.8
+# @date 2017-04-23 01:30
 
 ### import useful packages ###
 library(shiny)            # app formation
 library(shinydashboard)   # web display
 library(leaflet)          # map source
 
+sidebar_width = 240
+title_width = 360
+
 ### UI component ###
 shinyUI(dashboardPage(
   
-  # major component #1: Title Panel
-  dashboardHeader(title = "Aerial Bombing Operations", titleWidth = 360), 
+  # Title Panel
+  dashboardHeader(title = "Aerial Bombing Operations", titleWidth = title_width), 
   
-  dashboardSidebar(width = 240, 
+  dashboardSidebar(width = sidebar_width, 
     
-    # major component #2: Sidebar Panel
+    # Sidebar Panel
     sidebarUserPanel("Scott Dobbins", 
                      image = "https://yt3.ggpht.com/-04uuTMHfDz4/AAAAAAAAAAI/AAAAAAAAAAA/Kjeupp-eNNg/s100-c-k-no-rj-c0xffffff/photo.jpg"), 
     
     sidebarMenu(id = "tabs", 
-                menuItem("Map", tabName = "map", icon = icon("map")), 
+                menuItem("Overview", tabName = "overview", icon = icon("map")), 
                 menuItem("Data", tabName = "data", icon = icon("database")), 
-                menuItem("WW I", tabName = "WW1", icon = icon('map')), 
-                menuItem("WW II", tabName = "WW2", icon = icon('map')), 
-                menuItem("Korea", tabName = "Korea", icon = icon('map')), 
-                menuItem("Vietnam", tabName = "Vietnam", icon = icon('map'))
+                menuItem("WW I", tabName = "WW1", icon = icon('th')), 
+                menuItem("WW II", tabName = "WW2", icon = icon('th')), 
+                menuItem("Korea", tabName = "Korea", icon = icon('th')), 
+                menuItem("Vietnam", tabName = "Vietnam", icon = icon('th'))
     ), 
     
+    # map picker
     selectizeInput(inputId = "pick_map",
                    label = "Pick Map",
                    choices = c("Color Map", "Plain Map", "Terrain Map", "Street Map", "Satellite Map"),
                    selected = "Color Map",
                    multiple = FALSE),
-
+    
+    # label picker
     selectizeInput(inputId = "pick_labels",
                    label = "Pick Labels",
                    choices = c("Borders", "Text"),
                    selected = c("Borders","Text"),
                    multiple = TRUE),
-
-    br(),
-
-    # I had to keep these checkboxInputs separate (i.e. not a groupCheckboxInput)
-    # so that only redraws of the just-changed aspects occur (i.e. to avoid buggy redrawing)
-    checkboxInput(inputId = "show_WW1",
-                  label = "Show WW1 Bombings",
-                  value = FALSE),
-
-    checkboxInput(inputId = "show_WW2",
-                  label = "Show WW2 Bombings",
-                  value = FALSE),
-
-    checkboxInput(inputId = "show_Korea",
-                  label = "Show Korea Bombings",
-                  value = FALSE),
-
-    checkboxInput(inputId = "show_Vietnam",
-                  label = "Show Vietnam Bombings",
-                  value = FALSE)
+    
+    # war picker
+    selectizeInput(inputId = "which_war",
+                   label = "Which wars?",
+                   choices = c(WW1_string, WW2_string, Korea_string, Vietnam_string),
+                   selected = c(),
+                   multiple = TRUE),
+    
+    # date picker
+    dateRangeInput(inputId = "dateRange", 
+                   label = "Select which dates to show", 
+                   start = "1917-04-06", 
+                   end = "1975-04-30", 
+                   min = "1917-04-06", 
+                   max = "1975-04-30", 
+                   startview = "year", 
+                   width = sidebar_width), 
+    
+    selectizeInput(inputId = "country", 
+                   label = "Which country's air force?", 
+                   choices = c("one"), 
+                   selected = c(), 
+                   width = sidebar_width), 
+    
+    selectizeInput(inputId = "aircraft", 
+                   label = "Which types of aircraft?", 
+                   choices = c("one"), 
+                   selected = c(), 
+                   width = sidebar_width), 
+    
+    selectizeInput(inputId = "weapon", 
+                   label = "Which types of bombs?", 
+                   choices = c("one"), 
+                   selected = c(), 
+                   width = sidebar_width)
+    
   ),
   
   dashboardBody(
-    tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")), 
+    tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")), #***really wish this would also apply my desired formatting to the sidebar, but it seems not
     
     tabItems(
-      tabItem(tabName = "map", 
+      
+      # main panel with map and simple stats
+      tabItem(tabName = "overview", 
               
-              # fluidRow(infoBoxOutput("maxBox"),
-              #   infoBoxOutput("minBox"),
-              #   infoBoxOutput("avgBox")
-              # ), 
+              # some stats
+              fluidRow(infoBoxOutput("num_missions"),
+                infoBoxOutput("num_bombs"),
+                infoBoxOutput("weight_bombs")
+              ), 
               
-              # major component #3: Main Panel
+              # map
               fluidRow(
                 box(leafletOutput("overview_map", width = "100%", height = 768), width = 1024, height = 768)
               )
       ), 
       
+      # a closer look at the data
       tabItem(tabName = "data", 
-        fluidRow()#box(DT::dataTableOutput("table"), width = 12))
+        fluidRow(box(DT::dataTableOutput("table"), width = 12))
       ), 
       
+      # WW1-specific stats
       tabItem(tabName = "WW1",
-              fluidRow()
+              fluidRow(box(plotOutput("WW1_hist"))), 
+              fluidRow(box(sliderInput(inputId = "WW1_hist_slider", label = "# of bins", min = 4, value = 30, max = 48, step = 1)))
       ),
-
+      
+      # WW2-specific stats
       tabItem(tabName = "WW2",
-              fluidRow()
+              fluidRow(box(plotOutput("WW2_hist"))), 
+              fluidRow(box(sliderInput(inputId = "WW2_hist_slider", label = "# of bins", min = 7, value = 30, max = 84, step = 1)))
       ),
-
+      
+      # Korea-specific stats
       tabItem(tabName = "Korea",
-              fluidRow()
+              fluidRow(box(plotOutput("Korea_hist"))), 
+              fluidRow(box(sliderInput(inputId = "Korea_hist_slider", label = "# of bins", min = 4, value = 30, max = 48, step = 1)))
       ),
-
+      
+      # Vietnam-specific stats
       tabItem(tabName = "Vietnam",
-              fluidRow()
+              fluidRow(box(plotOutput("Vietnam_hist"))), 
+              fluidRow(box(sliderInput(inputId = "Vietnam_hist_slider", label = "# of bins", min = 4, value = 30, max = 240, step = 1)))
       )
     )
   )
