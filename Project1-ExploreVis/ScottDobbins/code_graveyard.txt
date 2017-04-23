@@ -1,6 +1,6 @@
 @author Scott Dobbins
-@version 0.6
-@date 2017-04-21 23:58
+@version 0.7
+# @date 2017-04-22 20:50
 
 ### Code Graveyard ###
 # where buggy or formerly useful but now unnecessary code lays to rest
@@ -103,5 +103,10 @@ WW1_sample <- WW1_unique_target[sample(x = c(TRUE, FALSE), replace = TRUE, prob 
 WW2_sample <- WW2_unique_target[sample(x = c(TRUE, FALSE), replace = TRUE, prob = c(1000/nrow(WW2_unique_target), 1-1000/nrow(WW2_unique_target))),]
 Korea_sample <- Korea_unique_target2[sample(x = c(TRUE, FALSE), replace = TRUE, prob = c(1000/nrow(Korea_unique_target2), 1-1000/nrow(Korea_unique_target2))),]
 Vietnam_sample <- Vietnam_unique_target[sample(x = c(TRUE, FALSE), replace = TRUE, prob = c(1000/nrow(Vietnam_unique_target), 1-1000/nrow(Vietnam_unique_target))),]
+
+  WW1_sample <- fread(file = 'WW1_sample.csv', sep = ',', sep2 = '\n', header = TRUE, stringsAsFactors = FALSE)
+  WW2_sample <- fread(file = 'WW2_sample.csv', sep = ',', sep2 = '\n', header = TRUE, stringsAsFactors = FALSE)
+  Korea_sample <- fread(file = 'Korea_sample.csv', sep = ',', sep2 = '\n', header = TRUE, stringsAsFactors = FALSE)
+  Vietnam_sample <- fread(file = 'Vietnam_sample.csv', sep = ',', sep2 = '\n', header = TRUE, stringsAsFactors = FALSE)
 
 ### end ###

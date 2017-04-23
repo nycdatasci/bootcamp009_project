@@ -66,3 +66,36 @@ crater_formation <- function(a_s, u_s, rho_t, delta_s, y_t, mu, nu, k_1, k_2, k_
   
   return(output)
 }
+
+#Ellipse plotting function
+ellipse_create <- function(a, q, phi_len = 100){
+  phi <- seq(-pi,pi,length.out = phi_len)
+  e <- (q/a) - 1
+  
+  out1 <- a*(cos(phi)-e)
+  out2 <- a*(1-e**2)**0.5 * sin(phi)
+  df <- data.frame(out1, out2)
+}
+#sun visualization df
+df_sun <- ellipse_create(a = 0.1, q = 0.1)
+df_earth <- ellipse_create(a = 1, q = 1)
+df_mars <- ellipse_create(a = 1.3813, q = 1.5237)
+df_jupiter <- ellipse_create(a = 4.952, q = 5.203)
+
+#Base plot for orbits
+orbital_plot <- ggplot(data = NULL, aes(x=out1, y=out2)) +
+  geom_polygon(data = df_sun, fill='yellow') +
+  geom_path(data = df_earth, color = 'blue') +
+  geom_path(data = df_mars, color = 'red') + 
+  geom_path(data = df_jupiter, color = 'purple') +
+  coord_fixed() + labs(x='', y='') +
+  theme_minimal() +
+  theme(axis.title=element_blank(),
+        axis.text=element_blank(),
+        panel.grid=element_blank())
+
+add_to_orbit <- function(class_name){
+  geom_path(data = ellipse_create(a = sbdt_summary[class==class_name]$avg_a,
+                                  q = sbdt_summary[class==class_name]$avg_q),
+            color = 'black')
+}

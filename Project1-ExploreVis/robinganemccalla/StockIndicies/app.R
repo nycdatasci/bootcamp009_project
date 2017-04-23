@@ -10,8 +10,10 @@
 #things to add
 #other types of graph
 #identify points
+#research on indices
 library(shiny)
 library(dplyr)
+library(ggplot2)
 
 formatData = function(indexTable){
   indexTable$Date = as.Date(indexTable$Date,"%Y-%m-%d")
@@ -39,6 +41,9 @@ NASDAQ = formatData(NASDAQ)
 SandP = formatData(SandP)
 DowJones = formatData(DowJones)
 
+#write.csv(NASDAQ,"./NASDAQ.csv")
+#write.csv(SandP,"./SandP.csv")
+#write.csv(DowJones,"./DowJones.csv")
 
 ui <- fluidPage(
    
@@ -51,7 +56,7 @@ ui <- fluidPage(
                       choices = c("NASDAQ","S&P","Dow Jones")),
        selectInput(inputId = "TimePeriod", 
                       label = "Time Period",
-                      choices= c("DayOfWeek","Monthly","Yearly")),
+                      choices= c("Daily","Monthly","Yearly")),
        selectInput(inputId = "Observation",
                    label = "Observation",
                    choices = c("CloseChange","High","Volume","PercentCloseChange")),
@@ -68,14 +73,16 @@ ui <- fluidPage(
        
      ),
      mainPanel = mainPanel(plotOutput("Values"),
-                           tableOutput("text1")
+                           tableOutput("StatsTable"),
+                           plotOutput("Scatter"),
+                           textOutput("text")
      ),
 
      )
 )
 
 
-# Define server logic required to draw a histogram
+# Define server logic
 server <- function(input, output, session) {
   datasetInput <- reactive({
 
@@ -88,33 +95,52 @@ server <- function(input, output, session) {
   })
   timeInput = reactive({
     switch(input$TimePeriod,
-           "DayOfWeek" = "DayOfWeek",
+           "Daily" = "DayOfWeek",
            "Monthly" = "MonthOfYear",
            "Yearly" = "Year")
   })
-
+  ScatterParameters = reactive({
+    #we set the Observation to the appropriate column 
+    #because sending a string or variable to dplyr is difficult
+  summarize(group_by(datasetInput(), #Year),# datasetInput()[[timeInput]]),
+                       period = switch(input$TimePeriod,
+                              "Daily" = DayOfWeek,
+                              "Monthly" = MonthOfYear,
+                              "Yearly" = Year)), 
+            avg=mean(
+                                switch(input$Observation,
+                                       "CloseChange" = CloseChange,
+                                        "High" = High,
+                                      "Volume" = Volume,
+                                      "PercentCloseChange" = PercentCloseChange)))
+  })
 
    output$Values <- renderPlot({
 
+          
      ggplot(data = datasetInput(), 
             aes_string(x=timeInput(),y=input$Observation,color=timeInput())) +
-       #this enables a zoom but it's hard to make it look good
-       #coord_cartesian(ylim=c(mean(datasetInput()[,input$Observation]) - (2 * mean(datasetInput()[,input$Observation])), mean(datasetInput()[,input$Observation]) + (2 * mean(datasetInput()[,input$Observation])))) +
        theme(axis.title.x = element_text(size=24),
              axis.title.y = element_text(size=24)) +
        geom_boxplot() #+
       
        #geom_tufteboxplot()
    })
-   output$text1 = renderTable({
-     #paste("test")
-     #mean(datasetInput()[,input$Observation]) - (.5 *mean(datasetInput()[,input$Observation]))
-     #mean(datasetInput()[,input$Observation]) + (.5 *mean(datasetInput()[,input$Observation]))
-     #summary(aov(NASDAQ$Close ~ NASDAQ$MonthOfYear))
+   output$StatsTable = renderTable({
      as.data.frame(summary(aov(datasetInput()[,input$Observation] ~ datasetInput()[,timeInput()]))[[1]])
 
    })
-
+   output$Scatter = renderPlot({
+     #time = datasetInput()[c(timeInput(),input$Observation)]
+     print(head(ScatterParameters()))
+     ggplot(data = ScatterParameters(), 
+            aes_string(x="period",y="avg",color="period")) +
+       geom_point()
+   })
+   output$text = renderText({
+     paste(cat(input$Observation,input$TimePeriod))
+   })
+   #summarise(group_by(NASDAQ, NASDAQ[,"Year"]),mean=mean(Close))
 }
 
 # Run the application 
