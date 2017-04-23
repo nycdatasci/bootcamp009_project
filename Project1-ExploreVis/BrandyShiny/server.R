@@ -21,7 +21,7 @@ function(input, output, session) {
     
   })
   
-  output$drugPlot <- renderPlot({
+  output$drugPlot <- renderPlotly({
     x <- Boros_AllDrugs
     x$plotValue <- x[, input$drugChoice]
     
@@ -37,7 +37,7 @@ function(input, output, session) {
       labs(color = "Borough", x = "Year", y = "Percent of Teens Using", caption = "(drug use data only available for years 2003-2009)")
   })
   
-  output$gradePlot <- renderPlot({
+  output$gradePlot <- renderPlotly({
   
     Average_BMI_gradeyear <- BoroData %>% 
       filter(year == input$yearChoice)
@@ -53,7 +53,7 @@ function(input, output, session) {
   
   })
   
-  output$sadPlot <- renderPlot({
+  output$sadPlot <- renderPlotly({
     
     Depression_Gender_boro <- Boros_Depression %>%
       filter(year == input$yearChoose) %>% 
@@ -68,7 +68,7 @@ function(input, output, session) {
     
   })
   
-  output$sexPlot <- renderPlot({
+  output$sexPlot <- renderPlotly({
     
     Depression_boro <- Boros_Depression %>%
       filter(sex == input$sexChoice) %>% 
