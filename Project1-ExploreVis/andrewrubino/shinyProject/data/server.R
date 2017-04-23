@@ -6,6 +6,23 @@ shinyServer(function(input, output, session) {
   
 # let's get it.
   
+  
+  leaf_map <- reactive({
+    leaf_data %>% 
+      filter(Year %in% input$year_range)
+    })
+  
+  
+  output$map <- renderLeaflet({
+    leaflet(leaf_map()) %>% setView(lng = -98.5556, lat = 39.8097, zoom = 4) %>% 
+      addProviderTiles(providers$Stamen.Terrain) %>%
+      addCircles(lng = ~Longitude, lat = ~Latitude, weight = 1, 
+                 radius = ~(all_claims) * 1000, popup = ~Airport.Code,
+                 label = ~paste0(Airport.Code, ": ", all_claims),
+                 labelOptions = labelOptions(noHide = T))
+  })
+  
+    
   output$timeSeries <- renderDygraph({
     
     dygraph(x_by_date, main = "Claims") %>%
@@ -49,7 +66,8 @@ shinyServer(function(input, output, session) {
                   "office_supplies", "outdoor_items", "pers_accessories",       
                   "pers_electronics", "pers_navigation", "sport_supplies",         
                   "home_improve_supplies", "toys", "travel_accessories"),
-            z = t(airport_matrix), type = "heatmap")
+            z = t(airport_matrix), type = "heatmap") %>%
+      layout(yaxis = list(tickangle = 30), margin = list(l=100))
   })
   
   ### for heatmap 2
@@ -74,7 +92,8 @@ shinyServer(function(input, output, session) {
                   "office_supplies", "outdoor_items", "pers_accessories",       
                   "pers_electronics", "pers_navigation", "sport_supplies",         
                   "home_improve_supplies", "toys", "travel_accessories"),
-            z = t(airline_matrix), type = "heatmap")
+            z = t(airline_matrix), type = "heatmap") %>%
+      layout(yaxis = list(tickangle = 30), margin = list(l=100))
   })
   
   

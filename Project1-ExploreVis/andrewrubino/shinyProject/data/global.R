@@ -10,6 +10,8 @@ library(plotly)
 library(dygraphs)
 library(xts) # as.Date is masked by zoo!!
 library(reshape2)
+library(googleVis)
+library(leaflet)
 
 claims <- read.table("tidy_claims.tsv", header = T, sep = " ") # space separated for some reason
 
@@ -326,5 +328,23 @@ top10al %>% group_by(Airline.Name) %>%
 
 
 ## write another table with added columns and shit, then add to global.
+
+
+
+###### leaflet mess around ########
+leaf_data <- claims %>% group_by(Latitude, Longitude, Year, Airport.Code) %>%
+  summarise(all_claims = sum(Total.Claims)) %>%
+    filter(all_claims >= 25) %>%
+    arrange(desc(all_claims))
+
+leaf_data$Longitude <- paste0("-",leaf_data$Longitude)
+leaf_data$Longitude <- as.numeric(leaf_data$Longitude)
+
+
+
+
+
+
+
 
 
