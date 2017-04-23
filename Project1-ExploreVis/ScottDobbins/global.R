@@ -1,23 +1,26 @@
 # @author Scott Dobbins
-# @version 0.6.1
-# @date 2017-04-22 17:35
+# @version 0.7
+# @date 2017-04-22 20:50
 
 ### import useful packages ###
-# shiny
-library(shiny)
+library(shiny)      # app formation
+# library(data.table) # data input
+# library(dplyr)      # data cleaning
+# library(tidyr)      # data tidying
 
-# import data analytic extensions
-library(data.table) # helps with data input
-library(dplyr)      # helps with data cleaning
-library(tidyr)      # helps with data tidying
 
-refresh_data = TRUE
-full_write = TRUE
+###
 
-if(refresh_data) {
-  # refresh the data from scratch
-  source(file = 'cleaner.R')
-} else {
-  # just read the pre-saved data
-  load('saves/Shiny_2017-04-22.RData')
+has_data = TRUE
+refresh_data = FALSE
+full_write = FALSE
+
+if(!has_data) {
+  if(refresh_data) {
+    # refresh the data from scratch
+    source(file = 'cleaner.R')
+  } else {
+    # just read the pre-saved data
+    load('saves/Shiny_2017-04-22.RData')
+  }
 }

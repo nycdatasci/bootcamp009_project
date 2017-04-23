@@ -1,6 +1,6 @@
 @author Scott Dobbins
-@version 0.6.1
-# @date 2017-04-22 17:35
+@version 0.7
+# @date 2017-04-22 20:50
 
 ### Code Graveyard ###
 # where buggy or formerly useful but now unnecessary code lays to rest
@@ -108,38 +108,5 @@ Vietnam_sample <- Vietnam_unique_target[sample(x = c(TRUE, FALSE), replace = TRU
   WW2_sample <- fread(file = 'WW2_sample.csv', sep = ',', sep2 = '\n', header = TRUE, stringsAsFactors = FALSE)
   Korea_sample <- fread(file = 'Korea_sample.csv', sep = ',', sep2 = '\n', header = TRUE, stringsAsFactors = FALSE)
   Vietnam_sample <- fread(file = 'Vietnam_sample.csv', sep = ',', sep2 = '\n', header = TRUE, stringsAsFactors = FALSE)
-
-WW1_col_classes <- c("integer",
-                     "character",
-                     "character",
-                     "character",
-                     "character",
-                     "character",
-                     "character",
-                     "integer",
-                     "character",
-                     "character",
-                     "integer",
-                     "character",
-                     "integer",
-                     "character",
-                     "integer",
-                     "double",
-                     "double",
-                     "double",
-                     "character",
-                     "character",
-                     "character",
-                     "character",
-                     "double",
-                     "double",
-                     "character",
-                     "character",
-                     "character",
-                     "character",
-                     "integer",
-                     "character",
-                     "character",
-                     "integer")
 
 ### end ###
