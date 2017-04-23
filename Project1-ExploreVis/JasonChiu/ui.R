@@ -109,7 +109,7 @@ dashboardPage(skin = "red",
                     tabName = "profile",
                     fluidRow(
                       box(
-                          selectInput("citystate","Please select a city:",choices = city_list,selectize = T,
+                          selectInput("citystate","Please select a city:",choices = top_30_city,selectize = T,
                                       selected = "New York, NY"),
                           width = 4),
                       box(
@@ -122,7 +122,43 @@ dashboardPage(skin = "red",
                       infoBoxOutput("n_hosp")
                     ),
                     fluidRow(
-                      box(plotlyOutput("quality_chart"))
+                      box(plotlyOutput("quality_chart"),
+                          width = 4),
+                      box(
+                        selectInput("factor","Please select a health indicator:",
+                                    choices = c("Health Insurance Coverage",
+                                                "Colorectal Cancer Screening",
+                                                "Preventative Care (Elderly Men)",
+                                                "Preventative Care (Elderly Women)",
+                                                "High Blood Pressure Prevalence",
+                                                "Asthma Prevalence",
+                                                "COPD Prevalence",
+                                                "Coronary Heart Disease Prevalence",
+                                                "Diabetes Prevalence", 
+                                                "High Cholesterol Prevalence",
+                                                "Mental Health Conditions Prevalence",
+                                                "Stroke Prevalence",
+                                                "Binge Drinking",
+                                                "Smoking",
+                                                "Insufficient Exercise",
+                                                "Insufficient Sleep"), 
+                                    selectize = TRUE,
+                                    selected = "Health"
+                                    ),
+                        plotOutput("city_map"),
+                        width = 8
+                      )
+                    ),
+                    fluidRow(
+                      column(width = 4,
+                             plotlyOutput("bar_p")
+                             ),
+                      column(width = 4,
+                             plotlyOutput("bar_h")
+                             ),
+                      column(width = 4,
+                             plotlyOutput("bar_d")
+                             )
                     )
                   )
                   )

@@ -9,17 +9,31 @@ library(leaflet)
 library(ggthemes)
 library(shinydashboard)
 library(plotly)
+library(RColorBrewer)
 
 exclude <- read.csv("./exclude.csv")
 
 city_hosp <- read.csv("./city_hosp.csv")
+
+national <- read.csv("./national.csv")
+
+city_hosp <- city_hosp %>% filter(Hospital.Name!= "GOOD SAMARITAN HOSPITAL")
+
+plotdata <- read.csv("./plotdata.csv", stringsAsFactors = FALSE)
+
 city_hosp$Hospital.overall.rating <- factor(city_hosp$Hospital.overall.rating,
                                             levels = c("1","2","3","4","5"),
                                             ordered = TRUE)
 
-city_list <- unique(exclude$label)
+top_30_list <- exclude %>% arrange(desc(Population_city)) %>% select(label) %>% head(30)
+top_30_city <- unique(top_30_list$label)
 
 var_list <- names(exclude)[9:32]
+
+prevention_list <- c("hcoverage","COLONSCREEN","COREM","COREW")
+behavior_list <- c("BINGE","CSMOKING","LPA","SLEEP")
+disease_list <- c("BPHIGH","CASTHMA","COPD","CHD","DIABETES","HIGHCHOL","MLHTH","STROKE")
+
 
 name_list <- c("Health Insurance Coverage", "Binge Drinking", "High Blood Pressure Prevalence",
                "Blood Pressure Meds",

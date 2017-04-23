@@ -147,6 +147,108 @@ server <- function(input, output) {
                scale_x_discrete(drop=FALSE))
   )
   
+  city_plot_data <- reactive({
+    df <- plotdata %>% filter(label == input$citystate)
+  })
   
+  city_plot_hosp <- reactive({
+    df <- city_hosp %>% filter(label == input$citystate)
+  })
+  
+  graph_factor <- reactive({
+    switch(input$factor,
+           "Health Insurance Coverage" = 44,
+           "Colorectal Cancer Screening" = 18,
+           "Preventative Care (Elderly Men)" = 20,
+           "Preventative Care (Elderly Women)" = 21,
+           "High Blood Pressure Prevalence" = 11,
+           "Asthma Prevalence" = 14,
+           "COPD Prevalence" = 19,
+           "Coronary Heart Disease Prevalence" = 15,
+           "Diabetes Prevalence" = 24, 
+           "High Cholesterol Prevalence" = 25,
+           "Mental Health Conditions Prevalence" = 29,
+           "Stroke Prevalence" = 34,
+           "Binge Drinking" = 10,
+           "Smoking" = 22,
+           "Insufficient Exercise" = 27,
+           "Insufficient Sleep" = 33)
+  })
+  
+  cols <- reactive({
+    c("1" = "red", "2" = "orange", "3" = "yellow", "4" = "green", "5" = "blue")
+  })
+  
+  output$city_map <- renderPlot({
+    ggplot() +
+      geom_polygon(data = city_plot_data(), aes(x = long, y = lat, group = group,
+                                         fill = city_plot_data()[,graph_factor()]), color = "white", size = 0.25) +
+      coord_map() + 
+      geom_point(data = city_plot_hosp(), aes(x = long.x, y = lati.x, color = factor(Hospital.overall.rating)), size = 3) +
+      theme_few() + scale_color_manual(values = cols(), limits = c("1", "2","3","4","5")) +
+      scale_fill_gradient(low = "white", high = "black") +
+      guides(fill = guide_legend(title=input$factor)) +
+      guides(color = guide_legend(title="Hospital Rating")) + ggtitle("City Map")
+  })
+  
+  city_perf <- reactive({
+    df <- exclude %>%
+      select(label, ends_with("_city")) %>%
+      gather(varname, Data_value, 3:27) %>%
+      filter(label == input$citystate) %>%
+      select(varname, Data_value) %>% 
+      filter(varname != "ACCESS2_city")
+  })
+  
+  total_perf <- reactive({
+    df <- rbind(city_perf(), national) %>% 
+      separate(varname, into = c("mea", "level")) %>% 
+      mutate(Measure = ifelse(mea == "hcoverage","Health Insurance Coverage",
+                              ifelse(mea == "COLONSCREEN","Colorectal Cancer Screening",
+                                     ifelse(mea == "COREM","Preventative Care (Elderly Men)",
+                                            ifelse(mea == "COREW","Preventative Care (Elderly Women)",
+                                                   ifelse(mea == "BINGE","Binge Drinking",
+                                                          ifelse(mea == "CSMOKING","Smoking",
+                                                                 ifelse(mea == "LPA","Insufficient Exercise",
+                                                                        ifelse(mea == "SLEEP", "Insufficient Sleep",
+                                                                               ifelse(mea == "BPHIGH","High Bloodpressure",
+                                                                                      ifelse(mea == "CASTHMA","Asthma",
+                                                                                             ifelse(mea == "COPD","COPD",
+                                                                                                    ifelse(mea == "CHD", "CHD",
+                                                                                                           ifelse(mea == "DIABETES", "Diabetes",
+                                                                                                                  ifelse(mea == "HIGHCHOL","High Cholesterol",
+                                                                                                                         ifelse(mea == "MHLTH","Mental Health",
+                                                                                                                                ifelse(mea == "STROKE","Stroke","Stroke")))))))))))))))))
+  })
+  
+  bar_data_p <- reactive({
+    df <- total_perf() %>% filter(mea %in% prevention_list)
+  })
+  
+  output$bar_p <- renderPlotly(
+    ggplotly(ggplot(data = bar_data_p(), aes(x = reorder(Measure,-Data_value), y = Data_value, fill=level)) +
+      geom_bar(stat = "identity", position=position_dodge()) + coord_flip() + ggtitle("City Performance") +
+      theme_few() + ylab("Prevalence") + xlab("Prevention")+theme(text = element_text(size=8)))
+  )
+  
+  bar_data_h <- reactive({
+    df <- total_perf() %>% filter(mea %in% behavior_list)
+  })
+  
+  output$bar_h <- renderPlotly(
+    ggplotly(ggplot(data = bar_data_h(), aes(x = reorder(Measure,-Data_value), y = Data_value, fill=level)) +
+               geom_bar(stat = "identity", position=position_dodge()) + coord_flip() + ggtitle("City Performance") +
+               theme_few() + ylab("Prevalence") + xlab("Health Behavior") + theme(text = element_text(size=8)))
+  )
+  
+  bar_data_d <- reactive({
+    df <- total_perf() %>% filter(mea %in% disease_list)
+  })
+  
+  output$bar_d <- renderPlotly(
+    ggplotly(ggplot(data = bar_data_d(), aes(x = reorder(Measure,-Data_value), y = Data_value, fill=level)) +
+               geom_bar(stat = "identity", position=position_dodge()) + coord_flip() + ggtitle("City Performance") +
+               theme_few() + ylab("Prevalence") + xlab("Disease") + theme(text = element_text(size=8)))
+  )
   
 }
