@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.8
-# @date 2017-04-23 01:30
+# @version 0.8.1
+# @date 2017-04-23 18:45
 
 ### import useful packages ###
 library(shiny)            # app formation
@@ -25,39 +25,21 @@ shinyUI(dashboardPage(
     sidebarMenu(id = "tabs", 
                 menuItem("Overview", tabName = "overview", icon = icon("map")), 
                 menuItem("Data", tabName = "data", icon = icon("database")), 
-                menuItem("WW I", tabName = "WW1", icon = icon('th')), 
-                menuItem("WW II", tabName = "WW2", icon = icon('th')), 
-                menuItem("Korea", tabName = "Korea", icon = icon('th')), 
-                menuItem("Vietnam", tabName = "Vietnam", icon = icon('th'))
+                menuItem("WW I", tabName = "WW1", icon = icon('bar-chart', lib = 'font-awesome')), 
+                menuItem("WW II", tabName = "WW2", icon = icon('bar-chart', lib = 'font-awesome')), 
+                menuItem("Korea", tabName = "Korea", icon = icon('bar-chart', lib = 'font-awesome')), 
+                menuItem("Vietnam", tabName = "Vietnam", icon = icon('bar-chart', lib = 'font-awesome')), 
+                menuItem("Be a pilot", tabName = "pilot", icon = icon('fighter-jet', lib = 'font-awesome')), 
+                menuItem("Be a commander", tabName = "commander", icon = icon('map-o', lib = 'font-awesome')), 
+                menuItem("Be a civilian", tabName = "civilian", icon = icon('life-ring', lib = 'font-awesome'))
     ), 
-    
-    # map picker
-    selectizeInput(inputId = "pick_map",
-                   label = "Pick Map",
-                   choices = c("Color Map", "Plain Map", "Terrain Map", "Street Map", "Satellite Map"),
-                   selected = "Color Map",
-                   multiple = FALSE),
-    
-    # label picker
-    selectizeInput(inputId = "pick_labels",
-                   label = "Pick Labels",
-                   choices = c("Borders", "Text"),
-                   selected = c("Borders","Text"),
-                   multiple = TRUE),
-    
-    # war picker
-    selectizeInput(inputId = "which_war",
-                   label = "Which wars?",
-                   choices = c(WW1_string, WW2_string, Korea_string, Vietnam_string),
-                   selected = c(),
-                   multiple = TRUE),
     
     # date picker
     dateRangeInput(inputId = "dateRange", 
                    label = "Select which dates to show", 
-                   start = "1917-04-06", 
+                   start = "1914-07-28", 
                    end = "1975-04-30", 
-                   min = "1917-04-06", 
+                   min = "1914-07-28", 
                    max = "1975-04-30", 
                    startview = "year", 
                    width = sidebar_width), 
@@ -78,7 +60,13 @@ shinyUI(dashboardPage(
                    label = "Which types of bombs?", 
                    choices = c("one"), 
                    selected = c(), 
-                   width = sidebar_width)
+                   width = sidebar_width), 
+    
+    numericInput(inputId = "sample_num", 
+                 label = "Sample size = ?", 
+                 value = 1024, 
+                 min = 1, 
+                 max = 2048)
     
   ),
   
@@ -91,14 +79,43 @@ shinyUI(dashboardPage(
       tabItem(tabName = "overview", 
               
               # some stats
-              fluidRow(infoBoxOutput("num_missions"),
-                infoBoxOutput("num_bombs"),
-                infoBoxOutput("weight_bombs")
+              fluidRow(
+                infoBoxOutput(outputId = "num_missions"),
+                infoBoxOutput(outputId = "num_bombs"),
+                infoBoxOutput(outputId = "total_weight")
               ), 
               
               # map
               fluidRow(
-                box(leafletOutput("overview_map", width = "100%", height = 768), width = 1024, height = 768)
+                box(leafletOutput("overview_map", width = "100%", height = 640), width = 1024, height = 640)
+              ), 
+              
+              # selection widgets
+              fluidRow(
+                
+                # map picker
+                box(selectizeInput(inputId = "pick_map", 
+                                   label = "Pick Map", 
+                                   choices = c("Color Map", "Plain Map", "Terrain Map", "Street Map", "Satellite Map"), 
+                                   selected = "Color Map", 
+                                   multiple = FALSE), 
+                    width = 4),
+                
+                # label picker
+                box(selectizeInput(inputId = "pick_labels", 
+                                   label = "Pick Labels", 
+                                   choices = c("Borders", "Text"), 
+                                   selected = c("Borders","Text"), 
+                                   multiple = TRUE), 
+                    width = 4), 
+                
+                # war picker
+                box(selectizeInput(inputId = "which_war", 
+                                   label = "Which wars?", 
+                                   choices = c(WW1_string, WW2_string, Korea_string, Vietnam_string), 
+                                   selected = c(), 
+                                   multiple = TRUE), 
+                    width = 4)
               )
       ), 
       
@@ -129,6 +146,21 @@ shinyUI(dashboardPage(
       tabItem(tabName = "Vietnam",
               fluidRow(box(plotOutput("Vietnam_hist"))), 
               fluidRow(box(sliderInput(inputId = "Vietnam_hist_slider", label = "# of bins", min = 4, value = 30, max = 240, step = 1)))
+      ), 
+      
+      # pilot stats
+      tabItem(tabName = "pilot", 
+              fluidRow()
+      ), 
+      
+      # commander stats
+      tabItem(tabName = "commander", 
+              fluidRow()
+      ), 
+      
+      # civilian stats
+      tabItem(tabName = "civilian", 
+              fluidRow()
       )
     )
   )

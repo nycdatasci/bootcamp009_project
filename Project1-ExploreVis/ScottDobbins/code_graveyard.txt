@@ -1,6 +1,6 @@
 @author Scott Dobbins
-@version 0.8
-# @date 2017-04-23 01:30
+@version 0.8.1
+# @date 2017-04-23 18:45
 
 ### Code Graveyard ###
 # where buggy or formerly useful but now unnecessary code lays to rest
@@ -235,5 +235,18 @@ Vietnam_sample <- Vietnam_unique_target[sample(x = c(TRUE, FALSE), replace = TRU
     checkboxInput(inputId = "show_Vietnam",
                   label = "Show Vietnam Bombings",
                   value = FALSE),
+
+### custom.css ###
+.sidebar .widget {
+  margin-bottom: 10px;
+  padding: 10px;
+}
+.content {
+  padding-top: 0px;
+  padding-bottom: 0px;
+}
+.selectize-dropdown, .selectize-input { 
+  line-height: 14px; 
+}
 
 ### end ###

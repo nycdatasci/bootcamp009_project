@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.8
-# @date 2017-04-23 01:30
+# @version 0.8.1
+# @date 2017-04-23 18:45
 
 ### text formatting functions ###
 
