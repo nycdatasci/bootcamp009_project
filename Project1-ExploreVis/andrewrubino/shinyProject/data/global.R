@@ -12,6 +12,7 @@ library(xts) # as.Date is masked by zoo!!
 library(reshape2)
 library(googleVis)
 library(leaflet)
+library(DT)
 
 claims <- read.table("tidy_claims.tsv", header = T, sep = " ") # space separated for some reason
 
@@ -254,7 +255,6 @@ ggplot(lltest, aes(x = Latitude, y = Longitude)) + geom_point()
 
 
 ######## compare top10 airports and airlines
-top10airlines <- read.csv("top10airlines.csv", header = T)
 top10airports <- read.csv("top10airports.csv", header = T)
 
 # Let's do top10airlines first. Create a dataframe from claims that has total count of
@@ -280,15 +280,13 @@ top10ac <- claims %>% filter(Airport.Code %in% c('ATL','LAX','ORD','DFW',
 top10ac <- left_join(top10ac, top10airports, by = c("Airport.Code", "Year"))
 
 top10ac <- top10ac %>% mutate(Claim.Rate = total / flights)
+top10ac$Year <- as.character(top10ac$Year)
 
-top10ac %>% group_by(Airport.Code) %>%
-  summarise(total_claims = sum(total),
-            total_flights = sum(flights)) %>%
-  mutate(claim_rate = total_claims / total_flights)
 
 
 ## Now do airlines
 # tidy
+top10airlines <- read.csv("top10airlines.csv", header = T)
 top10airlines <- top10airlines %>% rename("2015" = est_2015_flights, "2014" = est_2014_flights) %>%
   gather(key = "Year", value = "flights", 2:3)
 
@@ -299,8 +297,7 @@ top10al <- claims %>% filter((as.character(Airline.Name) %like% "^American Airli
                                 Airline.Name %like% "UAL" |
                                 Airline.Name %like% "Jet Blue" |
                                 Airline.Name %like% "Alaska Airlines" |
-                                Airline.Name %like% "Spirit Airlines" |
-                                Airline.Name %like% "Republic Airways") & 
+                                Airline.Name %like% "Spirit Airlines") & 
                                (Year == 2014 | Year == 2015)) %>%
   group_by(Airline.Name, Year, Claim.Type) %>%
   summarise(total_claims = sum(Total.Claims))
@@ -310,25 +307,29 @@ for (i in 1:nrow(top10al)) {
   trimws(top10al$Airline.Name[i], c("both"))
 }
 
+top10al$Year <- as.character(top10al$Year)
+
 jtl <- read.csv("jointop10al.csv", header = T) 
 # i did this because whitespaces were causing problems with joining and i was too lazy
 # to figure out how to fix.
 
 top10al <- jtl
+top10al$Year <- as.character(top10al$Year)
 
 # add claim rate
 top10al <- top10al %>% mutate(Claim.Rate = total_claims / Flights)
 top10al <- top10al %>% select(- concat)
 
-top10al %>% group_by(Airline.Name) %>%
-  summarise(claims = sum(total_claims),
-            total_flights = sum(Flights),
-            claim_rate = claims/total_flights) %>%
-  arrange(desc(claim_rate))
 
 
-## write another table with added columns and shit, then add to global.
 
+# by_month %>% filter(Year == input$general_year & avg_claim_amount != 0) %>%
+#   ggplot(aes(x = Month, y = avg_claim_amount)) + 
+#   geom_histogram(binwidth = 0.2, stat = "identity") + facet_wrap( ~ Claim.Type) +
+#   scale_x_discrete(limits = c("Jan", "Feb", "Mar", "Apr",
+#                               "May", "June", "July", "Aug",
+#                               "Sept", "Oct", "Nov", "Dec")) +
+#   theme(axis.text.x = element_text(angle = 90))
 
 
 ###### leaflet mess around ########
@@ -340,6 +341,10 @@ leaf_data <- claims %>% group_by(Latitude, Longitude, Year, Airport.Code) %>%
 leaf_data$Longitude <- paste0("-",leaf_data$Longitude)
 leaf_data$Longitude <- as.numeric(leaf_data$Longitude)
 
+
+##### renderTables #####
+airport_table <- read.csv("airport_table.csv", header = TRUE)
+airline_table <- read.csv("airline_table.csv", header = TRUE)
 
 
 

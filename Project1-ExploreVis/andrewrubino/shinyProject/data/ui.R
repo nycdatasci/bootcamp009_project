@@ -10,10 +10,18 @@ dashboardPage(skin = "blue",
                   menuItem("Map of Total Claims", tabName = "map", icon = icon("map")),
                   menuItem("Claims Over Time", tabName = "claimTS", icon = icon("line-chart"),
                            menuSubItem("Time Series", tabName = "month_and_day"),
-                           menuSubItem("Month Facet", tabName = "facet_wrap")),
+                           menuSubItem("Month Breakdown", tabName = "facet_wrap")),
                   menuItem("Itemized Breakdown", tabName = "prop", icon = icon("thermometer"),
                            menuSubItem("Airport Heatmap", tabName = "airport_heat"),
-                           menuSubItem("Airline Heatmap", tabName = "airline_heat"))
+                           menuSubItem("Airline Heatmap", tabName = "airline_heat")),
+                  menuItem("Flight and Passenger Data", tabName = "flights", icon = icon("plane"),
+                           menuSubItem("Airport Flight Data", tabName = "airport_table"),
+                           menuSubItem("Airline Flight Data", tabName = "airline_table")),
+                  menuItem("Claim Rates", tabName = "rates", icon = icon("rocket"),
+                           menuSubItem("Claim Rate by Airport per Year", tabName = "airport_rate"),
+                           menuSubItem("Claim Rate by Airline per Year", tabName = "airline_rate"),
+                           menuSubItem("Claim Rate by Airline and Type", tabName = "airline_and_type")
+                )
                 )
               ),
               
@@ -48,6 +56,18 @@ dashboardPage(skin = "blue",
                           fluidRow(
                             box(width = 12,
                                 plotOutput("facetPlot"))
+                            )
+                          ),
+                  tabItem(tabName = "airport_table",
+                          h2("Airport Flight Data for 2014-2015"),
+                          fluidRow(box(
+                            DT::dataTableOutput('airportTable'), width = 12)
+                            )
+                          ),
+                  tabItem(tabName = "airline_table",
+                          h2("Airline Flight Data for 2014-2015"),
+                          fluidRow(box(
+                            DT::dataTableOutput('airlineTable'), width = 12)
                             )
                           ),
                   tabItem(tabName = "airport_heat",
@@ -85,7 +105,21 @@ dashboardPage(skin = "blue",
                                           plotlyOutput("airlineItems"))
                             )
                           )
-                )
+                          ),
+                  tabItem(tabName = "airport_rate",
+                          h2("Claim Rates by Airport"),
+                          plotOutput("airportRate")
+                          ),
+                  
+                  tabItem(tabName = "airline_rate",
+                          h2("Claim Rates by Airline"),
+                          plotOutput("airlineRate")
+                            ),
+                  
+                  tabItem(tabName = "airline_and_type",
+                          h2("Claim Rates by Airline and Type"),
+                          plotOutput("airlineAndType")
+                          )
               )
               )
 )
