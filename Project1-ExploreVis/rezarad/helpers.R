@@ -1,5 +1,3 @@
-
-
 getFaresData = function() {
   
   require(dplyr)
@@ -76,49 +74,45 @@ getStationData = function(filename) {
   filename
 }
 
-addMTAStations = function(map, station_info) {
-  require(leaflet)
-
-  map = map %>% addCircleMarkers(lng = station_info$`GTFS Longitude`, 
-                                         lat = station_info$`GTFS Latitude`,
-                                         label = paste(station_info$`Stop Name`, paste("(",station_info$`Daytime Routes`,")",sep="")),
-                                         labelOptions = labelOptions(
-                                           textsize = "14px",
-                                           clickable = TRUE
-                                         ),
-                                         color = "black",
-                                         stroke = FALSE,
-                                         fillOpacity = .6,
-                                         radius = 4.5,
-                                         weight = 1.5)
+filteredLineData = function(line, station_info) {
+  require(dplyr)
   
-  map
-}  
-
-addMTALine = function(map, station_info) {
-  # list of mta lines including hex code for color
-  mta_lines = list("1" = "#EE352E","2" = "#EE352E","3" = "#EE352E",
-                   "4" = "#00933C","5" = "#00933C","6" = "#00933C","7" = "#B933AD",
-                   "A" = "#0039A6","C" = "#0039A6","E" = "#0039A6",
-                   "B" = "#FF6319","D" = "#FF6319", "F" = "#FF6319","M" = "#FF6319",
-                   "G" = "#6CBE45", "J" = "#996633", "Z" = "#996633","L" = "#A7A9AC",
-                   "S" = "#808183", "N" = "#FCCC0A","Q" = "#FCCC0A","R" = "#FCCC0A",
-                   "W" = "#FCCC0A")
-  line_latlong = as.data.frame(c())
-  for(line in names(mta_lines)) {
-    line_latlong = station_info %>%  
-      filter(grepl(line, `Daytime Routes`)) %>% 
-      arrange(desc(`GTFS Stop ID`)) %>% 
-      select(`Stop Name` , lng = `GTFS Longitude`, lat = `GTFS Latitude`) %>% 
-      mutate(`Line` = line)
-    
-    map = map %>% addPolylines(lng = line_latlong$lng,
-                                       lat = line_latlong$lat,
-                                       color = mta_lines[line][[1]],
-                                       weight = 3.5,
-                                       fillOpacity = .8)
-  }
-  map
+  latlong = station_info %>%  
+    filter(grepl(line, `Daytime Routes`)) %>% 
+    arrange(desc(`GTFS Stop ID`)) %>% 
+    select(`Stop Name` , lng = `GTFS Longitude`, lat = `GTFS Latitude`, `Daytime Routes`) %>% 
+    mutate(`Line` = line)
+  
+  latlong
 }
 
+mapLineData = function(map, df, color = "blue") {
+  require(leaflet)
 
+  map = map %>% addPolylines(df$lng,
+                             df$lat,
+                             color = color,
+                             weight = 4,
+                             opacity = 0.6,
+                             stroke = TRUE) %>% 
+                  addCircleMarkers(
+                     df$lng,
+                     df$lat,
+                     # label = paste(df$`Stop Name`, paste("(",df$`Daytime Routes`,")",sep="")),
+                     label  = df$`Stop Name`,
+                     labelOptions = labelOptions(
+                                      textsize = "12px",
+                                      noHide = TRUE,
+                                      textOnly = T,
+                                      opacity = .8,
+                                      direction = "left",
+                                      style = NULL,
+                                      clickable = TRUE
+                                      ),
+                      color = "black",
+                      stroke = FALSE,
+                      fillOpacity = .6,
+                      radius = 4.5,
+                      weight = 1.5)
+  map
+}

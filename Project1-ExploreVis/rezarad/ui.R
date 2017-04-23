@@ -1,6 +1,6 @@
 ## ui.R ##
 library(shinythemes)
-library(shiny)
+library(leaflet) 
 
 fillPage(theme = shinytheme("simplex"),
     includeCSS("./www/custom.css"),
@@ -8,7 +8,7 @@ fillPage(theme = shinytheme("simplex"),
     absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
                   draggable = TRUE, top = 60, left = "auto", right = 20, bottom = "auto",
                   width = 330, height = "auto",
-                  actionButton("q_train","on")
+                  selectizeInput("do", "Train Line", names(mta_lines))
     )
   )
   
