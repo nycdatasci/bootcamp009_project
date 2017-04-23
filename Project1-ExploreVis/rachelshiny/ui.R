@@ -6,16 +6,12 @@ library(maps)
 shinyUI(dashboardPage(
   dashboardHeader(title = "College Comparison Dashboard", titleWidth = 350),
   dashboardSidebar(
-    sidebarUserPanel("Tabs",
-                     image = 'https://course_report_production.s3.amazonaws.com/rich/rich_files/rich_files/567/s300/data-science-logos-final.jpg'
-    ),
     sidebarMenu(
-      menuItem("Overview", tabName = "home", icon = icon("map")),
+      menuItem("Overview", tabName = "home", icon = icon("bank")),
       menuItem("By Location", tabName = "map", icon = icon("map")),
-      menuItem("Scatter Plots", tabName = "sc", icon = icon("chart")),
-      menuItem("Charts", tabName = "ch", icon = icon("chart")),
-      menuItem("Comparator", tabName = "cp", icon = icon("chart")),
-      menuItem("Data", tabName = "data", icon = icon("database")))
+      menuItem("Scatter Plots", tabName = "sc", icon = icon('stats', lib='glyphicon')),
+      menuItem("Charts", tabName = "ch", icon = icon('stats', lib='glyphicon')),
+      menuItem("Comparator", tabName = "cp", icon = icon('thumbs-up', lib='glyphicon')))
   ),
   dashboardBody(
     tabItems(
@@ -38,11 +34,7 @@ shinyUI(dashboardPage(
               #          infoBoxOutput("minBox"),
               #          infoBoxOutput("avgBox")),
               # gvisGeoChart
-              fluidRow(box(
-                selectizeInput(inputId="region_choice",
-                               label=h4("Select Region"),
-                               selected=NULL,
-                               choices=region_vector)),
+              fluidRow(
                 box(
                 selectizeInput(inputId="state_choice",
                              label=h4("Select State"),
@@ -80,8 +72,7 @@ shinyUI(dashboardPage(
                          selectInput(inputId="highest_deg",
                                     label="Highest Degree Awarded",
                                     choices=names(highest_degree),
-                                    selected = 'All'),
-                         textInput("collegeName", "College name contains (e.g., Nursing)")
+                                    selected = 'All')
                        ),
                        wellPanel(
                          selectInput(inputId='xvar', 
@@ -96,15 +87,16 @@ shinyUI(dashboardPage(
                 column(8, ggvisOutput("plot1")))
               
             ),
-      tabItem(tabName = "data",
-              # datatable
-              fluidRow(box(width=12, DT::dataTableOutput("table")))
-      ),
       tabItem(tabName = "cp",
               fluidRow(box(selectizeInput(inputId="col_comp",
                                           label=h4("Select College"),
                                           selected='',
-                                          choices=c('', unique(data$INSTNM))))),
+                                          choices=c('', unique(data$INSTNM)))),
+                       box(
+                         selectInput(inputId='state', label=h4('In State Only?'),
+                                     selected='False', choices=c('True', 'False'))
+                       )
+                       ),
               # datatable
               fluidRow(box(width=12, DT::dataTableOutput("comp")))
       )

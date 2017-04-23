@@ -80,15 +80,6 @@ shinyServer(function(input, output, session){
     }else{
     }
     
-    # Optional: filter by college name
-    if (!is.null(input$collegeName) && input$collegeName != "") {
-      college_name <- paste0(input$collegeName, "")
-      ds <- ds[grep(pattern=input$collegeName, x=ds$INSTNM),]
-    }
-
-    ds <- as.data.frame(ds)
-    
-    
     ds
   })
   
@@ -144,17 +135,21 @@ shinyServer(function(input, output, session){
     college <- input$col_comp
     
     if(nchar(college)>0) {
-      three_data <- filter(data, INSTNM==college) %>% select(TUITIONFEE_IN, ADM_RATE, REGION_2)
-      data %>% filter(abs(TUITIONFEE_IN-three_data[1,1])<1e4, 
-                    abs(ADM_RATE-three_data[1,2])<.1, 
-                    REGION_2==three_data[1,3]) %>% 
-        select(college=INSTNM, state=STABBR, control=CONTROL_2, undergrads=UGDS, admit_rate=ADM_RATE, 
+      four_data <- filter(data, INSTNM==college) %>% select(TUITIONFEE_IN, ADM_RATE, REGION_2, STABBR)
+      d <- data %>% filter(abs(TUITIONFEE_IN-four_data[1,1])<1e4, 
+                    abs(ADM_RATE-four_data[1,2])<.1, 
+                    REGION_2==four_data[1,3]) %>% 
+        select(college=INSTNM, state=STABBR, control=CONTROL_2,
+               undergrads=UGDS, admit_rate=ADM_RATE, pct_pell=PCTPELL, 
                median_income=MN_EARN_WNE_P7, grad_rate_4yr=C150_4, grad_rate_2yr=C150_L4)
-    }else {select(data, college=INSTNM, state=STABBR, undergrads=UGDS, 
-                  median_income=MN_EARN_WNE_P7, grad_rate_4yr=C150_4, 
-                  grad_rate_2yr=C150_L4)
+      if(as.logical(input$state)){
+        d <- d %>% filter(state==four_data[1,4])
+      }
+    }else {d <- select(data, college=INSTNM, state=STABBR, control=CONTROL_2,
+                       undergrads=UGDS, admit_rate=ADM_RATE, pct_pell=PCTPELL, 
+                       median_income=MN_EARN_WNE_P7, grad_rate_4yr=C150_4, grad_rate_2yr=C150_L4)
     }
-    
+    d
   })
   
   output$comp <- DT::renderDataTable({

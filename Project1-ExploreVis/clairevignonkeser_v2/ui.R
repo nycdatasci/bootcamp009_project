@@ -252,7 +252,7 @@ shinyUI(dashboardPage(
                     style= "font-size: 18px"),
                     tags$div(tags$ul(
                     tags$li(tags$span(strong("Limited scope"), ": I only took the data from May 2016. However, I expect the Citi Bike riders 
-                                        to behave differently depenging on the season, temperature, etc. Besides, the bigger the sample size
+                                        to behave differently depending on the season, temperature, etc. Besides, the bigger the sample size
                                         the more reliable the insights are.")), 
                     tags$li(tags$span(strong("Missing data"),": There was no data on the docks available per station that could be scraped from the Citi Bike website.
                                       The map would have been more complete if the availability of docks had been displayed.")),
