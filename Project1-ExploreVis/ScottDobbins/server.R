@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.4
-# @date 2017-04-20 23:51
+# @version 0.6.1
+# @date 2017-04-22 17:35
 
 ### import useful packages ###
 # shiny

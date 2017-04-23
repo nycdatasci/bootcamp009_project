@@ -1,6 +1,6 @@
 @author Scott Dobbins
-@version 0.4
-@date 2017-04-20 23:51
+@version 0.6.1
+# @date 2017-04-22 17:35
 
 
 ## Version history ###
@@ -37,12 +37,34 @@ This version maps out all semi-cleaned longitudinal and latitudinal target data
   onto a selection of maps with map label options and clickable, detailed tooltips.
 Major changes: big data clean; incorporation of all Vietnam and Korea data
 
+0.5
+This version maps out all semi-cleaned longitudinal and latitudinal target data
+  from the United States Airforce in 4 major conflicts during the 20th century
+  onto a selection of maps with map label options and clickable, well-formatted, 
+  detailed tooltips using speed advantages brought to it by data table functions.
+Major changes: help cleaning and formatting with helper.R; speed-optimized with data table
+
+0.6
+This version maps out all semi-cleaned longitudinal and latitudinal target data
+  from the United States Airforce in 4 major conflicts during the 20th century
+  onto a selection of maps with map label options and clickable, well-formatted, 
+  detailed tooltips using speed advantages brought to it by data table functions
+  and cached outputs (while still enabling full refreshes of the displayed data).
+Major changes: further organized code with cleaner.R; development-friendly caching
+
+0.6.1	Additionally cleared up how data is input and processed
+	Fixed Korean war dates
+	Fixed how data is saved and read
 
 **Future version plans:
 **Tabs for exploring each separate conflict on its own in detail
 **Lots of ggplots, maybe a self-playing gif of bombs droppedover time for each conflict
-**Further clean/process the data
 **Fix some buggy tooltips (number agreement, NAs, capitalization, etc.)
+	WW2 cities in all caps
+	separate "time" into actual time and day/night--process this
+	Korea target types should be all lower, not capitalized
+	Korea cities and such are mostly invisible
+	and, of course, number agreement
 **Make efficient for use on shinyapps.io through SQLite
 **Maybe match (or fail to match) the data with the historical record.
 **Could also allow users to link (using html) to relevant Wikipedia articles on
@@ -79,14 +101,16 @@ data origin URL: https://insight.livestories.com/s/v2/vietnam/48973b96-8add-4898
 
 ***** PRIORITIES *****
 
-1. figure out exactly what some column variables are and rename accordingly
-2. further clean the data
-3. get the program to write a better csv file that's processed by me
+1. make it work in dashboard
+2. add tabs for individual conflicts
+3. histograms of bombings per date, sortable by aircraft and/or city for each separate conflict
+	measure intensity by number of bombs or total weight of bombs
+4. fix tooltips by adding extra columns and doing a saved data refresh
 4. ensure that all data tables are in third normal form and coordinate with glossary tables
-5. add tabs for individual conflicts
+5. get rid of all lapply statements in data cleaning section
 
 
 *** eventually ***
 - use branching to develop new features on local repository
-- remove debug features from a branched version
+- remove debug features from a branched final dev version
 

@@ -16,6 +16,11 @@ server <- function(input, output) {
            "Smoking" = 21,
            "No Exercise" = 22,
            "Obesity" = 24,
+<<<<<<< HEAD
+           "Insufficient Sleep" = 25)
+  )
+  
+=======
            "Insufficient Sleep" = 25,
            "High Bloodpressure Prevalence" = 27,
            "Cancer Prevalence" = 28,
@@ -28,6 +33,7 @@ server <- function(input, output) {
            "Stroke Prevalence" = 35)
   )
 
+>>>>>>> ef6b0d9d111f070a260be6500e4502ce5e9d1e6a
   output$boxplot <- renderPlot(
     ggplot(data = graph_hosp, aes(x = factor(graph_hosp$overall_f), y = graph_hosp[,varbox()])) +
       geom_boxplot() +
@@ -45,6 +51,19 @@ server <- function(input, output) {
   )
   
   mapdata <- reactive({
+<<<<<<< HEAD
+    df <- exclude %>% filter(hcoverage >= input$insurance,
+                             CHECKUP_city >= input$checkup,
+                             CHOLSCREEN_city >= input$chol,
+                             COREM_city >= input$elderly,
+                             COREW_city >= input$elderlyf,
+                             MAMMOUSE_city >= input$breast,
+                             PAPTEST_city >= input$cervical,
+                             mean_star %in% input$checkGroup)
+  })
+  
+  output$number <- renderText(paste(input$checkGroup[1], "HOW MANY?"))
+=======
     df <- switch(input$graph_v,
                  "Mean" = exclude %>% filter(hcoverage >= input$insurance,
                                              CHECKUP_city >= input$checkup,
@@ -65,11 +84,16 @@ server <- function(input, output) {
            "Mean" = "mean_star",
            "Median" = "median_star")
   })
+>>>>>>> ef6b0d9d111f070a260be6500e4502ce5e9d1e6a
   
   output$map <- renderLeaflet(
     leaflet(data = mapdata()) %>%
       addProviderTiles("Esri.WorldGrayCanvas") %>%  # Add default OpenStreetMap map tiles
       addCircleMarkers(lng = mapdata()$long, lat = mapdata()$lati, label = mapdata()$PlaceName,
+<<<<<<< HEAD
+                       radius = mapdata()$count_hosp, color = ifelse(mapdata()$mean_star==5,"Blue",ifelse(mapdata()$mean_star==4,"Green",ifelse(mapdata()$mean_star==3,"Gold",ifelse(mapdata()$mean_star==2,"Orange","Red")))))
+  )
+=======
                        radius = mapdata()$count_hosp, color = ifelse(mapdata()[,mvalue()]==5,"Blue",ifelse(mapdata()[,mvalue()]==4,"Green",ifelse(mapdata()[,mvalue()]==3,"Gold",ifelse(mapdata()[,mvalue()]==2,"Orange","Red")))))
   )
   
@@ -140,5 +164,6 @@ server <- function(input, output) {
                        color = ifelse(mapdata_d()[,mvalue2()]==5,"Blue",ifelse(mapdata_d()[,mvalue2()]==4,"Green",ifelse(mapdata_d()[,mvalue2()]==3,"Gold",ifelse(mapdata_d()[,mvalue2()]==2,"Orange","Red")))))
   )
   
+>>>>>>> ef6b0d9d111f070a260be6500e4502ce5e9d1e6a
 }
 

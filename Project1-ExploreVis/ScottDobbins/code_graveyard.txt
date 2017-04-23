@@ -1,3 +1,7 @@
+@author Scott Dobbins
+@version 0.6.1
+# @date 2017-04-22 17:35
+
 ### Code Graveyard ###
 # where buggy or formerly useful but now unnecessary code lays to rest
 # can resurrect if necessary
@@ -67,5 +71,75 @@ observeEvent(input$show_bombings, {
     proxy %>% clearGroup(group = "Vietnam_unique_targets")
   }
 })
+
+col_num_missing_values <- vector(mode='integer', length(WW2_extra))
+
+for(c in 1:length(WW2_extra)) {
+  print("hello")
+  if(class(WW2_extra[[c]]) == "numeric" | class(WW2_extra[[c]]) == "integer" | class(WW2_extra[[c]]) == "Date") {
+    col_num_missing_values[c] <- sum(is.na(WW2_extra[[c]]))
+  } else if(class(WW2_extra[[c]]) == "character") {
+    col_num_missing_values[c] <- sum(WW2_extra[[c]] == '')
+  } else if(class(WW2_extra[[c]]) == 'logical') {
+    col_num_missing_values[c] <- sum(!WW2_extra[[c]])
+  }
+}
+
+remove_quote_padding <- function(cell) {
+  if(cell[1] == "\"" & cell[nchar(cell)] == "\"") {
+    return(remove_quote_padding(substring(cell, 2, nchar(cell)-1)))
+  } else {
+    return(cell)
+  }
+}
+
+WW1_raw$Mission.Date <- as.Date(WW1_raw$Mission.Date, format = "%Y-%m-%d")
+WW2_raw$Mission.Date <- as.Date(WW2_raw$Mission.Date, format = "%m/%d/%Y")
+Korea_raw1$Mission.Date <- as.Date(Korea_raw1$Mission.Date, format = "%m/%d/%y")
+Korea_raw2$Mission.Date <- as.Date(Korea_raw2$Mission.Date, format = "%m/%d/%y")
+Vietnam_raw$Mission.Date <- as.Date(Vietnam_raw$Mission.Date, format = "%Y-%m-%d")
+
+WW1_sample <- WW1_unique_target[sample(x = c(TRUE, FALSE), replace = TRUE, prob = c(1000/nrow(WW1_unique_target), 1-1000/nrow(WW1_unique_target))),]
+WW2_sample <- WW2_unique_target[sample(x = c(TRUE, FALSE), replace = TRUE, prob = c(1000/nrow(WW2_unique_target), 1-1000/nrow(WW2_unique_target))),]
+Korea_sample <- Korea_unique_target2[sample(x = c(TRUE, FALSE), replace = TRUE, prob = c(1000/nrow(Korea_unique_target2), 1-1000/nrow(Korea_unique_target2))),]
+Vietnam_sample <- Vietnam_unique_target[sample(x = c(TRUE, FALSE), replace = TRUE, prob = c(1000/nrow(Vietnam_unique_target), 1-1000/nrow(Vietnam_unique_target))),]
+
+  WW1_sample <- fread(file = 'WW1_sample.csv', sep = ',', sep2 = '\n', header = TRUE, stringsAsFactors = FALSE)
+  WW2_sample <- fread(file = 'WW2_sample.csv', sep = ',', sep2 = '\n', header = TRUE, stringsAsFactors = FALSE)
+  Korea_sample <- fread(file = 'Korea_sample.csv', sep = ',', sep2 = '\n', header = TRUE, stringsAsFactors = FALSE)
+  Vietnam_sample <- fread(file = 'Vietnam_sample.csv', sep = ',', sep2 = '\n', header = TRUE, stringsAsFactors = FALSE)
+
+WW1_col_classes <- c("integer",
+                     "character",
+                     "character",
+                     "character",
+                     "character",
+                     "character",
+                     "character",
+                     "integer",
+                     "character",
+                     "character",
+                     "integer",
+                     "character",
+                     "integer",
+                     "character",
+                     "integer",
+                     "double",
+                     "double",
+                     "double",
+                     "character",
+                     "character",
+                     "character",
+                     "character",
+                     "double",
+                     "double",
+                     "character",
+                     "character",
+                     "character",
+                     "character",
+                     "integer",
+                     "character",
+                     "character",
+                     "integer")
 
 ### end ###

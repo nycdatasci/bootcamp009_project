@@ -7,6 +7,8 @@ rownames(state_stat) <- NULL
 
 loan <- read.csv("LoanStats3a.csv",skip=1,stringsAsFactors = F)
 loan <- loan[!is.na(loan$loan_amnt),]
+loan <- loan[!is.na(loan$annual_inc),]
+loan <- loan[loan$annual_inc < 300000,]
 loan <- mutate(loan,loan_rate=as.numeric(substr(loan$int_rate,1,nchar(loan$int_rate)-1)))
 loan <- select(loan, loan_amnt,dti,installment,loan_rate,term,grade,annual_inc,addr_state)
 totalloanbal = sum(loan$loan_amnt)
