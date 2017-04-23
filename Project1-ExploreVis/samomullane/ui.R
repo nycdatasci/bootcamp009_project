@@ -2,6 +2,9 @@ shinyUI(dashboardPage(
   dashboardHeader(title = "Meteor Data Analysis"),
   dashboardSidebar(
     sidebarMenu(
+      menuItem("Overview",
+               tabName = "overview",
+               icon = icon("info")),
       menuItem("Meteor Classes",
                tabName = "classes",
                icon = icon("bar-chart")),
@@ -12,6 +15,22 @@ shinyUI(dashboardPage(
     ),
   dashboardBody(
     tabItems(
+      tabItem(tabName = "overview",
+              fluidPage(tabBox(id = 'tabset5', width = 12,
+                fluidRow(box("Will include introduction info")),
+                fluidRow(box(plotlyOutput("all_class_orbits"))),
+                fluidRow(box(plotlyOutput("total_diameter_plot"),
+                               title = 'Diameter-Count Statistics',
+                               status = 'primary',
+                               solidHeader = TRUE,
+                               width = 6),
+                         box(plotlyOutput("kepler_plot"),
+                               title = 'Kepler\'s Third Law',
+                               status = 'primary',
+                               solidHeader = TRUE,
+                               width = 6)
+                         )
+              ))),
       #1) Class individual stats and info
       #2) Class total stats and info
       tabItem(tabName = "classes",
@@ -23,11 +42,17 @@ shinyUI(dashboardPage(
                            box(selectizeInput(inputId = "meteor_class", 
                                               label = "Meteor Class",
                                               #should arrange alphabetically eventually
-                                              choices = meteor_descriptions$meteor_classes, 
-                                              selected = 'APO'), width = 2, height = 75),
+                                              choices = meteor_descriptions[order(meteor_classes),1], 
+                                              selected = 'APO'), width = 2, height = 210),
                            
-                           #Class descriptions and prerendered image
-                           box(htmlOutput("class_description"))),
+                           #Class descriptions
+                           box(htmlOutput("class_description"),
+                               h6('(from Wikipedia)'),
+                               width = 7, height = 210),
+                           #Orbit plot
+                           box(plotlyOutput("single_class_orbits"),
+                               width = 3, height = 210)
+                         ),
                          
                          #Want characteristic plots of 'a' and 'q', and 'd' counts
                          fluidRow(box(plotlyOutput("characteristic_plot_a"),
@@ -36,7 +61,7 @@ shinyUI(dashboardPage(
                                     solidHeader = TRUE,
                                     width = 4, align = 'center'),
                                 box(plotlyOutput("characteristic_plot_q"),
-                                    title = 'Aphelion distance (q)',
+                                    title = 'Perihelion distance (q)',
                                     status = 'warning',
                                     solidHeader = TRUE,
                                     width = 4),
@@ -49,9 +74,9 @@ shinyUI(dashboardPage(
                                       of the two radii that define
                                       an ellipse.',
                                       width = 4),
-                                  box('The aphelion distance (q) is the point on 
-                                      the orbit furthest from the Sun. The closer
-                                      that the aphelion is to the semi-major axis,
+                                  box('The perihelion distance (q) is the point on 
+                                      the orbit closest to the Sun. The closer
+                                      that the perihelion is to the semi-major axis,
                                       the more circular the orbit.',
                                       width = 4),
                                   box('The diameter (d) is an estimated quantity
@@ -61,20 +86,19 @@ shinyUI(dashboardPage(
                                       magnitude (H, intensity).',
                                       width = 4))
                        ),
-                       
-                       tabPanel("Population statistics",
+                       tabPanel("Data and Information",
                                 fluidRow(
-                                  box(plotlyOutput("total_diameter_plot"),
-                                      title = 'Diameter-Count Statistics',
-                                      status = 'primary',
-                                      solidHeader = TRUE,
-                                      width = 6),
-                                  box(plotlyOutput("kepler_plot"),
-                                      title = 'Kepler\'s Third Law',
-                                      status = 'primary',
-                                      solidHeader = TRUE,
-                                      width = 6)
-                                  ))
+                                  box(tags$div(
+                                    tags$b("Selected data from all non-MBA objects"), 
+                                    tags$br(),
+                                    "Source: ", tags$html(
+                                      tags$body(a('JPL Solar System Dynamics',
+                                        href="https://ssd.jpl.nasa.gov/")))
+                                  ), width = 12, align = 'center')
+                                ),
+                                fluidRow(
+                                  column(12, dataTableOutput('small_body_dt'))
+                                ))
                        ))),
                          
 
@@ -113,9 +137,25 @@ shinyUI(dashboardPage(
                                         ),
                                tabPanel("Potentially Hazardous Object Statitics",
                                         fluidRow(
-                                          box("To be replaced with object statistics")
-                                          )
-                                        )
+                                          box(plotlyOutput("hazard_a"), width = 4),
+                                          box(plotlyOutput("hazard_q"), width = 4),
+                                          box(plotlyOutput("hazard_d"), width = 4)
+                                          ),
+                                        fluidRow(box(plotlyOutput("hazard_prob"), width = 12))
+                                        ),
+                               tabPanel("Data and Information",
+                                        fluidRow(
+                                          box(tags$div(
+                                            tags$b("Selected data from all potentially hazardous NEOs"), 
+                                            tags$br(),
+                                            "Source: ", tags$html(
+                                              tags$body(a('JPL Sentry - Earth Impact Monitoring',
+                                                          href="https://cneos.jpl.nasa.gov/sentry/")))
+                                          ), width = 12, align = 'center')
+                                        ),
+                                        fluidRow(
+                                          column(12, dataTableOutput('small_body_join'))
+                                        ))
                                
                                )
               )

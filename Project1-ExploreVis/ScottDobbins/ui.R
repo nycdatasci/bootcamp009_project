@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.6
-# @date 2017-04-21 23:58
+# @version 0.6.1
+# @date 2017-04-22 17:35
 
 ### import useful packages ###
 library(shiny)
