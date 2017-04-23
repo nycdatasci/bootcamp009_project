@@ -54,22 +54,32 @@ getFaresData = function() {
   fares_by_date
 } # returns a df of maximum fare card's sold per station per type
 
-addMTAStations = function() {
+getBaseMap = function() {
   require(leaflet)
-  require(dplyr)
-  
-  station_info = paste(getwd(),"data","Stations.csv",sep = "/")
-  station_info = data.table::fread(input = station_info, sep = ",") %>%
-    mutate(LatLong = paste(`GTFS Latitude`,`GTFS Longitude`, sep=":")) %>% 
-    filter(`Daytime Routes` != "SIR")
   
   map_style = "https://api.mapbox.com/styles/v1/rezarad77/cj1u20c5q000q2rqhg8zd822d/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoicmV6YXJhZDc3IiwiYSI6ImNqMXAyOHZvMzAwOWczNG1seHY4ZzJzdXcifQ.JwYon0JR4nbIAMC-fsaNyw"
   
-  nyc_map = leaflet() %>%
+  map = leaflet() %>%
     addTiles(map_style) %>%
     setView(lng = -73.87, lat = 40.705, zoom = 12)
+  
+  map
+}
 
-  nyc_map = nyc_map %>% addCircleMarkers(lng = station_info$`GTFS Longitude`, 
+getStationData = function(filename) {
+  require(dplyr)
+  
+  filename = data.table::fread(input = filename, sep = ",") %>%
+    mutate(LatLong = paste(`GTFS Latitude`,`GTFS Longitude`, sep=":")) %>% 
+    filter(`Daytime Routes` != "SIR")
+  
+  filename
+}
+
+addMTAStations = function(map, station_info) {
+  require(leaflet)
+
+  map = map %>% addCircleMarkers(lng = station_info$`GTFS Longitude`, 
                                          lat = station_info$`GTFS Latitude`,
                                          label = paste(station_info$`Stop Name`, paste("(",station_info$`Daytime Routes`,")",sep="")),
                                          labelOptions = labelOptions(
@@ -79,9 +89,13 @@ addMTAStations = function() {
                                          color = "black",
                                          stroke = FALSE,
                                          fillOpacity = .6,
-                                         radius = 2.5,
+                                         radius = 4.5,
                                          weight = 1.5)
   
+  map
+}  
+
+addMTALine = function(map, station_info) {
   # list of mta lines including hex code for color
   mta_lines = list("1" = "#EE352E","2" = "#EE352E","3" = "#EE352E",
                    "4" = "#00933C","5" = "#00933C","6" = "#00933C","7" = "#B933AD",
@@ -90,35 +104,21 @@ addMTAStations = function() {
                    "G" = "#6CBE45", "J" = "#996633", "Z" = "#996633","L" = "#A7A9AC",
                    "S" = "#808183", "N" = "#FCCC0A","Q" = "#FCCC0A","R" = "#FCCC0A",
                    "W" = "#FCCC0A")
-  line_coordinates = as.data.frame(c())
+  line_latlong = as.data.frame(c())
   for(line in names(mta_lines)) {
-    line_coordinates = station_info %>%  
+    line_latlong = station_info %>%  
       filter(grepl(line, `Daytime Routes`)) %>% 
       arrange(desc(`GTFS Stop ID`)) %>% 
       select(`Stop Name` , lng = `GTFS Longitude`, lat = `GTFS Latitude`) %>% 
       mutate(`Line` = line)
     
-    nyc_map = nyc_map %>% addPolylines(lng = line_coordinates$lng,
-                                       lat = line_coordinates$lat,
+    map = map %>% addPolylines(lng = line_latlong$lng,
+                                       lat = line_latlong$lat,
                                        color = mta_lines[line][[1]],
                                        weight = 3.5,
                                        fillOpacity = .8)
   }
-  
-
-  
-  nyc_map
+  map
 }
 
-
-
-
-messageData = data.frame(
-  from = c("Subway Status", "Delays"),
-  message = c(
-    "trains on-time (%):",
-    "Lines having delays:"
-  ),
-  stringsAsFactors = FALSE
-)
 

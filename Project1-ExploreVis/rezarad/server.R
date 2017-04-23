@@ -5,18 +5,11 @@ library(shiny)
 source("helpers.R")
 
 fares_by_date = getFaresData()
+stations_data = getStationData("./data/Stations.csv")
 
 function(input, output) {
   
-#   output$messageMenu = renderMenu({
-#     msgs <- apply(messageData, 1, function(row) {
-#     messageItem(from = row[["from"]], message = row[["message"]])
-#   })
-#   # This is equivalent to calling:
-#   #   dropdownMenu(type="messages", msgs[[1]], msgs[[2]], ...)
-#   dropdownMenu(type = "messages", .list = msgs)
-# })
-  output$mtamap = renderLeaflet(addMTAStations())
+  output$mtamap = renderLeaflet(getBaseMap())
   # output$q_train = renderLeaflet(addMTAStations() )
   # event = input$mtamap_marker_click 
   
