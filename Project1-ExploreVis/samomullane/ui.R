@@ -19,10 +19,15 @@ shinyUI(dashboardPage(
               fluidPage(tabBox(id = 'tabset5', width = 12,
                 tabPanel("Base Information",
                                fluidRow(box(tags$div(
+                                 'There are over 700,000 comets and asteroids (meteors) that have been
+                                 identified, classified and catalogued by NASA in open databases. This work
+                                 is in part an attempt to make these databases accessible to more people.',
+                                 tags$br(),
+                                 tags$br(),
                                  'Meteors are mainly classified by the perihelion distance and
                                  semi-major axis of their orbit. As seen in the class-specific
-                                 plots, these are artificial definitions which can lead to
-                                 one-sided normal distributions of orbital parameters.',
+                                 plots, this classification is artificial and can lead to
+                                 truncated distributions of orbital parameters.',
                                  tags$br(),
                                  'Two distint datasets were used for this project:',
                                  tags$br(),
@@ -67,17 +72,13 @@ shinyUI(dashboardPage(
                          fluidRow(box(imageOutput("meteor_image"), width = 12, height = 1000))
                 )
               ))),
-      #1) Class individual stats and info
-      #2) Class total stats and info
+
       tabItem(tabName = "classes",
-              #Choice of meteor class for information display
-              #Can add wiki link (NASA or open) to the right of selection
               fluidPage(tabBox(id = "tabset1", width = 12,
                        tabPanel("Class descriptions and statistics",
                          fluidRow(
                            box(tags$div(selectizeInput(inputId = "meteor_class", 
                                               label = "Meteor Class",
-                                              #should arrange alphabetically eventually
                                               choices = meteor_descriptions[order(meteor_classes),1], 
                                               selected = 'APO'), 
                                         tags$b('Legend for orbit schematic'),
@@ -97,39 +98,45 @@ shinyUI(dashboardPage(
                            box(htmlOutput("class_description"),
                                h6('(from Wikipedia)'),
                                width = 7, height = 210)
-                         ),
-                         
-                         #Want characteristic plots of 'a' and 'q', and 'd' counts
-                         fluidRow(box(plotlyOutput("characteristic_plot_a"),
-                                    title = 'Semi-major axis (a)',
-                                    status = 'primary',
-                                    solidHeader = TRUE,
-                                    width = 4, align = 'center'),
-                                box(plotlyOutput("characteristic_plot_q"),
-                                    title = 'Perihelion distance (q)',
-                                    status = 'warning',
-                                    solidHeader = TRUE,
-                                    width = 4),
-                                box(plotlyOutput("diameter_plot"),
-                                    title = 'Diameter (d)',
-                                    status = 'primary',
-                                    solidHeader = TRUE,
-                                    width = 4)),
-                         fluidRow(box('The semi-major axis (a) is the longer 
+                          ),
+                          
+                         # characteristic plots of 'a' and 'q', and 'd' counts
+                           fluidRow(box(plotlyOutput("characteristic_plot_a"),
+                                      title = tags$div('Semi-major axis (a)',
+                                                       tags$br(),
+                                                       textOutput('class_label_a')),
+                                      status = 'primary',
+                                      solidHeader = TRUE,
+                                      width = 4, align = 'center'),
+                                 box(plotlyOutput("characteristic_plot_q"),
+                                     title = tags$div('Perihelion distance (q)',
+                                                      tags$br(),
+                                                      textOutput('class_label_q')),
+                                     status = 'success',
+                                     solidHeader = TRUE,
+                                     width = 4),
+                                 box(plotlyOutput("diameter_plot"),
+                                     title = tags$div('Diameter (d)',
+                                                      tags$br(),
+                                                      textOutput('class_label_d')),
+                                     status = 'danger',
+                                     solidHeader = TRUE,
+                                     width = 4)),
+                         fluidRow(box('The semi-major axis (a) is the longer
                                       of the two radii that define
                                       an ellipse.',
-                                      width = 4),
-                                  box('The perihelion distance (q) is the point on 
+                                      width = 4, height = 150),
+                                  box('The perihelion distance (q) is the point on
                                       the orbit closest to the Sun. The closer
                                       that the perihelion is to the semi-major axis,
                                       the more circular the orbit.',
-                                      width = 4),
+                                      width = 4, height = 150),
                                   box('The diameter (d) is an estimated quantity
                                       based on other more readily measureable
                                       parameters. Specifically, it is calculated
                                       from the albedo (a, reflectance) and absolute
                                       magnitude (H, intensity).',
-                                      width = 4))
+                                      width = 4, height = 150))
                        ),
                        tabPanel("Data and Information",
                                 fluidRow(
@@ -157,27 +164,28 @@ shinyUI(dashboardPage(
                                           box(selectizeInput(inputId = "target_material", 
                                                              label = "Target material",
                                                              choices = materials$name, 
-                                                             selected = "soft rock"), width = 3, height = 75),
+                                                             selected = "soft rock"), width = 3, height = 100),
                                           box(selectizeInput(inputId = "meteor_material",
                                                              label = "Meteor material (g/cm^3)",
                                                              choices = impactor$name,
-                                                             selected = "c-type (1.8)"), width = 3, height = 75),
+                                                             selected = "c-type (1.8)"), width = 3, height = 100),
                                           box(selectizeInput(inputId = "city",
                                                              label = "Impact city",
                                                              choices = city_dt$name,
-                                                             selected = "New York"), width = 2, height = 75),
+                                                             selected = "New York"), width = 2, height = 100),
                                           box(selectizeInput(inputId = "crater_name",
                                                              label = "Meteor name",
                                                              choices = small_body_join$Object.Designation..,
-                                                             selected = "1950 DA"), width = 2, height = 75),
+                                                             selected = "1950 DA"), width = 2, height = 100),
                                           box(sliderInput(inputId = "theta_in",
-                                                          label = "Angle of impact",
+                                                          label = "Angle of Impact",
                                                           min = 10,
                                                           max = 90,
-                                                          value = 90,
-                                                          step = 5), width = 2, height = 75)
+                                                          value = 60,
+                                                          step = 5), width = 2, height = 100)
                                           ),
                                         fluidRow(
+                                          tags$head(tags$style(HTML(".small-box {height: 150px}"))),
                                           valueBoxOutput("valuebox1", width = 2),
                                           valueBoxOutput("valuebox2", width = 2),
                                           valueBoxOutput("valuebox3", width = 2),
@@ -188,9 +196,15 @@ shinyUI(dashboardPage(
                                         ),
                                tabPanel("Potentially Hazardous Object Statitics",
                                         fluidRow(
-                                          box(plotlyOutput("hazard_a"), width = 4),
-                                          box(plotlyOutput("hazard_q"), width = 4),
-                                          box(plotlyOutput("hazard_d"), width = 4)
+                                          box(plotlyOutput("hazard_a"), 
+                                              width = 4,
+                                              status = 'primary'),
+                                          box(plotlyOutput("hazard_q"), 
+                                              width = 4,
+                                              status = 'success'),
+                                          box(plotlyOutput("hazard_d"), 
+                                              width = 4,
+                                              status = 'danger')
                                           ),
                                         fluidRow(box(plotlyOutput("hazard_prob"), width = 12))
                                         ),

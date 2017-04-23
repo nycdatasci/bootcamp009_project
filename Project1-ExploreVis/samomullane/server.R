@@ -26,6 +26,15 @@ shinyServer(function(input, output, session) {
       filter(!is.na(a)) %>% 
       dplyr::summarise(mean = mean(a), median = median(a))
   })
+  
+  output$class_label_a <- renderText(
+    class_select() %>% 
+      distinct(class) %>% 
+      unlist() %>% 
+      paste('Distribution for ',
+            .,
+            ' class')
+  )
 ######################################################################
   #Same schema as for semi-major axis, here for perihelion distance
   output$characteristic_plot_q <- renderPlotly({
@@ -36,7 +45,7 @@ shinyServer(function(input, output, session) {
     class_select() %>% 
       filter(!is.na(q)) %>% 
       ggplot(aes(x = q)) + 
-      geom_density(fill='red', alpha=0.2) + 
+      geom_density(fill='green', alpha=0.2) + 
       geom_vline(aes(xintercept=mean_val),
                  linetype='dashed') +
       geom_vline(aes(xintercept=median_val),
@@ -49,6 +58,15 @@ shinyServer(function(input, output, session) {
       filter(!is.na(q)) %>% 
       dplyr::summarise(mean = mean(q), median = median(q))
   })
+  
+  output$class_label_q <- renderText(
+    class_select() %>% 
+      distinct(class) %>% 
+      unlist() %>% 
+      paste('Distribution for ',
+            .,
+            ' class')
+  )
 ######################################################################  
   #Kepler's law plot generation (orbital period v semi-major axis)
   output$kepler_plot <- renderPlotly({
@@ -57,7 +75,7 @@ shinyServer(function(input, output, session) {
       ggplot(., aes(x = per_y, y = a)) +
       scale_x_log10() + scale_y_log10() +
       geom_point(aes(size = diameter, color = class), alpha = 0.5) +
-      xlab("Semi-major axis (AU)") + ylab("Orbital period (year)") +
+      xlab("Semi-major axis (log AU)") + ylab("Orbital period (log year)") +
       labs(color = "Class", size = ""))
   })
 ######################################################################    
@@ -66,16 +84,16 @@ shinyServer(function(input, output, session) {
     avgs <- avg_calc_diam()
     mean_val <- unlist(avgs[1])
     median_val <- unlist(avgs[2])
-    
+           
     ggplotly(class_select() %>% 
-      filter(!is.na(diameter)) %>% 
-      ggplot(aes(x = diameter)) +
-        geom_density(fill='purple', alpha=0.2) + 
-        geom_vline(aes(xintercept=mean_val),
-                 linetype='dashed') +
-        geom_vline(aes(xintercept=median_val),
-                 linetype='dotted') +
-        coord_cartesian(xlim = c(0, 2*mean_val)))
+               filter(!is.na(diameter)) %>% 
+               ggplot(aes(x = diameter)) +
+               geom_density(fill='red', alpha=0.2) + 
+               geom_vline(aes(xintercept=mean_val),
+                          linetype='dashed') +
+               geom_vline(aes(xintercept=median_val),
+                          linetype='dotted') +
+               coord_cartesian(xlim = c(0, 2*mean_val)))
   })
   
   avg_calc_diam <- reactive({
@@ -83,6 +101,15 @@ shinyServer(function(input, output, session) {
       filter(!is.na(diameter)) %>% 
       dplyr::summarise(mean = mean(diameter), median = median(diameter))
   })
+  
+  output$class_label_d <- renderText(
+    class_select() %>% 
+      distinct(class) %>% 
+      unlist() %>% 
+      paste('Distribution for ',
+            .,
+            ' class')
+  )
 ######################################################################
   #Overview page distance from sun v diameter plot
   output$total_diameter_plot <- renderPlotly({
@@ -106,7 +133,7 @@ shinyServer(function(input, output, session) {
     
     ggplotly(temp %>% 
                ggplot(aes(x = Estimated.Diameter)) +
-               geom_density(fill='purple', alpha=0.2) + 
+               geom_density(fill='red', alpha=0.2) + 
                geom_vline(aes(xintercept=avg_diam[1]),
                           linetype='dashed') +
                geom_vline(aes(xintercept=avg_diam[2]),
@@ -126,7 +153,7 @@ shinyServer(function(input, output, session) {
     
     ggplotly(temp %>% 
                ggplot(aes(x = a)) +
-               geom_density(fill='purple', alpha=0.2) + 
+               geom_density(fill='blue', alpha=0.2) + 
                geom_vline(aes(xintercept=avg_a[1]),
                           linetype='dashed') +
                geom_vline(aes(xintercept=avg_a[2]),
@@ -146,7 +173,7 @@ shinyServer(function(input, output, session) {
     
     ggplotly(temp %>% 
                ggplot(aes(x = q)) +
-               geom_density(fill='purple', alpha=0.2) + 
+               geom_density(fill='green', alpha=0.2) + 
                geom_vline(aes(xintercept=avg_q[1]),
                           linetype='dashed') +
                geom_vline(aes(xintercept=avg_q[2]),
