@@ -1,6 +1,6 @@
 @author Scott Dobbins
-@version 0.8
-# @date 2017-04-23 01:30
+@version 0.8.1
+# @date 2017-04-23 18:45
 
 
 ## Version history ###
@@ -73,6 +73,10 @@ This version maps out all semi-cleaned longitudinal and latitudinal target data
   It also plots a bin-editable histogram of missions by date for each conflict.
 Major changes: full sidebar; tabs for each war
 
+0.8.1	Added stat boxes in the overview tab
+	Made date restrictions apply to all data accessed in all tabs
+	Made sampling occur after date restriction changes
+	Opacity now updates with sample size as well
 
 **Future version plans:
 *Tabs for exploring each separate conflict on its own in detail
@@ -127,4 +131,10 @@ data origin URL: https://insight.livestories.com/s/v2/vietnam/48973b96-8add-4898
 *** eventually ***
 - use branching to develop new features on local repository
 - remove debug features from a branched final dev version
+
+
+*** num missions should account for sortie duplicates
+*** num bombs should use totals across different types and better quality control on data
+*** weight bombs should use num aircraft * bombload in separate (new) column
+*** weight should all be converted into pounds or tons
 

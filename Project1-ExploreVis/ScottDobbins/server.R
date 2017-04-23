@@ -1,11 +1,12 @@
 # @author Scott Dobbins
-# @version 0.8
-# @date 2017-04-23 01:30
+# @version 0.8.1
+# @date 2017-04-23 18:45
 
 ### import useful packages ###
 library(shiny)      # app formation
 library(leaflet)    # map source
 library(ggplot2)    # plots and graphs
+library(dplyr)      # data processing
 #library(maps)       # also helps with maps
 #library(htmltools)  # helps with tooltips
 library(DT)         # web tables
@@ -13,10 +14,11 @@ library(DT)         # web tables
 
 ### server component ###
 
-shinyServer(function(input, output) {#***session is still currently unused below
+shinyServer(function(input, output, session) {
   
   ### server session variables ###
   
+  # toggles for graphs
   WW1_selected <- FALSE
   WW2_selected <- FALSE
   Korea_selected <- FALSE
@@ -28,24 +30,177 @@ shinyServer(function(input, output) {#***session is still currently unused below
   #   datatable(state_stat, rownames=FALSE) %>%
   #     formatStyle(input$which_war, background="skyblue", fontWeight='bold')
   # })
-  # 
-  # # show statistics using infoBox
-  # output$maxBox <- renderInfoBox({
-  #   max_value <- max(state_stat[,input$selected])
-  #   max_state <-
-  #     state_stat$state.name[state_stat[,input$selected] == max_value]
-  #   infoBox(max_state, max_value, icon = icon("hand-o-up"))
-  # })
-  # output$minBox <- renderInfoBox({
-  #   min_value <- min(state_stat[,input$selected])
-  #   min_state <-
-  #     state_stat$state.name[state_stat[,input$selected] == min_value]
-  #   infoBox(min_state, min_value, icon = icon("hand-o-down"))
-  # })
-  # output$avgBox <- renderInfoBox(
-  #   infoBox(paste("AVG.", input$selected),
-  #           mean(state_stat[,input$selected]),
-  #           icon = icon("calculator"), fill = TRUE))
+
+  ### show overview statistics
+  
+  WW1_selection <- reactive({
+    WW1_clean %>% 
+      filter(Mission.Date >= input$dateRange[1] & Mission.Date <= input$dateRange[2])# %>% 
+      #filter(Unit.Country %in% input$country) %>%
+      #filter(Aircraft.Type %in% input$aircraft)
+  })
+  
+  WW2_selection <- reactive({
+    WW2_clean %>% 
+      filter(Mission.Date >= input$dateRange[1] & Mission.Date <= input$dateRange[2])# %>% 
+  })
+  
+  Korea_selection <- reactive({
+    Korea_clean2 %>% 
+      filter(Mission.Date >= input$dateRange[1] & Mission.Date <= input$dateRange[2])# %>% 
+  })
+  
+  Vietnam_selection <- reactive({
+    Vietnam_clean %>%
+      filter(Mission.Date >= input$dateRange[1] & Mission.Date <= input$dateRange[2])# %>% 
+  })
+  
+  WW1_sample <- reactive({
+    if(WW1_missions_reactive() < input$sample_num) {
+      WW1_selection()
+    } else {
+      sample_n(WW1_selection(), input$sample_num, replace = FALSE)
+    }
+  })
+  
+  WW2_sample <- reactive({
+    if(WW2_missions_reactive() < input$sample_num) {
+      WW2_selection()
+    } else {
+      sample_n(WW2_selection(), input$sample_num, replace = FALSE)
+    }
+  })
+  
+  Korea_sample <- reactive({
+    if(Korea_missions_reactive() < input$sample_num) {
+      Korea_selection()
+    } else {
+      sample_n(Korea_selection(), input$sample_num, replace = FALSE)
+    }
+  })
+  
+  Vietnam_sample <- reactive({
+    if(Vietnam_missions_reactive() < input$sample_num) {
+      Vietnam_selection()
+    } else {
+      sample_n(Vietnam_selection(), input$sample_num, replace = FALSE)
+    }
+  })
+  
+  WW1_missions_reactive <- reactive({
+    if(WW1_string %in% input$which_war) {
+      WW1_selection() %>% summarize(n = n())
+    } else {
+      0
+    }
+  })
+  
+  WW2_missions_reactive <- reactive({
+    if(WW2_string %in% input$which_war) {
+      WW2_selection() %>% summarize(n = n())
+    } else {
+      0
+    }
+  })
+  
+  Korea_missions_reactive <- reactive({
+    if(Korea_string %in% input$which_war) {
+      Korea_selection() %>% summarize(n = n())
+    } else {
+      0
+    }
+  })
+  
+  Vietnam_missions_reactive <- reactive({
+    if(Vietnam_string %in% input$which_war) {
+      Vietnam_selection() %>% summarize(n = n())
+    } else {
+      0
+    }
+  })
+  
+  WW1_bombs_reactive <- reactive({
+    if(WW1_string %in% input$which_war) {
+      WW1_selection() %>% summarize(sum = sum(Weapons.Expended, na.rm = TRUE))
+    } else {
+      0
+    }
+  })
+  
+  WW2_bombs_reactive <- reactive({
+    if(WW2_string %in% input$which_war) {
+      WW2_selection() %>% summarize(sum = sum(Bomb.HE.Num, na.rm = TRUE))
+    } else {
+      0
+    }
+  })
+  
+  Korea_bombs_reactive <- reactive({
+    if(Korea_string %in% input$which_war) {
+      Korea_selection() %>% summarize(sum = sum(Weapons.Num, na.rm = TRUE))
+    } else {
+      0
+    }
+  })
+  
+  Vietnam_bombs_reactive <- reactive({
+    if(Vietnam_string %in% input$which_war) {
+      Vietnam_selection() %>% summarize(sum = sum(Weapons.Delivered.Num, na.rm = TRUE))
+    } else {
+      0
+    }
+  })
+  
+  WW1_weight_reactive <- reactive({
+    if(WW1_string %in% input$which_war) {
+      WW1_selection() %>% summarize(sum = sum(Aircraft.Bombload, na.rm = TRUE))
+    } else {
+      0
+    }
+  })
+  
+  WW2_weight_reactive <- reactive({
+    if(WW2_string %in% input$which_war) {
+      WW2_selection() %>% summarize(sum = sum(Bomb.Total.Pounds, na.rm = TRUE))
+    } else {
+      0
+    }
+  })
+  
+  Korea_weight_reactive <- reactive({
+    if(Korea_string %in% input$which_war) {
+      Korea_selection() %>% summarize(sum = sum(Aircraft.Bombload.Calculated.Pounds, na.rm = TRUE))
+    } else {
+      0
+    }
+  })
+  
+  Vietnam_weight_reactive <- reactive({
+    if(Vietnam_string %in% input$which_war) {
+      Vietnam_selection() %>% summarize(sum = sum(Weapon.Type.Weight, na.rm = TRUE))
+    } else {
+      0
+    }
+  })
+  
+  # number of missions
+  output$num_missions <- renderInfoBox({
+    total_missions <- WW1_missions_reactive() + WW2_missions_reactive() + Korea_missions_reactive() + Vietnam_missions_reactive()
+    infoBox(title = "Number of Missions", total_missions, icon = icon('chevron-up', lib = 'font-awesome'))
+  })
+  
+  # number of bombs
+  output$num_bombs <- renderInfoBox({
+    total_bombs <- WW1_bombs_reactive() + WW2_bombs_reactive() + Korea_bombs_reactive() + Vietnam_bombs_reactive()
+    infoBox(title = "Number of Bombs", total_bombs, icon = icon('bomb', lib = 'font-awesome'))
+  })
+  
+  # weight of bombs
+  output$total_weight <- renderInfoBox({
+    total_weight <- WW1_weight_reactive() + WW2_weight_reactive() + Korea_weight_reactive() + Vietnam_weight_reactive()
+    infoBox(title = "Weight of Bombs", total_weight, icon = icon('fire', lib = 'font-awesome'))
+  })
+  
   
   # initialize leaflet map
   output$overview_map <- renderLeaflet({
@@ -54,27 +209,28 @@ shinyServer(function(input, output) {#***session is still currently unused below
   })
   
   output$WW1_hist <- renderPlot({
-    WW1_plot <- ggplot(WW1_bombs, aes(x = Mission.Date)) + geom_histogram(bins = input$WW1_hist_slider)
+    WW1_plot <- ggplot(WW1_selection(), aes(x = Mission.Date)) + geom_histogram(bins = input$WW1_hist_slider)
     WW1_plot
   })
   
   output$WW2_hist <- renderPlot({
-    WW2_plot <- ggplot(WW2_bombs, aes(x = Mission.Date)) + geom_histogram(bins = input$WW2_hist_slider)
+    WW2_plot <- ggplot(WW2_selection(), aes(x = Mission.Date)) + geom_histogram(bins = input$WW2_hist_slider)
     WW2_plot
   })
   
   output$Korea_hist <- renderPlot({
-    Korea_plot <- ggplot(Korea_bombs2, aes(x = Mission.Date)) + geom_histogram(bins = input$Korea_hist_slider)
+    Korea_plot <- ggplot(Korea_selection(), aes(x = Mission.Date)) + geom_histogram(bins = input$Korea_hist_slider)
     Korea_plot
   })
   
   output$Vietnam_hist <- renderPlot({
-    Vietnam_plot <- ggplot(Vietnam_bombs, aes(x = Mission.Date)) + geom_histogram(bins = input$Vietnam_hist_slider)
+    Vietnam_plot <- ggplot(Vietnam_selection(), aes(x = Mission.Date)) + geom_histogram(bins = input$Vietnam_hist_slider)
     Vietnam_plot
   })
 
   # hanlder for changes in map type
   observeEvent(eventExpr = input$pick_map, ignoreNULL = FALSE, handlerExpr = {
+    
     if(debug_mode_on) print("map altered"); print(input$pick_map)
     
     proxy <- leafletProxy("overview_map")
@@ -220,7 +376,7 @@ shinyServer(function(input, output) {#***session is still currently unused below
         WW1_selected <<- FALSE
       } else {
         if(debug_mode_on) print("WW1 selected")
-        proxy %>% addCircles(data = WW1_sample,
+        proxy %>% addCircles(data = WW1_sample(),
                              lat = ~Target.Latitude,
                              lng = ~Target.Longitude,
                              color = "darkblue",
@@ -240,7 +396,7 @@ shinyServer(function(input, output) {#***session is still currently unused below
         WW2_selected <<- FALSE
       } else {
         if(debug_mode_on) print("WW2 selected")
-        proxy %>% addCircles(data = WW2_sample,
+        proxy %>% addCircles(data = WW2_sample(),
                              lat = ~Target.Latitude,
                              lng = ~Target.Longitude,
                              color = "darkred",
@@ -259,7 +415,7 @@ shinyServer(function(input, output) {#***session is still currently unused below
         Korea_selected <<- FALSE
       } else {
         if(debug_mode_on) print("Korea selected")
-        proxy %>% addCircles(data = Korea_sample,
+        proxy %>% addCircles(data = Korea_sample(),
                              lat = ~Target.Latitude,
                              lng = ~Target.Longitude,
                              color = "yellow",
@@ -278,7 +434,7 @@ shinyServer(function(input, output) {#***session is still currently unused below
         Vietnam_selected <<- FALSE
       } else {
         if(debug_mode_on) print("Vietnam selected")
-        proxy %>% addCircles(data = Vietnam_sample,
+        proxy %>% addCircles(data = Vietnam_sample(),
                              lat = ~Target.Latitude,
                              lng = ~Target.Longitude,
                              color = "darkgreen",
@@ -330,6 +486,84 @@ shinyServer(function(input, output) {#***session is still currently unused below
     if(debug_mode_on) print("weapon selected")
     
     proxy <- leafletProxy("overview_map")
+  })
+  
+  # handler for sample size refresh
+  observeEvent(eventExpr = input$sample_num, ignoreInit = TRUE, handlerExpr = {
+    
+    proxy <- leafletProxy("overview_map")
+    
+    if(input$sample_num > 1024) opacity_now <<- 0.1
+    else if(input$sample_num > 512) opacity_now <<- 0.2
+    else if(input$sample_num > 256) opacity_now <<- 0.3
+    else if(input$sample_num > 128) opacity_now <<- 0.4
+    else if(input$sample_num > 64) opacity_now <<- 0.5
+    else if(input$sample_num > 32) opacity_now <<- 0.6
+    else if(input$sample_num > 16) opacity_now <<- 0.7
+    else if(input$sample_num > 8) opacity_now <<- 0.8
+    else if(input$sample_num > 4) opacity_now <<- 0.9
+    else opacity_now <<- 1.0
+    
+    if(WW1_selected) {
+      proxy %>% 
+        clearGroup(group = "WW1_unique_targets") %>% 
+        addCircles(data = WW1_sample(),
+                   lat = ~Target.Latitude,
+                   lng = ~Target.Longitude,
+                   color = "darkblue",
+                   weight = 5,
+                   opacity = opacity_now,
+                   fill = TRUE,
+                   fillColor = "darkblue",
+                   fillOpacity = opacity_now,
+                   popup = ~tooltip,
+                   group = "WW1_unique_targets")
+    }
+    if(WW2_selected) {
+      proxy %>% 
+        clearGroup(group = "WW2_unique_targets") %>% 
+        addCircles(data = WW2_sample(),
+                   lat = ~Target.Latitude,
+                   lng = ~Target.Longitude,
+                   color = "darkred",
+                   weight = 5,
+                   opacity = opacity_now,
+                   fill = TRUE,
+                   fillColor = "darkred",
+                   fillOpacity = opacity_now, 
+                   popup = ~tooltip,
+                   group = "WW2_unique_targets")
+    }
+    if(Korea_selected) {
+      proxy %>% 
+        clearGroup(group = "Korea_unique_targets") %>% 
+        addCircles(data = Korea_sample(),
+                   lat = ~Target.Latitude,
+                   lng = ~Target.Longitude,
+                   color = "yellow",
+                   weight = 5,
+                   opacity = opacity_now,
+                   fill = TRUE,
+                   fillColor = "yellow", 
+                   fillOpacity = opacity_now, 
+                   popup = ~tooltip,
+                   group = "Korea_unique_targets")
+    }
+    if(Vietnam_selected) {
+      proxy %>% 
+        clearGroup(group = "Vietnam_unique_targets") %>% 
+        addCircles(data = Vietnam_sample(),
+                   lat = ~Target.Latitude,
+                   lng = ~Target.Longitude,
+                   color = "darkgreen",
+                   weight = 5,
+                   opacity = opacity_now,
+                   fill = TRUE, 
+                   fillColor = "darkgreen", 
+                   fillOpacity = opacity_now, 
+                   popup = ~tooltip,
+                   group = "Vietnam_unique_targets")
+    }
   })
   
 })

@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.8
-# @date 2017-04-23 01:30
+# @version 0.8.1
+# @date 2017-04-23 18:45
 
 ### import useful packages ###
 library(shiny)      # app formation
@@ -11,9 +11,16 @@ library(shiny)      # app formation
 
 ### toggles for app behavior ###
 
+# data refresh
 has_data = TRUE
 refresh_data = FALSE
 full_write = FALSE
+
+# debug control
+debug_mode_on = TRUE
+
+# default plotting complexity
+sample_num <- 1000
 
 
 ### global static variables ###
