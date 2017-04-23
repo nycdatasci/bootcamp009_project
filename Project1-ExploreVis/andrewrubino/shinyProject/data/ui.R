@@ -4,7 +4,7 @@ library(shinydashboard)
 
 # Define UI for application that draws a histogram
 dashboardPage(skin = "blue",
-              dashboardHeader(title = "What's the deal with TSA?", titleWidth = 400),
+              dashboardHeader(title = "Where the Angriest Passengers Are", titleWidth = 400),
               dashboardSidebar(
                 sidebarMenu(
                   menuItem("Map of Total Claims", tabName = "map", icon = icon("map")),

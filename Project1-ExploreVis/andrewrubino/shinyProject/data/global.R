@@ -16,30 +16,6 @@ library(DT)
 
 claims <- read.table("tidy_claims.tsv", header = T, sep = " ") # space separated for some reason
 
-# total claims by airport
-claims %>% group_by(Airport.Code) %>%
-  summarise(n = n()) %>%
-  arrange(desc(n)) %>%
-  top_n(20)
-
-claims %>% group_by(Airline.Name) %>%
-  summarise(n = n()) %>%
-  arrange(desc(n)) %>%
-  top_n(20)
-
-# total close amount by airport
-claims %>% group_by(Airport.Code) %>%
-  summarise(total_claims = sum(Close.Amount)) %>%
-  arrange(desc(total_claims)) %>%
-  top_n(20)
-
-# JFK leads by a whopping margin. Maybe we can make a group bar chart that lets us filter by
-# airport code, showing the total claims, close amounts, and by month?
-
-# How bout overall claim type?
-table(claims$Claim.Type)
-# property loss first, , followed by prop damange, then personal injury
-# Let's group this, and find which were denied, settled, or approved
 
 type_df <- claims %>% group_by(Claim.Type) %>%
   summarise(n = n(),
@@ -56,29 +32,6 @@ joined_typedis <- left_join(type_dis, type_df, by = "Claim.Type") %>%
          settled_ratio = Settle / n) %>%
   select(- overall_ratio)
 
-#60% is property loss, 38% is prop damange, less than 1% is personal injury, and the rest
-# are very small.
-# The highest approval rate is only 25%!!!, when property damage is involved. They also
-# settle 14% of the time. Property loss is only accepted 18% of the time, and settled 7%.
-
-# Out of curiosity, I want to see where people claimed injuries.
-claims %>% group_by(Airline.Name, Airport.Code) %>%
-  filter(Claim.Type == "Personal Injury" & Disposition != "Deny") %>%
-  summarise(n = n()) %>%
-  arrange(desc(n))
-
-# well well well. what do we have here. How bout if we take out the disposition type.
-
-claims %>% group_by(Airline.Name) %>%
-  filter(Claim.Type == "Personal Injury") %>%
-  summarise(n = n()) %>%
-  arrange(desc(n))
-# I'd rather leave out the disposition type for personal injury, on account of data being 
-# small and if it seems serious enough to file a claim for injury, might as well leave it.
-
-# Vegas baby. because they were hungover?? Fun fact, all of these were denied.
-# Followed by Newark at 3, Denver, Honolulu, Houton, and Orlanda with 2 that were not denied. 
-# View(claims[claims$Claim.Type == "Personal Injury", ])
 
 # Adding Total.Claims will make calculations easier
 claims <- claims %>% mutate(Total.Claims  = Audio.Video +
@@ -140,21 +93,6 @@ by_month <- claims %>% filter(Claim.Type != "Compliment") %>%
   filter(Claim.Type != "Compliment") %>%
   summarise(avg_claim_amount = mean(Total.Claims),
             median_claim_amount = median(Total.Claims))
-
-
-
-# Kind of surprising, I thought there'd be more during November-December, but the avg
-# claims looks to be pretty even across the board. What if we look at the same plot, 
-# but with Airlines and Airports? Maybe it'll be good to get the ratio of claims/flights\
-# first.
-
-
-claims %>% group_by(Airport.Code, Claim.Type) %>%
-  summarise(n = n()) %>%
-  arrange(Claim.Type)
-
-################## GO BACK #############
-
 
 
 
@@ -321,18 +259,7 @@ top10al <- top10al %>% mutate(Claim.Rate = total_claims / Flights)
 top10al <- top10al %>% select(- concat)
 
 
-
-
-# by_month %>% filter(Year == input$general_year & avg_claim_amount != 0) %>%
-#   ggplot(aes(x = Month, y = avg_claim_amount)) + 
-#   geom_histogram(binwidth = 0.2, stat = "identity") + facet_wrap( ~ Claim.Type) +
-#   scale_x_discrete(limits = c("Jan", "Feb", "Mar", "Apr",
-#                               "May", "June", "July", "Aug",
-#                               "Sept", "Oct", "Nov", "Dec")) +
-#   theme(axis.text.x = element_text(angle = 90))
-
-
-###### leaflet mess around ########
+###### leaflet ########
 leaf_data <- claims %>% group_by(Latitude, Longitude, Year, Airport.Code) %>%
   summarise(all_claims = sum(Total.Claims)) %>%
     filter(all_claims >= 25) %>%
