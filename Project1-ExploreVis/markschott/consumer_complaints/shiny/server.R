@@ -72,33 +72,51 @@ function(input, output, session) {
 #################################################
     observe({
       ### Depending on the extra variable chosen, display the corresponding components of that variable
-      dep_list = 
+      if (input$map_var == "All") {
+        dep_list = ""
+      } else { 
+        dep_list = sort(unique(complaints[,input$map_var]))
+      }
+          updateSelectizeInput(
+            session, "dep_list",
+            choices = dep_list,
+          selected = dep_list[1])
     })
-    filtered_dates <- reactive({
-      ## Filter out the data frame by the input dates
+    
+    filter_dates <- reactive({
+      ## Filter out the data frame by the input dates. This is the first level of filtering. 
       complaints %>% filter(Date.received < input$dateRange[2] &
                             Date.received > input$dateRange[1])
     })
     
-    filtered_time_series <- reactive({
-      ## Create data frame to be plotted in a time series plot which is filtered (in addition to the
-      ## date) by a variable of the user's choosing. The user can choose to display the total counts
-      ## over the time range or they can pick 
-      filtered_dates() %>% group_by_(input$map_var)
+    filter_custom_var <- reactive({
+      ## Filter data by user input variables. If variable is "All" don't do any filtering, (AKA 
+      ## include all variables). This level of filtering is done after the dates.
+      if (input$map_var == "All") {
+        filter_dates()
+      } else {
+      filter_dates() %>% filter(filter_dates()[,as.character(input$map_var)] %in% input$dep_list)
+      }
     })
     
-    filtered_states <- reactive ({
-      ## group the filtered dates by State and count them for later merging into the SPDF
-      filtered = filtered_dates() %>% group_by(State) %>% summarize(count = n())
+    counts_for_TSplot <- reactive({
+      ## Group filtered data frame by the Date.received and compute the counts
+      filter_custom_var() %>% group_by(Date.received) %>% summarize(Count = n())
+    })
+    
+    filter_states <- reactive ({
+      ## group the filtered data by State and count them for later merging into the SPDF
+      ## to display on the map.
+      tmp = filter_custom_var() %>% group_by(State, add=TRUE) %>% summarize(count = n())
       
-      ### Inner join to get state names and population then add new normalized counts
-      filtered = inner_join(filtered, pops, by = c('State' = 'abbreviation')) %>%
-        ### Multiply by a one hundred thousand to avoid fractinal people
+      ### Inner join to get state names and population then compute new normalized counts
+      tmp = inner_join(tmp, pops, by = c('State' = 'abbreviation')) %>%
+        ### Multiply by a one hundred thousand to avoid fractional people
         mutate(norm_count = round(100000*(count/population_2016)))
       
       ### Drop old columns before adding new ones
       states@data = states@data %>% select(-c(COUNT,NORM_COUNT))
-      states@data = inner_join(states@data, filtered, by = c('NAME' = 'region'))
+      states@data = inner_join(states@data, tmp, by = c('NAME' = 'region'))
       
       ## Drop unneccesary columns and upper case all column names
       states@data = states@data %>% select(-c(State))
@@ -109,15 +127,15 @@ function(input, output, session) {
     
     counts = reactive({
       if (input$normalize) {
-        filtered_states()$NORM_COUNT
+        filter_states()$NORM_COUNT
       } else {
-        filtered_states()$COUNT
+        filter_states()$COUNT
       }
     })
     
     html_text = reactive({
       if (input$normalize) {
-        "<strong>%s</strong><br/>%g complaints per person"
+        "<strong>%s</strong><br/>%g complaints per 100K persons"
       } else {
         "<strong>%s</strong><br/>%g complaints"
       }
@@ -136,10 +154,10 @@ function(input, output, session) {
       pal <- colorNumeric(palette = "viridis", domain = counts())
       labels <- sprintf(
         html_text(),
-        filtered_states()$NAME, counts()
+        filter_states()$NAME, counts()
       ) %>% lapply(htmltools::HTML)
       
-      leaflet(filtered_states()) %>% 
+      leaflet(filter_states()) %>% 
         setView(-96, 37.8, 3) %>%
         addTiles() %>%
         addPolygons(
@@ -166,6 +184,13 @@ function(input, output, session) {
                   opacity = 1)
     })
     
+    output$ts = renderPlot({
+      
+      ggplot(counts_for_TSplot(), aes(Date.received, Count)) +
+        geom_jitter()
+        
+    })
+
 ################################
     ## For the word cloud tab
 ######################################
