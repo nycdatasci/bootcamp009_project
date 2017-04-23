@@ -67,7 +67,20 @@ addMTAStations = function() {
   
   nyc_map = leaflet() %>%
     addTiles(map_style) %>%
-    setView(lng = -73.947, lat = 40.706, zoom = 11)
+    setView(lng = -73.87, lat = 40.705, zoom = 12)
+
+  nyc_map = nyc_map %>% addCircleMarkers(lng = station_info$`GTFS Longitude`, 
+                                         lat = station_info$`GTFS Latitude`,
+                                         label = paste(station_info$`Stop Name`, paste("(",station_info$`Daytime Routes`,")",sep="")),
+                                         labelOptions = labelOptions(
+                                           textsize = "14px",
+                                           clickable = TRUE
+                                         ),
+                                         color = "black",
+                                         stroke = FALSE,
+                                         fillOpacity = .6,
+                                         radius = 2.5,
+                                         weight = 1.5)
   
   # list of mta lines including hex code for color
   mta_lines = list("1" = "#EE352E","2" = "#EE352E","3" = "#EE352E",
@@ -88,22 +101,11 @@ addMTAStations = function() {
     nyc_map = nyc_map %>% addPolylines(lng = line_coordinates$lng,
                                        lat = line_coordinates$lat,
                                        color = mta_lines[line][[1]],
-                                       weight = 2.5,
+                                       weight = 3.5,
                                        fillOpacity = .8)
   }
   
-  nyc_map = nyc_map %>% addCircleMarkers(lng = station_info$`GTFS Longitude`, 
-                               lat = station_info$`GTFS Latitude`,
-                               label = paste(station_info$`Stop Name`, paste("(",station_info$`Daytime Routes`,")",sep="")),
-                               labelOptions = labelOptions(
-                                 textsize = "14px",
-                                 clickable = TRUE
-                                  ),
-                               color = "black",
-                               stroke = FALSE,
-                               fillOpacity = .6,
-                               radius = 2,
-                                weight = .5)
+
   
   nyc_map
 }
