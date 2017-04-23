@@ -28,7 +28,7 @@ formatData = function(indexTable){
   #a basic sum, not incredibly useful
   #we get the change from the previous day
   indexTable$CloseChange = c(0,diff(indexTable$Close))
-  indexTable$PercentCloseChange = 100* (indexTable$CloseChange/lag(indexTable$Close-1))
+  indexTable$DailyPercentCloseChange = 100* (indexTable$CloseChange/lag(indexTable$Close-1))
   #remove the first row to get rid of the NA value
   indexTable = indexTable[-1,]
   return (indexTable)
@@ -59,10 +59,10 @@ ui <- fluidPage(
                       choices= c("Daily","Monthly","Yearly")),
        selectInput(inputId = "Observation",
                    label = "Observation",
-                   choices = c("CloseChange","High","Volume","PercentCloseChange")),
+                   choices = c("CloseChange","High","Volume","DailyPercentCloseChange")),
        dateInput(inputId = "startDate",
                  label = "Start Date",
-                 value = "1987-04-13",
+                 value = "1987-10-13",
                  min = "1987-04-13",
                  max = "2017-04-13"),
        dateInput(inputId = "endDate",
@@ -112,17 +112,18 @@ server <- function(input, output, session) {
                                        "CloseChange" = CloseChange,
                                         "High" = High,
                                       "Volume" = Volume,
-                                      "PercentCloseChange" = PercentCloseChange)))
+                                      "DailyPercentCloseChange" = DailyPercentCloseChange)))
   })
 
    output$Values <- renderPlot({
 
-          
+      title =   paste(input$Index,paste(input$TimePeriod,input$Observation))#cat(input$Index, input$Observation, "by", input$TimePeriod)  
      ggplot(data = datasetInput(), 
             aes_string(x=timeInput(),y=input$Observation,color=timeInput())) +
        theme(axis.title.x = element_text(size=24),
-             axis.title.y = element_text(size=24)) +
-       geom_boxplot() #+
+             axis.title.y = element_text(size=24),
+             plot.title = element_text(hjust = 0.5, size=36)) +
+       geom_boxplot() + ggtitle(title)#+ggtitle(cat(input$Index, input$Observation, "by", input$TimePeriod))#+
       
        #geom_tufteboxplot()
    })
@@ -134,8 +135,8 @@ server <- function(input, output, session) {
      #time = datasetInput()[c(timeInput(),input$Observation)]
      print(head(ScatterParameters()))
      ggplot(data = ScatterParameters(), 
-            aes_string(x="period",y="avg",color="period")) +
-       geom_point()
+            aes_string(x="period",y="avg")) +
+       geom_point(size=3)# + stat_smooth(method = "lm") 
    })
    output$text = renderText({
      paste(cat(input$Observation,input$TimePeriod))
