@@ -19,6 +19,7 @@ library(ggmap)
 library(leaflet)
 library(maps)
 library(tidyr)
+library(plotly)
 
 
 
