@@ -2,168 +2,151 @@ library(shiny)
 library(shinydashboard)
 
 server <- function(input, output) {
-  varbox <- reactive(
-    switch(input$`y-value`,
-           "Healthcare Access" = 42,
-           "Routine Doctor Checkup" = 16,
-           "Cholesterol Screening" = 17,
-           "Colorectal Cancer Screening" = 18,
-           "Preventative Care among Elderly (Men)" = 19,
-           "Preventative Care among Elderly (Women)" = 20,
-           "Breast Cancer Screening" = 23,
-           "Cervical Cancer Screening" = 26,
-           "Binge Drinking" = 14,
-           "Smoking" = 21,
-           "No Exercise" = 22,
-           "Obesity" = 24,
-<<<<<<< HEAD
-           "Insufficient Sleep" = 25)
-  )
-  
-=======
-           "Insufficient Sleep" = 25,
-           "High Bloodpressure Prevalence" = 27,
-           "Cancer Prevalence" = 28,
-           "Asthma Prevalence" = 29,
-           "Coronary Heart Disease Prevalence" = 30,
-           "Chronic Obstructive Pulmonary Disease Prevalence" = 31,
-           "Diabetes Prevalence" = 32, 
-           "High Cholesterol" = 33,
-           "Mental Health Condition Prevalence" = 34,
-           "Stroke Prevalence" = 35)
-  )
-
->>>>>>> ef6b0d9d111f070a260be6500e4502ce5e9d1e6a
-  output$boxplot <- renderPlot(
-    ggplot(data = graph_hosp, aes(x = factor(graph_hosp$overall_f), y = graph_hosp[,varbox()])) +
-      geom_boxplot() +
-      ggtitle(paste(input$`y-value`,"by Hospital Quality Rating")) +
-      xlab("Hospital Overall Quality Rating") + ylab(notes_list[match(input$`y-value`,name_list)]) +
-      guides(fill=FALSE) + theme_few()
-  )
-  
-  output$boxplot_by_owner <- renderPlot(
-    ggplot(data = graph_hosp, aes(x = factor(graph_hosp$overall_f), y = graph_hosp[,varbox()])) +
-      geom_boxplot() +
-      ggtitle("By Ownership Type") +
-      xlab("Hospital Overall Quality Rating") + ylab(notes_list[match(input$`y-value`,name_list)]) +
-      facet_grid(.~hosp_owner_tri) + guides(fill=FALSE) + theme_few()
-  )
-  
   mapdata <- reactive({
-<<<<<<< HEAD
-    df <- exclude %>% filter(hcoverage >= input$insurance,
-                             CHECKUP_city >= input$checkup,
-                             CHOLSCREEN_city >= input$chol,
-                             COREM_city >= input$elderly,
-                             COREW_city >= input$elderlyf,
-                             MAMMOUSE_city >= input$breast,
-                             PAPTEST_city >= input$cervical,
-                             mean_star %in% input$checkGroup)
+    df <- switch(input$type,
+                 "Health Behavior" = exclude %>% filter(BINGE_city >= input$binge,
+                                                        CSMOKING_city>= input$smoking,
+                                                        LPA_city >= input$exercise,
+                                                        SLEEP_city >= input$sleep,
+                                                        OBESITY_city >= input$obesity),
+                 "Disease Prevalence" = exclude %>% filter(BPHIGH_city >= input$hbp,
+                                                           CANCER_city >= input$cancer,
+                                                           CASTHMA_city >= input$asthma,
+                                                           CHD_city >= input$chd,
+                                                           COPD_city >= input$copd,
+                                                           DIABETES_city >= input$dia,
+                                                           HIGHCHOL_city >= input$hc,
+                                                           MHLTH_city >= input$mh,
+                                                           STROKE_city >= input$stk),
+                 "Preventative Care" = exclude %>% filter(hcoverage_city >= input$insurance,
+                                                          CHECKUP_city >= input$checkup,
+                                                          CHOLSCREEN_city >= input$chol,
+                                                          COREM_city >= input$elderly,
+                                                          COREW_city >= input$elderlyf,
+                                                          MAMMOUSE_city >= input$breast,
+                                                          PAPTEST_city >= input$cervical))
   })
   
-  output$number <- renderText(paste(input$checkGroup[1], "HOW MANY?"))
-=======
-    df <- switch(input$graph_v,
-                 "Mean" = exclude %>% filter(hcoverage >= input$insurance,
-                                             CHECKUP_city >= input$checkup,
-                                             CHOLSCREEN_city >= input$chol,
-                                             COREM_city >= input$elderly,
-                                             COREW_city >= input$elderlyf,
-                                             mean_star %in% input$checkGroup),
-                 "Median" = exclude %>% filter(hcoverage >= input$insurance,
-                                               CHECKUP_city >= input$checkup,
-                                               CHOLSCREEN_city >= input$chol,
-                                               COREM_city >= input$elderly,
-                                               COREW_city >= input$elderlyf,
-                                               median_star %in% input$checkGroup))
+  mapdata_final <- reactive({
+    df <- switch(input$mm,
+                 "Mean" = mapdata() %>% filter(mean_rating %in% input$checkGroup),
+                 "Median" = mapdata() %>% filter(median_rating %in% input$checkGroup))
   })
   
-  mvalue <- reactive({
-    switch(input$graph_v,
-           "Mean" = "mean_star",
-           "Median" = "median_star")
+  var_name <- reactive({
+    switch(input$mm,
+           "Mean" = "mean_rating",
+           "Median" = "median_rating")
   })
->>>>>>> ef6b0d9d111f070a260be6500e4502ce5e9d1e6a
   
   output$map <- renderLeaflet(
-    leaflet(data = mapdata()) %>%
+    leaflet(data = mapdata_final()) %>%
       addProviderTiles("Esri.WorldGrayCanvas") %>%  # Add default OpenStreetMap map tiles
-      addCircleMarkers(lng = mapdata()$long, lat = mapdata()$lati, label = mapdata()$PlaceName,
-<<<<<<< HEAD
-                       radius = mapdata()$count_hosp, color = ifelse(mapdata()$mean_star==5,"Blue",ifelse(mapdata()$mean_star==4,"Green",ifelse(mapdata()$mean_star==3,"Gold",ifelse(mapdata()$mean_star==2,"Orange","Red")))))
-  )
-=======
-                       radius = mapdata()$count_hosp, color = ifelse(mapdata()[,mvalue()]==5,"Blue",ifelse(mapdata()[,mvalue()]==4,"Green",ifelse(mapdata()[,mvalue()]==3,"Gold",ifelse(mapdata()[,mvalue()]==2,"Orange","Red")))))
+      addCircleMarkers(lng = mapdata_final()$long, lat = mapdata_final()$lati, label = mapdata_final()$label,
+                       radius = mapdata_final()$hosp_count, color = ifelse(mapdata_final()[,var_name()]==5,"Blue",ifelse(mapdata_final()[,var_name()]==4,"Green",ifelse(mapdata_final()[,var_name()]==3,"Gold",ifelse(mapdata_final()[,var_name()]==2,"Orange","Red"))))) %>%
+      addLegend("bottomright", colors = c("Blue", "Green", "Yellow", "Orange","Red"), title = "Hospital Rating", labels = c("5 Stars", "4 Stars","3 Stars","2 Stars","1 Star"))
   )
   
-  mvalue1 <- reactive({
-    switch(input$graph_v1,
-           "Mean" = "mean_star",
-           "Median" = "median_star")
+  yvar <- reactive({
+    switch(input$type1,
+           "Preventative Care" = switch(input$prevent,
+                                        "Health Insurance Coverage" = 9,
+                                        "Colorectal Cancer Screening" = 18,
+                                        "Preventative Care Coverage among Elderly Men" = 20,
+                                        "Preventative Care Coverage among Elderly Women" = 21),
+           "Health Behavior" = switch(input$behavior,
+                                      "Binge Drinking" = 10,
+                                      "Smoking" = 22,
+                                      "Insufficient Exercise" = 26,
+                                      "Insufficient Sleep" = 31),
+           "Disease Prevalence" = switch(input$disease,
+                                         "High Blood Pressure Prevalence" = 11,
+                                         "Asthma Prevalence" = 14,
+                                         "COPD Prevalence" = 19,
+                                         "Coronary Heart Disease Prevalence" = 15,
+                                         "Diabetes Prevalence" = 23,
+                                         "High Cholesterol Prevalence" = 24,
+                                         "Mental Health Conditions Prevalence" = 28,
+                                         "Stroke Prevalence" = 32)
+           )
   })
   
-  mapdata_h <- reactive({
-    df <- switch(input$graph_v1,
-                 "Mean" = exclude %>% filter(BINGE_city >= input$binge,
-                                             CSMOKING_city>= input$smoking,
-                                             LPA_city >= input$exercise,
-                                             SLEEP_city >= input$sleep,
-                                             OBESITY_city >= input$obesity,
-                                             mean_star %in% input$checkGroup1),
-                 "Median" = exclude %>% filter(BINGE_city >= input$binge,
-                                               CSMOKING_city>= input$smoking,
-                                               LPA_city >= input$exercise,
-                                               SLEEP_city >= input$sleep,
-                                               OBESITY_city >= input$obesity,
-                                               median_star %in% input$checkGroup1))
+  title <- reactive({
+    switch(input$type1,
+           "Preventative Care" = switch(input$prevent,
+                                        "Health Insurance Coverage" = "Health Insurance Coverage",
+                                        "Colorectal Cancer Screening" = "Colorectal Cancer Screening",
+                                        "Preventative Care Coverage among Elderly Men" = "Preventative Care Coverage among Elderly Men",
+                                        "Preventative Care Coverage among Elderly Women" = "Preventative Care Coverage among Elderly Women"),
+           "Health Behavior" = switch(input$behavior,
+                                      "Binge Drinking" = "Binge Drinking",
+                                      "Smoking" = "Smoking",
+                                      "Insufficient Exercise" = "Insufficient Exercise",
+                                      "Insufficient Sleep" = "Insufficient Sleep"),
+           "Disease Prevalence" = switch(input$disease,
+                                         "High Blood Pressure Prevalence" = "High Blood Pressure Prevalence",
+                                         "Asthma Prevalence" = "Asthma Prevalence",
+                                         "COPD Prevalence" = "COPD Prevalence",
+                                         "Coronary Heart Disease Prevalence" = "Coronary Heart Disease Prevalence",
+                                         "Diabetes Prevalence" = "Diabetes Prevalence",
+                                         "High Cholesterol Prevalence" = "High Cholesterol Prevalence",
+                                         "Mental Health Conditions Prevalence" = "Mental Health Conditions Prevalence",
+                                         "Stroke Prevalence" = "Stroke Prevalence")
+    )
   })
   
-  output$map_h <- renderLeaflet(
-    leaflet(data = mapdata_h()) %>%
-      addProviderTiles("Esri.WorldGrayCanvas") %>%  # Add default OpenStreetMap map tiles
-      addCircleMarkers(lng = mapdata_h()$long, lat = mapdata_h()$lati, label = mapdata_h()$PlaceName,
-                       radius = mapdata_h()$count_hosp,
-                       color = ifelse(mapdata_h()[,mvalue1()]==5,"Blue",ifelse(mapdata_h()[,mvalue1()]==4,"Green",ifelse(mapdata_h()[,mvalue1()]==3,"Gold",ifelse(mapdata_h()[,mvalue1()]==2,"Orange","Red")))))
+  output$boxplot <- renderPlotly(
+   ggplotly(ggplot(data = exclude, aes(x=factor(mean_rating), y = exclude[,yvar()])) +
+              geom_boxplot() + ggtitle(paste(title(),"by Hospital Rating")) + 
+              xlab("Hospital Rating") + theme_few() + ylab(notes_list[match(title(),name_list)]) 
+              ) 
   )
   
-  mvalue2 <- reactive({
-    switch(input$graph_v2,
-           "Mean" = "mean_star",
-           "Median" = "median_star")})
+  output$density <- renderPlotly(
+    ggplotly(ggplot(data = exclude, aes(x = exclude[,yvar()])) + 
+               geom_density(aes(color = factor(mean_rating))) +
+               ggtitle(paste(title())) + xlab(title()) + labs(color = "Hospital Rating"))
+  )
   
-  mapdata_d <- reactive({
-    df <- switch(input$graph_v2,
-                 "Mean" = exclude %>% filter(BPHIGH_city >= input$hbp,
-                                             CANCER_city >= input$cancer,
-                                             CASTHMA_city >= input$asthma,
-                                             CHD_city >= input$chd,
-                                             COPD_city >= input$copd,
-                                             DIABETES_city >= input$dia,
-                                             HIGHICHOL_city >= input$hc,
-                                             MHLTH_city >= input$mh,
-                                             STROKE_city >= input$stk,
-                                             mean_star %in% input$checkGroup2),
-                 "Median" = exclude %>% filter(BPHIGH_city >= input$hbp,
-                                               CANCER_city >= input$cancer,
-                                               CASTHMA_city >= input$asthma,
-                                               CHD_city >= input$chd,
-                                               COPD_city >= input$copd,
-                                               DIABETES_city >= input$dia,
-                                               HIGHICHOL_city >= input$hc,
-                                               MHLTH_city >= input$mh,
-                                               STROKE_city >= input$stk,
-                                               median_star %in% input$checkGroup2))
+  output$city_state <- renderText(
+    input$citystate
+  )
+  
+  city_level <- reactive({
+    df <- exclude %>% filter(label == input$citystate)
   })
   
-  output$map_d <- renderLeaflet(
-    leaflet(data = mapdata_d()) %>%
-      addProviderTiles("Esri.WorldGrayCanvas") %>%  # Add default OpenStreetMap map tiles
-      addCircleMarkers(lng = mapdata_d()$long, lat = mapdata_d()$lati, label = mapdata_d()$PlaceName,
-                       radius = mapdata_d()$count_hosp,
-                       color = ifelse(mapdata_d()[,mvalue2()]==5,"Blue",ifelse(mapdata_d()[,mvalue2()]==4,"Green",ifelse(mapdata_d()[,mvalue2()]==3,"Gold",ifelse(mapdata_d()[,mvalue2()]==2,"Orange","Red")))))
+  output$avg_star <- renderInfoBox({
+    infoBox(
+      "Avg. Hospital Rating", paste(city_level()$mean_rating, "Stars"), icon = icon("star"),
+      color = "yellow"
+    )
+  })
+  
+  output$n_hosp <- renderInfoBox({
+    infoBox(
+      "No. of Hospitals", paste(as.character(city_level()$hosp_count), "Hospitals"), icon = icon("hospital-o"),
+      color = "red"
+    )
+  })
+  
+  output$total <- renderInfoBox({
+    infoBox(
+      "Total Population", paste(as.character(city_level()$Population_city), "Residents"), icon = icon("users"),
+      color = "blue"
+    )
+  })
+  
+  city_specific <- reactive({
+    df <- city_hosp %>% filter(label == input$citystate) %>% filter(!is.na(Hospital.overall.rating))
+  })
+  
+  output$quality_chart <- renderPlotly(
+    ggplotly(ggplot(data = city_specific(), aes(x = Hospital.overall.rating)) + geom_bar() + 
+               ggtitle("Hospital Overall Rating") + theme_few() + ylab("Count") + xlab("Rating") +
+               scale_x_discrete(drop=FALSE))
   )
   
->>>>>>> ef6b0d9d111f070a260be6500e4502ce5e9d1e6a
+  
+  
 }
-

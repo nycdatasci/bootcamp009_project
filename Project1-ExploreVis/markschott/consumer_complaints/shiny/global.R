@@ -41,6 +41,8 @@ pops = read.csv("data/us_populations.csv", stringsAsFactors = F)
 ## Create choices for selection input
 complaint_vars = names(complaints %>% select(-c(Date.received, Date.sent.to.company, 
                                                 latitude, longitude)))
+## Add blank choice to selection input
+complaint_vars = c(complaint_vars,"All")
 
 ## Read in Rda of the consumer text input for each complaint grouped by each company
 narratives = readRDS('data/narratives.Rda')
