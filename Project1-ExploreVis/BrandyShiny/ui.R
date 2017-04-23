@@ -45,7 +45,7 @@ shinyUI(dashboardPage(
                                 choices = c("Marijuana", "Cocaine", "Heroin", "Meth", "Molly"),
                                 selected = "Marijuana"), width = NULL),
                   box(status = 'primary',
-                    plotOutput("drugPlot"), width = NULL
+                    plotlyOutput("drugPlot"), width = NULL
                   ),
                   box(status = "warning",
                       tags$b("For reference:"),
@@ -69,7 +69,7 @@ shinyUI(dashboardPage(
                                      choices = c('2003', '2005', '2007', '2009', '2011', '2013', '2015'),
                                      selected = '2003'), width = NULL),
                        box(status = 'primary',
-                         plotOutput("sadPlot"), width = NULL),
+                         plotlyOutput("sadPlot"), width = NULL),
                        box(status = "warning",
                            tags$b("For reference:"),
                            tags$i("The National Suicide Prevention Reasource Center estimates that 3.7% of the US Population
@@ -81,7 +81,7 @@ shinyUI(dashboardPage(
                                      choices = c('Male', 'Female'),
                                      selected = 'Male'), width = NULL),
                        box(status = 'primary',
-                         plotOutput("sexPlot"), width = NULL)
+                         plotlyOutput("sexPlot"), width = NULL)
                        ))),
       tabItem(tabName = "obesity",
               h2("Obesity by Grade Level and Boro Over Time"),
@@ -93,7 +93,7 @@ shinyUI(dashboardPage(
                                      choices = c('2003', '2005', '2007', '2009', '2011', '2013', '2015'),
                                      selected = '2003'), width = NULL),
                        box(status = 'primary',
-                         plotOutput("gradePlot"), 
+                         plotlyOutput("gradePlot"), 
                          width = NULL),
                        box(status = 'warning',
                          tags$b("For reference"),
