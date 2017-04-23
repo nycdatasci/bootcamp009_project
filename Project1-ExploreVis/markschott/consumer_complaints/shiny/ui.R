@@ -17,13 +17,17 @@ shinyUI(pageWithSidebar(
                                       label = 'Date range input: yyyy-mm-dd',
                                       start = min(complaints$Date.received), 
                                       end = max(complaints$Date.received)
-                       ),
-                       checkboxInput("normalize", "Normalize Counts", value = FALSE),
+                     ),
+                       checkboxInput("normalize", "Normalize Map Counts", value = FALSE),
                        selectInput("map_var", "Choose a variable:",
-                                   choices = complaint_vars),
+                                   choices = complaint_vars,
+                                   selected = complaint_vars[1]),
                        selectizeInput(
-                         'dep_list', 'Items of interest', choices = var_list(), multiple = F
-                       )
+                         'dep_list', 'Items of interest', 
+                         choices = "", 
+                         multiple = TRUE
+                       ),
+                       plotOutput("ts")
                        
       ),
       
@@ -48,7 +52,8 @@ shinyUI(pageWithSidebar(
       
       conditionalPanel(condition="input.conditionedPanels==5",
                        selectizeInput(
-                         'company_var', 'Company', choices = companies, multiple = F
+                         'company_var', 'Company', choices = companies, 
+                         multiple = F
                        ),
                        actionButton("update", "Update Word Bubble"),
                        hr(),

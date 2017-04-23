@@ -6,11 +6,22 @@ library(dplyr)
 ## server.R ##
 shinyServer(function(input, output, session){
   output$controlPlot <- renderPlot({
-    ggplot(data=data_1(), aes(x=x_var, y=y_var)) + geom_violin()
+    ggplot(data=data_1(), aes(x=x_var, y=y_var)) + geom_violin() +
+      labs(x='control', y='grad rate', title='Graduation Rates by Control')
   })
   
   output$graddensityPlot <- renderPlot({
-    ggplot(data=data_1(), aes(x=y_var)) + geom_density() + xlim(0, 1)
+    ggplot(data=data_1(), aes(x=y_var)) + stat_density(geom='line') + 
+      labs(title='Density of Graduation Rates', x='graduation rate')
+  })
+  
+  output$blackdensityPlot <- renderPlot({
+    g <- ggplot(data=data, aes(x=MN_EARN_WNE_P7))  + xlim(0, 1e5) +
+      labs(title='Density of Mean Earnings', x='Earnings')
+    if(input$filt!='None') {
+      g <- g + stat_density(aes_string(color=filts[[input$filt]]), position='dodge', geom='line')
+    }else {g <- g + stat_density(geom='line')}
+    g
   })
   
   output$statePlot <- renderLeaflet({
@@ -54,7 +65,8 @@ shinyServer(function(input, output, session){
     # Apply filters
     ds <- data %>%
       filter(
-        UGDS >= ugrads
+        UGDS >= ugrads[1],
+        UGDS <= ugrads[2]
       ) %>%
       arrange(UNITID)
     
@@ -76,8 +88,7 @@ shinyServer(function(input, output, session){
 
     ds <- as.data.frame(ds)
     
-    # Add column which says whether the movie won any Oscars
-    # Be a little careful in case we have a zero-row data frame
+    
     ds
   })
   
@@ -91,17 +102,24 @@ shinyServer(function(input, output, session){
     xvar <- prop("x", as.symbol(input$xvar))
     yvar <- prop("y", as.symbol(input$yvar))
     
+    data_scatter <- data_scatter()[complete.cases(data_scatter()[,c(input$xvar,input$yvar)]),]
+    
+    #if(xvar_name=='ADM_RATE') data_scatter <- data_scatter %>% filter(ADM_RATE > 0)
+    
+    
     data_scatter %>%
       ggvis(x = xvar, y = yvar) %>%
       layer_points(size := 50, size.hover := 200, stroke:='blue',
-                   fillOpacity := 0.2, fillOpacity.hover := 0.5) %>%
-      #add_tooltip(movie_tooltip, "hover") %>%
+                   fillOpacity := 0.2, fillOpacity.hover := 0.5, 
+                   key := ~UNITID) %>%
+      add_tooltip(college_tooltip, "hover") %>%
       add_axis("x", title = xvar_name) %>%
       add_axis("y", title = yvar_name) %>%
-      layer_smooths() %>%
+      layer_smooths()
       #add_legend("stroke", title = "Won Oscar", values = c("Yes", "No")) %>%
-      scale_nominal("stroke", domain = c("Yes", "No"),
-                    range = c("orange", "#aaa"))
+      #scale_nominal("stroke", domain = c("Yes", "No"),
+                    #range = c("orange", "#aaa")
+    
   })
   
   vis %>% bind_shiny("plot1")
@@ -117,8 +135,45 @@ shinyServer(function(input, output, session){
   })
   
   output$table <- DT::renderDataTable({
-    datatable(data=data, rownames=FALSE) 
+    datatable(data=data %>% select(college=INSTNM, state=STABBR, undergrads=UGDS, 
+                                   median_income=MN_EARN_WNE_P7,
+                                   grad_rate_4yr=C150_4, grad_rate_2yr=C150_L4), rownames=F) 
   })
+  
+  data_comp <- reactive({
+    college <- input$col_comp
+    
+    if(nchar(college)>0) {
+      three_data <- filter(data, INSTNM==college) %>% select(TUITIONFEE_IN, ADM_RATE, REGION_2)
+      data %>% filter(abs(TUITIONFEE_IN-three_data[1,1])<1e4, 
+                    abs(ADM_RATE-three_data[1,2])<.1, 
+                    REGION_2==three_data[1,3]) %>% 
+        select(college=INSTNM, state=STABBR, control=CONTROL_2, undergrads=UGDS, admit_rate=ADM_RATE, 
+               median_income=MN_EARN_WNE_P7, grad_rate_4yr=C150_4, grad_rate_2yr=C150_L4)
+    }else {select(data, college=INSTNM, state=STABBR, undergrads=UGDS, 
+                  median_income=MN_EARN_WNE_P7, grad_rate_4yr=C150_4, 
+                  grad_rate_2yr=C150_L4)
+    }
+    
+  })
+  
+  output$comp <- DT::renderDataTable({
+    datatable(data=data_comp(), rownames = F)
+    
+  })
+  
+  college_tooltip <- function(x) {
+    if (is.null(x)) return(NULL)
+    if (is.null(x$UNITID)) return(NULL)
+    
+    # Pick out the college with this ID
+    all_colleges <- isolate(data_scatter())
+    college <- all_colleges[all_colleges$UNITID == x$UNITID, ]
+    
+    paste0("<b>", college$INSTNM, "</b><br>",
+           'undergrads: ', college$UGDS, "<br>"
+    )
+  }
   
   
   

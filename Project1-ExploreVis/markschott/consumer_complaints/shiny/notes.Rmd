@@ -50,15 +50,20 @@ I think that plotting the word count for a specific company versus the number of
 11. Add title of company to word cloud, Add text displaying total word count by the word cloud
 12. Change label so that it shows up clearly on the map.    (Done)
 13. Assemble slides into cohesive story, thinking something to do with states and company
-14. Display counts in map by company make one input for that
+14. Display counts in map by company make one input for that     (Done)
 15. Change company selector from drop down to search input     (Done)
-16. Analyze difference from Date.received to Date.sent.to.company 
+16. Analyze difference from Date.received to Date.sent.to.company    (Nope)
 17. Mosaic plot pick two variables to sample and display (too large too display all?)
-18. Change max n to adjust for dates
+18. Change max n to adjust for dates                    (Done, removed from bar plot)
 19. Add second variable to bar plots                    (Done)
-20. Remove companies who have no text
+20. Remove companies who have no text                   (Done)
 21. Show word bubble by state and do random sampling of text
-22. Plot company word count versus. company complaints, same for state
+22. Plot word counts versus complaint counts. (More complaints more words... so?)
 23. Hide/Change legend position for bar plot        (Done)
 24. Change bar plot y label to Total Count          (Done)
-25. Add plot to map tab that shows count by date by State
+25. Add plot to map tab that shows count by date by State            (Done)
+26. Analyze time series data
+    a. Day of the week, group by month analysis
+      - Frequency by day of the week/month
+    b. group data into weeks/months to smooth out deviations
+      
