@@ -1,0 +1,11 @@
+name: project
+title: project
+account: fu-yuan
+server: shinyapps.io
+appId: 174841
+bundleId: 801769
+url: https://fu-yuan.shinyapps.io/project/
+when: 1493055093.94247
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: .RData|Final_data.csv|R_loan.csv
