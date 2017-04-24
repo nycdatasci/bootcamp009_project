@@ -24,10 +24,9 @@ navbarPage(
                 
                 h2(img(src = "videocam.png", height = 40),
                    "Movies in NYC"),
-                
-                selectizeInput("Genres", h4(img(src = 'gen.png', height = 40),  "Select the genres:"),choices = Genres,
-                                multiple = TRUE),
-                helpText("Please select the genres to see the movies on the map and graphs"),
+                checkboxGroupInput("Genres", h4(img(src = 'gen.png', height = 40),  "Select the Genres:"),choices = Genres,
+                                   selected = Genres),
+                helpText("You can see more movie information by click the color circle on the map"),
                 sliderInput(
                     "Year",
                     h4("Year"),
@@ -44,12 +43,12 @@ navbarPage(
                 )
                 ),
             absolutePanel(id = "controls", class = "panel panel-default", fixed = FALSE,
-                          draggable = TRUE, top = 300, left ="auto" , right =20 , bottom = "auto",
+                          draggable = TRUE, top = 280, left ="auto" , right =20 , bottom = "auto",
                           width = 350, height = "auto",
                           plotOutput("yearbar",height = 200),
                           plotOutput("scorebar",height = 200)
             ),
-########################## data scource ###############################
+            # the origins of the dataset
             tags$div(
                 id = "cite",
                 'Data was provide by ',
@@ -74,7 +73,7 @@ navbarPage(
                                     min = 1,  max = 200,  value = c(1,200))),
                  
                  column(9,
-                        h3("What are the words the Directors use the most,"),
+                        h3("What are the words the Directors use the most in the movie title,"),
                         h3("when they film the movies in NYC? "),
                         plotOutput("wordcloud",height=500)
                  )

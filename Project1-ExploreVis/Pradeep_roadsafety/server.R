@@ -1,15 +1,5 @@
 shinyServer(function(input, output){
   
-  output$plot1 <- renderPlot({
-    group_by(filter(mvc_major, input$borough1),YEAR) %>% summarise(count = n())%>%
-      ggplot(aes(x=as.integer(as.character(YEAR)), y=count)) +
-      geom_point(size = 4, color = 'red') +
-      geom_line(size = 2, color = 'red') + theme_classic() +
-      geom_text(aes(label = count), vjust = 2) +
-      labs(title = 'Plot of fatalities',
-           x = 'Year', y = 'Number of Accidents')
-
-  })
   
   output$map1 <- renderLeaflet({
     leaflet() %>%
