@@ -15,6 +15,10 @@ shinyServer(function(input, output, session){
       labs(title='Density of Graduation Rates', x='graduation rate')
   })
   
+  output$gradPlot <- renderPlot({
+    ggplot(data=data_1(), aes(x=C150_L4)) + geom_density() 
+  })
+  
   output$blackdensityPlot <- renderPlot({
     g <- ggplot(data=data, aes(x=MN_EARN_WNE_P7))  + xlim(0, 1e5) +
       labs(title='Density of Mean Earnings', x='Earnings')
@@ -43,11 +47,9 @@ shinyServer(function(input, output, session){
       
     } else {
       data %>% filter(SCH_DEG==2 | SCH_DEG==1) %>%
-        select(x_var=CONTROL_2, y_var=C150_L4)
+        select(x_var=CONTROL_2, y_var=C150_L4, HIGHDEG)
     }
   })
-  
-  
   
   state_school <- reactive({
     data %>% filter(STABBR==input$state_choice)
@@ -135,17 +137,18 @@ shinyServer(function(input, output, session){
     college <- input$col_comp
     
     if(nchar(college)>0) {
-      four_data <- filter(data, INSTNM==college) %>% select(TUITIONFEE_IN, ADM_RATE, REGION_2, STABBR)
-      d <- data %>% filter(abs(TUITIONFEE_IN-four_data[1,1])<1e4, 
-                    abs(ADM_RATE-four_data[1,2])<.1, 
-                    REGION_2==four_data[1,3]) %>% 
-        select(college=INSTNM, state=STABBR, control=CONTROL_2,
-               undergrads=UGDS, admit_rate=ADM_RATE, pct_pell=PCTPELL, 
+      five_data <- filter(data, INSTNM==college) %>% select(TUITIONFEE_IN, ADM_RATE, REGION_2, STABBR, HIGHDEG)
+      d <- data %>% filter(abs(TUITIONFEE_IN-five_data[1,1])<1e4, 
+                    abs(ADM_RATE-five_data[1,2])<.1, 
+                    REGION_2==five_data[1,3],
+                    HIGHDEG==five_data[1,5]) %>% 
+        select(college=INSTNM, state=STABBR, control=CONTROL_2, tuition=TUITIONFEE_IN,
+               undergrads=UGDS, admit_rate=ADM_RATE, high_deg=HIGHDEG, pct_pell=PCTPELL, 
                median_income=MN_EARN_WNE_P7, grad_rate_4yr=C150_4, grad_rate_2yr=C150_L4)
       if(as.logical(input$state)){
-        d <- d %>% filter(state==four_data[1,4])
+        d <- d %>% filter(state==five_data[1,4])
       }
-    }else {d <- select(data, college=INSTNM, state=STABBR, control=CONTROL_2,
+    }else {d <- select(data, college=INSTNM, state=STABBR, control=CONTROL_2, tuition=TUITIONFEE_IN,
                        undergrads=UGDS, admit_rate=ADM_RATE, pct_pell=PCTPELL, 
                        median_income=MN_EARN_WNE_P7, grad_rate_4yr=C150_4, grad_rate_2yr=C150_L4)
     }
