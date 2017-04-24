@@ -28,6 +28,7 @@ for(file in turnstile_files) {
                value = file,
                append = TRUE,
                headers = TRUE,
+              d
                sep = ",")
 }
 

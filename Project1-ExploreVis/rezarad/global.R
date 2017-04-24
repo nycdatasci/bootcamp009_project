@@ -2,7 +2,11 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 source("./helpers.R")
 
-stations_data = getStationData("./data/Stations.csv")
+# import stations information linked 
+stations_data = getStationData("./data/Updated_Stations.csv")
+
+# import data into a df
+turnstile_db = turnstileData()
 
 # list of mta lines including hex code for color
 mta_lines = list("1" = "#EE352E","2" = "#EE352E","3" = "#EE352E",
