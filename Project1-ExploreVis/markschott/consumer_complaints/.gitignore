@@ -3,3 +3,4 @@ images
 preProc_old.R
 .RData
 consumer_complaints-cache
+consumer_complaints-figure
