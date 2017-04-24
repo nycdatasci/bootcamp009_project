@@ -8,5 +8,5 @@ merged_rent_value$Dates = as.yearmon(merged_rent_value$Dates)
 merged_rent_value$Zipcode = as.factor(merged_rent_value$Zipcode)
 
 # Loading Zipcode Spatial Data
-load("./zipcode_shape_data.rda")
+load("./zipcode_shape_data2.rda") 
 
