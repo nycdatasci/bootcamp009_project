@@ -12,7 +12,7 @@ fillPage(theme = shinytheme("simplex"),
                                  options = list(
                                    "color" = "white"
                                  )),
-                  textOutput("station_stats")
+                  textOutput("ts_per_station")
                   )
                 
   )
