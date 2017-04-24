@@ -26,8 +26,10 @@ function(input, output, session) {
         ### switching back and forth
         ### Repeat the primary_counts by the secondary counts before doing a column bind then mutate
         secondary_counts = inner_join(secondary_counts, primary_counts, by = input$primary)
-        secondary_counts %>% mutate(Probability = round(Count/total_count,4)) %>%
+        secondary_counts = secondary_counts %>% mutate(Probability = round(Count/total_count,4)) %>%
           select(-c(total_count)) %>% arrange(desc(Probability))
+        ## Factorize so that they appear nicely in the plot
+        #secondary_counts$Probability = factor(secondary_counts$Probability)
     })
     
     output$df <- renderDataTable(
@@ -64,7 +66,9 @@ function(input, output, session) {
             theme(axis.text.x = element_text(angle=90, size = 13),
                 axis.text.y = element_text(size = 13),
                 axis.title = element_text(size = 15),
-                legend.position = leg_pos(), legend.title = element_blank())
+                legend.position = leg_pos(), legend.title = element_blank(),
+                panel.grid.major.y = element_line(color = 'black')) + 
+            ggtitle(paste('Counts for',input$primary,'Filled by',input$secondary,collapse = ' '))
     )
     })
     
@@ -90,6 +94,10 @@ function(input, output, session) {
                             Date.received > input$dateRange[1])
     })
     
+    event_counts <- reactive({
+      filter_dates() %>% group_by_(input$map_var) %>% summarize(event_count = n())
+    })
+    
     filter_custom_var <- reactive({
       ## Filter data by user input variables. If variable is "All" don't do any filtering, (AKA 
       ## include all variables). This level of filtering is done after the dates.
@@ -100,9 +108,19 @@ function(input, output, session) {
       }
     })
     
-    counts_for_TSplot <- reactive({
+    plt <- reactive({
       ## Group filtered data frame by the Date.received and compute the counts
       filter_custom_var() %>% group_by(Date.received) %>% summarize(Count = n())
+    })
+    
+    xts_for_TSplot <- reactive({
+      ## Create xts object for plotting
+      switch(as.integer(input$period),
+             apply.daily(xts(plt()$Count, order.by = plt()$Date.received), input$period_func),
+             apply.weekly(xts(plt()$Count, order.by = plt()$Date.received), input$period_func),
+             apply.monthly(xts(plt()$Count, order.by = plt()$Date.received), input$period_func),
+             apply.quarterly(xts(plt()$Count, order.by = plt()$Date.received), input$period_func)
+      )
     })
     
     filter_states <- reactive ({
@@ -111,6 +129,7 @@ function(input, output, session) {
       tmp = filter_custom_var() %>% group_by(State, add=TRUE) %>% summarize(count = n())
       
       ### Inner join to get state names and population then compute new normalized counts
+      ### by population
       tmp = inner_join(tmp, pops, by = c('State' = 'abbreviation')) %>%
         ### Multiply by a one hundred thousand to avoid fractional people
         mutate(norm_count = round(100000*(count/population_2016)))
@@ -210,30 +229,83 @@ function(input, output, session) {
     
     output$ts_plot = renderPlot({
       
-      ggplot(counts_for_TSplot(), aes(Date.received, Count)) +
-        geom_jitter()
-        
+      # ggplot(counts_for_TSplot(), aes(Date.received, Count)) +
+      #   geom_jitter()
+    plot(xts_for_TSplot(), type = 'l', main = 'Counts over Time', 
+           ylab = 'Count', tick = 1)
     })
-    
+      
     output$day_freq = renderPlot({
       
       weekday_freq() %>% ggplot(aes(x=day, y=Count, fill = day)) + 
-        geom_bar(stat='identity')
+        geom_bar(stat='identity') + theme(axis.text.x = element_text(angle = 90), 
+                                          legend.position = 'none') +
+        ggtitle('Counts for each Weekday based on Inputs')
       
     })
     
     output$month_freq = renderPlot({
       
       month_freq() %>% ggplot(aes(x=month, y=Count, fill = month)) + 
-        geom_bar(stat='identity') + theme(axis.text.x = element_text(angle = 90))
+        geom_bar(stat='identity') + theme(axis.text.x = element_text(angle = 90),
+                                          legend.position='none') +
+        ggtitle('Counts for each Month based on Inputs')
       
     })
 
+    ################################
+    ## For the mosaic plot tab
+    ######################################
+    
+    observe({
+      ### Depending on the extra variable chosen, display the corresponding components of that variable
+      mosaic_list1 = sort(unique(complaints[,input$mosaic_var1]))
+
+      updateSelectizeInput(
+        session, "mosaic_list1",
+        choices = mosaic_list1,
+        selected = mosaic_list1[1])
+    })
+    
+    observe({
+      ### Depending on the extra variable chosen, display the corresponding components of that variable
+      mosaic_list2 = sort(unique(complaints[,input$mosaic_var2]))
+      
+      updateSelectizeInput(
+        session, "mosaic_list2",
+        choices = mosaic_list2,
+        selected = mosaic_list2[1])
+    })
+
+    mosaic_df = reactive({
+      ## Filter the data frame to a reasonable amount for the mosaicplot
+      complaints %>% select_(input$mosaic_var1, input$mosaic_var2) %>%
+        filter(.[,input$mosaic_var1] %in% input$mosaic_list1) %>%
+        filter(.[,input$mosaic_var2] %in% input$mosaic_list2) 
+    })
+    
+    output$mosaic = renderPlot({
+      ### las = 2 makes the axis labels display perpendicular to the axis
+      mosaicplot(table(mosaic_df()), shade = T,  las = 2, main = NULL)
+    })
 ################################
     ## For the word cloud tab
 ######################################
     
-
+    observe({
+      ### Depending on the extra variable chosen, display the corresponding components of that variable
+      if (input$wordcloud_var == "All") {
+        wc_list = ""
+      } else { 
+        wc_list = sort(unique(complaints[,input$wordcloud_var]))
+      }
+      updateSelectizeInput(
+        session, "wordcloud_dep_list",
+        choices = wc_list
+        #selected = dep_list[1]
+      )
+    })
+    
     # Define a reactive expression for the document term matrix
     terms <- reactive({
         # Change when the "update" button is pressed...
@@ -241,8 +313,19 @@ function(input, output, session) {
         # ...but not for anything else
         isolate({
             withProgress({
-                setProgress(message = "Processing corpus...")
-                narr = Corpus(VectorSource(narratives[narratives$Company == input$company_var, 'text']))
+              setProgress(message = "Processing corpus...")
+                narratives = complaints %>% 
+                  filter(complaints[,as.character(input$map_var)] %in% input$dep_list) %>%
+                  #group_by_(input$map_var) %>% 
+                  select_(input$map_var, 'Consumer.complaint.narrative') %>%
+                  filter(Consumer.complaint.narrative != "") %>%
+                  summarise(text = paste0(Consumer.complaint.narrative,collapse='')) %>%
+                  # Make a new column with the number of characters
+                  mutate(chars = nchar(text)) %>%
+                  # Make another new column with the number of words total
+                  mutate(words = sapply(gregexpr("\\W+", text),length)) %>%
+                  arrange(desc(chars))
+                narr = Corpus(VectorSource(narratives[, 'text']))
                 narr = tm_map(narr, stripWhitespace)
                 narr = tm_map(narr, tolower)
                 narr = tm_map(narr, removeWords,stopwords('english'))

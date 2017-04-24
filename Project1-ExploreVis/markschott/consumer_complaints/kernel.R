@@ -134,4 +134,10 @@ ggplot(public_counts, aes(x=reorder(Company.public.response,count), y= count)) +
 
 
 ### Mosaic plots
+test = complaints %>% select(State, Consumer.disputed.,Submitted.via) %>% 
+  filter((State %in% c('CA', 'NY', 'MI', 'FL', 'GA', 'DC', 'AL','CT')))
+mosaicplot(table(test), shade=T, las = 2)
 
+## gets busy quick. How many can I fit?
+test = complaints %>% select(State, Consumer.disputed.) 
+mosaicplot(table(test), shade=T, las = 2)
