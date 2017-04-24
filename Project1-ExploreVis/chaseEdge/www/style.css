@@ -1,0 +1,26 @@
+.heatmap-details {
+    /*position: absolute;
+    top: 0;
+    right: 0;*/
+}
+
+.container-fluid{
+    padding: 0;
+}
+
+.shinysky-select2Input, .select2-choices{
+    width: 100%;
+    margin-bottom: 10px;
+    border-radius: 4px;
+}
+
+.select2-search-choice {
+    margin-top: 6px !important;
+    padding: 3px 12px;
+    border: 0 solid rgba(0, 0, 0, 0) !important;
+}
+
+.tab-content {
+    padding-top: 25px;
+    padding-right: 10px;
+}
