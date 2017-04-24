@@ -1,7 +1,7 @@
 # convert matrix to dataframe
 library(ggvis)
 
-data <- readRDS("~/Student_Loans/data.Rds")
+data <- readRDS("data.Rds")
 
 # remove row names
 
