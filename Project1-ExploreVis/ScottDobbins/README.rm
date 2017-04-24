@@ -1,6 +1,6 @@
 @author Scott Dobbins
-@version 0.4
-@date 2017-04-20 23:51
+@version 0.9
+# @date 2017-04-23 23:45
 
 
 ## Version history ###
@@ -37,15 +37,61 @@ This version maps out all semi-cleaned longitudinal and latitudinal target data
   onto a selection of maps with map label options and clickable, detailed tooltips.
 Major changes: big data clean; incorporation of all Vietnam and Korea data
 
+0.5
+This version maps out all semi-cleaned longitudinal and latitudinal target data
+  from the United States Airforce in 4 major conflicts during the 20th century
+  onto a selection of maps with map label options and clickable, well-formatted, 
+  detailed tooltips using speed advantages brought to it by data table functions.
+Major changes: help cleaning and formatting with helper.R; speed-optimized with data table
+
+0.6
+This version maps out all semi-cleaned longitudinal and latitudinal target data
+  from the United States Airforce in 4 major conflicts during the 20th century
+  onto a selection of maps with map label options and clickable, well-formatted, 
+  detailed tooltips using speed advantages brought to it by data table functions
+  and cached outputs (while still enabling full refreshes of the displayed data).
+Major changes: further organized code with cleaner.R; development-friendly caching
+
+0.6.1	Additionally cleared up how data is input and processed
+	Fixed Korean war dates
+	Fixed how data is saved and read
+
+0.7
+This version maps out all semi-cleaned longitudinal and latitudinal target data
+  from the United States Airforce in 4 major conflicts during the 20th century
+  onto a selection of maps with map label options and clickable, well-formatted, 
+  detailed tooltips using speed advantages brought to it by data table functions
+  and cached outputs (while still enabling full refreshes of the displayed data).
+Major changes: Shiny dashboard
+
+0.8
+This version maps out all semi-cleaned longitudinal and latitudinal target data
+  from the United States Airforce in 4 major conflicts during the 20th century
+  onto a selection of maps with map label options and clickable, well-formatted, 
+  detailed tooltips using speed advantages brought to it by data table functions
+  and cached outputs (while still enabling full refreshes of the displayed data).
+  It also plots a bin-editable histogram of missions by date for each conflict.
+Major changes: full sidebar; tabs for each war
+
+0.8.1	Added stat boxes in the overview tab
+	Made date restrictions apply to all data accessed in all tabs
+	Made sampling occur after date restriction changes
+	Opacity now updates with sample size as well
+
+0.9
+Version for class lecture
+Major changes: Sandbox added; labeling added
+Notes: sidebar and other parts reduced to what works
 
 **Future version plans:
-**Tabs for exploring each separate conflict on its own in detail
-**Lots of ggplots, maybe a self-playing gif of bombs droppedover time for each conflict
-**Further clean/process the data
-**Fix some buggy tooltips (number agreement, NAs, capitalization, etc.)
-**Make efficient for use on shinyapps.io through SQLite
-**Maybe match (or fail to match) the data with the historical record.
-**Could also allow users to link (using html) to relevant Wikipedia articles on
+*Tabs for exploring each separate conflict on its own in detail
+*Lots of ggplots, maybe a self-playing gif of bombs droppedover time for each conflict
+*Fix some buggy tooltips (number agreement, NAs, capitalization, etc.)
+	Korea cities and such are mostly invisible
+	and, of course, number agreement
+*Make efficient for use on shinyapps.io through SQLite
+*Maybe match (or fail to match) the data with the historical record.
+*Could also allow users to link (using html) to relevant Wikipedia articles on
   certain aspects of the conflicts (airframes, campaigns, etc.)
 
 ### notes on data sources ###
@@ -66,27 +112,4 @@ Vietnam
 data source: data.mil
 data origin URL: https://insight.livestories.com/s/v2/vietnam/48973b96-8add-4898-9b33-af2a676b10bb/
 
-
-### Thomas recommendations ###
-# maybe do SQLite
-# maybe add pictures to pop up
-# maybe add hyperlinks to various Wikipedia pages
-# definitely add plots and summary stats
-
-### end ###
-
-
-
-***** PRIORITIES *****
-
-1. figure out exactly what some column variables are and rename accordingly
-2. further clean the data
-3. get the program to write a better csv file that's processed by me
-4. ensure that all data tables are in third normal form and coordinate with glossary tables
-5. add tabs for individual conflicts
-
-
-*** eventually ***
-- use branching to develop new features on local repository
-- remove debug features from a branched version
-
+### END ###

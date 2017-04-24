@@ -10,33 +10,12 @@ library(plotly)
 library(dygraphs)
 library(xts) # as.Date is masked by zoo!!
 library(reshape2)
+library(googleVis)
+library(leaflet)
+library(DT)
 
 claims <- read.table("tidy_claims.tsv", header = T, sep = " ") # space separated for some reason
 
-# total claims by airport
-claims %>% group_by(Airport.Code) %>%
-  summarise(n = n()) %>%
-  arrange(desc(n)) %>%
-  top_n(20)
-
-claims %>% group_by(Airline.Name) %>%
-  summarise(n = n()) %>%
-  arrange(desc(n)) %>%
-  top_n(20)
-
-# total close amount by airport
-claims %>% group_by(Airport.Code) %>%
-  summarise(total_claims = sum(Close.Amount)) %>%
-  arrange(desc(total_claims)) %>%
-  top_n(20)
-
-# JFK leads by a whopping margin. Maybe we can make a group bar chart that lets us filter by
-# airport code, showing the total claims, close amounts, and by month?
-
-# How bout overall claim type?
-table(claims$Claim.Type)
-# property loss first, , followed by prop damange, then personal injury
-# Let's group this, and find which were denied, settled, or approved
 
 type_df <- claims %>% group_by(Claim.Type) %>%
   summarise(n = n(),
@@ -53,29 +32,6 @@ joined_typedis <- left_join(type_dis, type_df, by = "Claim.Type") %>%
          settled_ratio = Settle / n) %>%
   select(- overall_ratio)
 
-#60% is property loss, 38% is prop damange, less than 1% is personal injury, and the rest
-# are very small.
-# The highest approval rate is only 25%!!!, when property damage is involved. They also
-# settle 14% of the time. Property loss is only accepted 18% of the time, and settled 7%.
-
-# Out of curiosity, I want to see where people claimed injuries.
-claims %>% group_by(Airline.Name, Airport.Code) %>%
-  filter(Claim.Type == "Personal Injury" & Disposition != "Deny") %>%
-  summarise(n = n()) %>%
-  arrange(desc(n))
-
-# well well well. what do we have here. How bout if we take out the disposition type.
-
-claims %>% group_by(Airline.Name) %>%
-  filter(Claim.Type == "Personal Injury") %>%
-  summarise(n = n()) %>%
-  arrange(desc(n))
-# I'd rather leave out the disposition type for personal injury, on account of data being 
-# small and if it seems serious enough to file a claim for injury, might as well leave it.
-
-# Vegas baby. because they were hungover?? Fun fact, all of these were denied.
-# Followed by Newark at 3, Denver, Honolulu, Houton, and Orlanda with 2 that were not denied. 
-# View(claims[claims$Claim.Type == "Personal Injury", ])
 
 # Adding Total.Claims will make calculations easier
 claims <- claims %>% mutate(Total.Claims  = Audio.Video +
@@ -137,21 +93,6 @@ by_month <- claims %>% filter(Claim.Type != "Compliment") %>%
   filter(Claim.Type != "Compliment") %>%
   summarise(avg_claim_amount = mean(Total.Claims),
             median_claim_amount = median(Total.Claims))
-
-
-
-# Kind of surprising, I thought there'd be more during November-December, but the avg
-# claims looks to be pretty even across the board. What if we look at the same plot, 
-# but with Airlines and Airports? Maybe it'll be good to get the ratio of claims/flights\
-# first.
-
-
-claims %>% group_by(Airport.Code, Claim.Type) %>%
-  summarise(n = n()) %>%
-  arrange(Claim.Type)
-
-################## GO BACK #############
-
 
 
 
@@ -252,7 +193,6 @@ ggplot(lltest, aes(x = Latitude, y = Longitude)) + geom_point()
 
 
 ######## compare top10 airports and airlines
-top10airlines <- read.csv("top10airlines.csv", header = T)
 top10airports <- read.csv("top10airports.csv", header = T)
 
 # Let's do top10airlines first. Create a dataframe from claims that has total count of
@@ -278,15 +218,13 @@ top10ac <- claims %>% filter(Airport.Code %in% c('ATL','LAX','ORD','DFW',
 top10ac <- left_join(top10ac, top10airports, by = c("Airport.Code", "Year"))
 
 top10ac <- top10ac %>% mutate(Claim.Rate = total / flights)
+top10ac$Year <- as.character(top10ac$Year)
 
-top10ac %>% group_by(Airport.Code) %>%
-  summarise(total_claims = sum(total),
-            total_flights = sum(flights)) %>%
-  mutate(claim_rate = total_claims / total_flights)
 
 
 ## Now do airlines
 # tidy
+top10airlines <- read.csv("top10airlines.csv", header = T)
 top10airlines <- top10airlines %>% rename("2015" = est_2015_flights, "2014" = est_2014_flights) %>%
   gather(key = "Year", value = "flights", 2:3)
 
@@ -297,8 +235,7 @@ top10al <- claims %>% filter((as.character(Airline.Name) %like% "^American Airli
                                 Airline.Name %like% "UAL" |
                                 Airline.Name %like% "Jet Blue" |
                                 Airline.Name %like% "Alaska Airlines" |
-                                Airline.Name %like% "Spirit Airlines" |
-                                Airline.Name %like% "Republic Airways") & 
+                                Airline.Name %like% "Spirit Airlines") & 
                                (Year == 2014 | Year == 2015)) %>%
   group_by(Airline.Name, Year, Claim.Type) %>%
   summarise(total_claims = sum(Total.Claims))
@@ -308,23 +245,38 @@ for (i in 1:nrow(top10al)) {
   trimws(top10al$Airline.Name[i], c("both"))
 }
 
+top10al$Year <- as.character(top10al$Year)
+
 jtl <- read.csv("jointop10al.csv", header = T) 
 # i did this because whitespaces were causing problems with joining and i was too lazy
 # to figure out how to fix.
 
 top10al <- jtl
+top10al$Year <- as.character(top10al$Year)
 
 # add claim rate
 top10al <- top10al %>% mutate(Claim.Rate = total_claims / Flights)
 top10al <- top10al %>% select(- concat)
 
-top10al %>% group_by(Airline.Name) %>%
-  summarise(claims = sum(total_claims),
-            total_flights = sum(Flights),
-            claim_rate = claims/total_flights) %>%
-  arrange(desc(claim_rate))
+
+###### leaflet ########
+leaf_data <- claims %>% group_by(Latitude, Longitude, Year, Airport.Code) %>%
+  summarise(all_claims = sum(Total.Claims)) %>%
+    filter(all_claims >= 25) %>%
+    arrange(desc(all_claims))
+
+leaf_data$Longitude <- paste0("-",leaf_data$Longitude)
+leaf_data$Longitude <- as.numeric(leaf_data$Longitude)
 
 
-## write another table with added columns and shit, then add to global.
+##### renderTables #####
+airport_table <- read.csv("airport_table.csv", header = TRUE)
+airline_table <- read.csv("airline_table.csv", header = TRUE)
+
+
+
+
+
+
 
 

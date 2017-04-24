@@ -6,6 +6,23 @@ shinyServer(function(input, output, session) {
   
 # let's get it.
   
+  
+  leaf_map <- reactive({
+    leaf_data %>% 
+      filter(Year %in% input$year_range)
+    })
+  
+  
+  output$map <- renderLeaflet({
+    leaflet(leaf_map()) %>% setView(lng = -98.5556, lat = 39.8097, zoom = 4) %>% 
+      addProviderTiles(providers$Stamen.Terrain) %>%
+      addCircles(lng = ~Longitude, lat = ~Latitude, weight = 1, 
+                 radius = ~(all_claims) * 1000, popup = ~Airport.Code,
+                 label = ~paste0(Airport.Code, ": ", all_claims),
+                 labelOptions = labelOptions(noHide = T))
+  })
+  
+    
   output$timeSeries <- renderDygraph({
     
     dygraph(x_by_date, main = "Claims") %>%
@@ -49,7 +66,8 @@ shinyServer(function(input, output, session) {
                   "office_supplies", "outdoor_items", "pers_accessories",       
                   "pers_electronics", "pers_navigation", "sport_supplies",         
                   "home_improve_supplies", "toys", "travel_accessories"),
-            z = t(airport_matrix), type = "heatmap")
+            z = t(airport_matrix), type = "heatmap") %>%
+      layout(yaxis = list(tickangle = 30), margin = list(l=100))
   })
   
   ### for heatmap 2
@@ -74,8 +92,65 @@ shinyServer(function(input, output, session) {
                   "office_supplies", "outdoor_items", "pers_accessories",       
                   "pers_electronics", "pers_navigation", "sport_supplies",         
                   "home_improve_supplies", "toys", "travel_accessories"),
-            z = t(airline_matrix), type = "heatmap")
+            z = t(airline_matrix), type = "heatmap") %>%
+      layout(yaxis = list(tickangle = 30), margin = list(l=100))
   })
   
+  output$airportTable <- renderDataTable({
+    datatable(airport_table)
+    })
+  
+  
+  output$airlineTable <- renderDataTable({
+    datatable(airline_table)
+  })
+  
+  
+  output$airportRate <- renderPlot({
+    
+    top10ac %>% filter(Airport.Code != 'SFO') %>%
+      group_by(Airport.Code, Year) %>%
+      summarise(total_claims = sum(total),
+                total_flights = mean(flights)) %>%
+      mutate(claim_rate = total_claims / total_flights) %>%
+      select(-total_claims, -total_flights) %>%
+      ggplot(aes(x = Airport.Code, y = claim_rate)) + 
+      geom_col(aes(fill = Year), position = "dodge") +
+      scale_y_continuous(labels = scales::percent) +
+      ylab("Scale Rate") + xlab("Airport")
+  
+    })
+  
+  output$airlineRate <- renderPlot({
+    
+    top10al %>% filter(Airline.Name != "Republic Airways") %>%
+      group_by(Airline.Name, Year) %>%
+      summarise(Total_Claims = sum(total_claims),
+                Total_Flights = mean(Flights)) %>%
+      mutate(claim_rate = Total_Claims / Total_Flights) %>%
+      select(-Total_Claims, -Total_Flights) %>%
+      ggplot(aes(x = Airline.Name, y = claim_rate)) +
+      geom_col(aes(fill = Year), stat = "identity", position = "dodge") +
+      scale_y_continuous(labels = scales::percent) +
+      ylab("Claim Rate") + xlab("Airline") +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    
+  })
+  
+  output$airlineAndType <- renderPlot({
+    
+    top10al %>% filter(Airline.Name != "Republic Airways") %>%
+      group_by(Airline.Name, Claim.Type) %>%
+      summarise(Total_Claims = sum(total_claims),
+                Total_Flights = mean(Flights)) %>%
+      mutate(claim_rate = Total_Claims / Total_Flights) %>%
+      select(-Total_Claims, -Total_Flights) %>%
+      ggplot(aes(Airline.Name, claim_rate)) + 
+      geom_col(aes(fill = Claim.Type), position = "dodge") +
+      scale_y_continuous(labels = scales::percent) +
+      ylab("Claim Rate") + xlab("Airline and Claim Type") +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    
+  })
   
 })

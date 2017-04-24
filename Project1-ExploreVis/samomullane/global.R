@@ -4,30 +4,37 @@ library(googleVis)
 library(plotly)
 library(akima)
 library(shinydashboard)
-
-setwd('~/Desktop/nycdsa/shiny_comet/meteor_app/')
+library(leaflet)
 
 #Full data sets
-#small_body_dt <- fread(file = "./small_body_dt.dt")
+small_body_dt <- fread(file = "./small_body_dt.dt")
 small_body_join <- fread(file = "./small_body_join.dt")
-#sentry_dt <- fread(file = "./sentry_dt.dt")
-#sbdt_summary <- fread(file = "./sbdt_summary.dt")
+sentry_dt <- fread(file = "./sentry_dt.dt")
+sbdt_summary <- fread(file = "./sbdt_summary.dt")
 #mba_dt <- fread(file = "./mba_dt.dt")
 
-#For class information page
+#For class information page, contains descriptions of meteor classes
 meteor_descriptions <- fread(file = "./meteor_descriptions")
 
-#For crater formation
+#For crater formation, contains variables used for crater calculation
 impactor <- fread(file = "./impactor")
 materials <- fread(file = "./materials")
+city_dt <- fread(file = "./city_dt.dt")
 
-#Commonly used color map
+#Commonly used color map, stored for convenience
 class_temp <- unique(small_body_join$class)
 col_temp <- heat.colors(length(class_temp), alpha=NULL)
 class_col <- c(class_temp=col_temp)
 
-#Crater formation equation
-crater_formation <- function(a_s, u_s, rho_t, delta_s, y_t, mu, nu, k_1, k_2, k_r, k_d){
+##Crater formation equation##
+#Variables from database: a_s (radius of impactor), u_s (velocity of impactor),
+#Variables from ext tables: rho_t (target density), delta_s (impactor density),
+#                           y_t (target material strength), k_r/k_d (target prop's),
+#                           k_1, k_2 (target constant values)
+#Coefficients depending on interaction: mu, nu
+crater_formation <- function(a_s, u_s, rho_t, delta_s, y_t, mu, nu, k_1, k_2, k_r, k_d, theta){
+  u_s <- u_s*sin(theta*pi/180)
+  
   g = 980.7 #cm/s^2
   #Coefficient calc pi_2
   pi_2 <- g*a_s/u_s**2
@@ -36,8 +43,8 @@ crater_formation <- function(a_s, u_s, rho_t, delta_s, y_t, mu, nu, k_1, k_2, k_
   pi_3 <- y_t/(rho_t*u_s**2)
   
   #Coefficient calc pi_v
-  pi_v <- k_1*(pi_2(g, a_s, u_s)*(rho_t/delta_s)**((6*nu-2-mu)/(3*mu)) +
-                 (k_2*pi_3(y_t, rho_t, u_s)*(rho_t/delta_s)**((6*nu-2)/(3*mu)))**((2+mu)/2))**(-3*mu/(2+mu))
+  pi_v <- k_1*(pi_2*(rho_t/delta_s)**((6*nu-2-mu)/(3*mu)) +
+                 (k_2*pi_3*(rho_t/delta_s)**((6*nu-2)/(3*mu)))**((2+mu)/2))**(-3*mu/(2+mu))
   
   #Crater volume V_cr
   V_cr <- pi_v*(pi*(4/3)*(a_s)**3 * delta_s)/rho_t
@@ -63,4 +70,38 @@ crater_formation <- function(a_s, u_s, rho_t, delta_s, y_t, mu, nu, k_1, k_2, k_
                        stringsAsFactors = F)
   
   return(output)
+}
+
+#Ellipse plotting function
+ellipse_create <- function(a, q, phi_len = 100){
+  phi <- seq(-pi,pi,length.out = phi_len)
+  e <- (q/a) - 1
+  
+  out1 <- a*(cos(phi)-e)
+  out2 <- a*(1-e**2)**0.5 * sin(phi)
+  df <- data.frame(out1, out2)
+}
+#sun visualization df
+df_sun <- ellipse_create(a = 0.1, q = 0.1)
+df_earth <- ellipse_create(a = 1, q = 1)
+df_mars <- ellipse_create(a = 1.3813, q = 1.5237)
+df_jupiter <- ellipse_create(a = 4.952, q = 5.203)
+
+#Base plot for orbits
+orbital_plot <- ggplot(data = NULL, aes(x=out1, y=out2)) +
+  geom_polygon(data = df_sun, fill='yellow') +
+  geom_path(data = df_earth, color = 'blue') +
+  geom_path(data = df_mars, color = 'red') + 
+  geom_path(data = df_jupiter, color = 'purple') +
+  coord_fixed() + labs(x='', y='') +
+  theme_minimal() +
+  theme(axis.title=element_blank(),
+        axis.text=element_blank(),
+        panel.grid=element_blank())
+
+#Macro for creating orbit pictures for class page
+add_to_orbit <- function(class_name, color_orbit = 'black'){
+  geom_path(data = ellipse_create(a = sbdt_summary[class==class_name]$avg_a,
+                                  q = sbdt_summary[class==class_name]$avg_q),
+            color = color_orbit)
 }

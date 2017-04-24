@@ -65,7 +65,7 @@ shinyServer(function(input, output){
   output$downloadData <- downloadHandler(
     filename = 'lendingclubloandata.csv' ,
     content = function(file) {
-      write.csv(state_stat, file)
+      write.csv(loan, file)
     }
   )
   

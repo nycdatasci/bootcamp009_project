@@ -1,0 +1,19 @@
+#controls {
+  /* Appearance */
+  background-color: lightslategrey;
+  padding: 0 0 10px 10px;
+  cursor: move;
+  /* Fade out while not hovering */
+  opacity: 0.35;
+  zoom: 0.9;
+  transition: opacity 200ms 500ms;
+}
+#controls:hover {
+  /* Fade in while hovering */
+  opacity: 0.85;
+  transition-delay: 0;
+}
+
+#h7 {
+    color: black
+}
