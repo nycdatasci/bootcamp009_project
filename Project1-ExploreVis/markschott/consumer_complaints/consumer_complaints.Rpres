@@ -1,0 +1,250 @@
+Consumer Complaints Database (amassed and made available by the Consumer Financial Protection Bureau)
+========================================================
+author: Mark Schott
+date: 4/24/2017
+autosize: true
+
+Dataset Information
+========================================================
+- Data consists of 18 variables, and about 750000 rows
+- Spans from December 2011 to the present
+  - 10 categorical variables (such as)
+      - State
+      - Company
+      - Product/Sub-Product
+      - Issue/Sub-Issue
+  - 2 date fields
+  - 2 yes/no fields
+  - 1 unique complaint ID
+  - Zip code
+  - 2 text fields (one for the consumer filing the complaint and one for the company's response)
+
+Data trimming
+========================================================
+  - Disregard 
+      - Zip Code
+      - Complaint ID
+      - Date sent to company (in favor of date received by the CFPB)
+      - Company Public Response
+      
+Loading in the needed libraries
+========================================================
+```{r echo = TRUE}
+  library(knitr)
+  knitr::opts_chunk$set
+  # Basic plotting
+  library(graphics)
+  # Data frame manipulation
+  library(dplyr)
+  # Fancier plotting
+  library(ggplot2)
+  # Time series manipulation
+  library(xts)
+```
+ 
+Loading in the data
+========================================================
+```{r echo = TRUE, cache = TRUE}
+setwd("~/data/consumer_complaints")
+## Read in main data
+data = readRDS('data/complaints.Rda')
+## Read in state names and 2016 US population estimates
+pops = read.csv("data/us_populations.csv", stringsAsFactors = F)
+## merge for later ease
+data = inner_join(data, pops, by=c('State'='abbreviation'))
+rm(pops)
+```
+
+Initial Dataset Exploration
+========================================================
+```{r echo = FALSE, cache = TRUE}
+  data %>% group_by(Date.received) %>% summarize(count = n()) %>%
+  ggplot(aes(x=Date.received, y = count)) + geom_line() + 
+  ggtitle('Counts for entire dataset over time') + 
+  theme(plot.title = element_text(hjust = 0.5))
+  #apply.weekly(xts(plt()$Count, order.by = plt()$Date.received), input$period_func),
+```
+
+Initial Dataset Exploration
+========================================================
+```{r echo = FALSE, cache = TRUE}
+  plt = data %>% mutate(weekday = weekdays(Date.received)) %>% group_by(weekday) %>%
+    summarize(count = n())
+  plt$weekday = factor(plt$weekday, levels = c("Monday","Tuesday","Wednesday","Thursday",
+                                           "Friday","Saturday","Sunday"))
+    plt[order(plt$weekday),] %>% ggplot(aes(x=weekday, y = count, fill = weekday)) +  
+      geom_bar(stat='identity') + xlab("Weekday") +
+      ggtitle('Complaints received by Weekday') + 
+      theme(plot.title = element_text(hjust = 0.5), legend.position = 'none')
+```
+
+Statistically Significant? Day of the week
+========================================================
+  - First do a bartlett test (multi-sample variance test) on the weekdays (exclude weekends)
+```{r echo = FALSE}
+  plt = data %>% group_by(Date.received) %>% summarize(count = n()) %>%
+    mutate(weekday = weekdays(Date.received)) %>% filter(!(weekday %in% c('Saturday','Sunday')))
+  bartlett.test(plt$count, plt$weekday)
+```
+- The variances aren't equal so simple linear aov will not be appropriate
+
+Counts by month?
+========================================================
+```{r echo = FALSE}
+ plt = data %>% mutate(month = months(Date.received)) %>% group_by(month) %>%
+    summarize(count = n())
+    
+  plt$month = factor(plt$month, levels= c("January", "February", "March", "April", "May", 
+                                              "June", "July", "August", "September", "October",
+                                            "November","December"))
+    plt[order(plt$month),] %>% ggplot(aes(x=month, y = count, fill = month)) +  
+      geom_bar(stat='identity') + xlab("Month") +
+      ggtitle('Complaints received by Month') + 
+      theme(plot.title = element_text(hjust = 0.5), legend.position = 'none')
+```
+
+Statistically Significant? Months
+========================================================
+  - Bartlett test now for this case
+```{r echo = FALSE}
+  plt = data %>% group_by(Date.received) %>% summarize(count = n()) %>%
+    mutate(month = months(Date.received))
+  bartlett.test(plt$count, plt$month)
+```
+- Again variances aren't equal so simple linear aov will not be appropriate
+- Is this type of analysis even appropriate for time series? 
+
+Question of Interest
+========================================================
+  - How do complaints affect various companies?
+      - Are they suggestive of subsequent troubles
+      - Are there any companies that are more egregious than others?
+      - Are there any specific states that are more afflicted than others? More vocal?
+
+Specific Focus
+========================================================
+  - Wells Fargo Bank
+      -  Second-largest bank in deposits, home mortgage servicing, and debit cards.
+      -   September 2016 
+          - Scandal where 2 million bank accounts were opened by employees to boost numbers
+      - October 2016 
+          - Settled a racketeering lawsuit for overcharging home owners for appraisals
+
+Wells Fargo EDA
+========================================================
+```{r echo = FALSE, cache = TRUE}
+wf_data = data %>% filter(Company == 'Wells Fargo & Company')
+plt = wf_data %>% group_by(Date.received) %>% summarize(count = n())
+plt = apply.weekly(xts(plt$count, order.by = plt$Date.received), mean)
+plt = data.frame(index(plt),plt[,1])
+# colnames(plt) = c('Date','count')
+#   plt %>% ggplot(aes(x=Date,y=count)) + geom_line() + 
+#    theme(axis.text.x = element_text(angle = 90), axis.ticks.x = element_line(color='black'),
+#          legend.position = 'none', panel.grid.major.y = element_line(color = 'black')) +   
+#    xlab('') + theme(plot.title = element_text(hjust = 0.5), legend.position = 'none') +
+#    ggtitle('Complaints against Wells Fargo over Time Averaged Weekly') + 
+#     geom_vline(xintercept = as.Date(2016-09-01))
+plot(plt, type = 'l', xlab = '', ylab = 'Count', main = 'Counts over time for Wells Fargo Averaged Weekly') 
+abline(v = as.Date("2012-02-09"),col = 'red', lwd = 1)
+abline(v = as.Date("2012-04-05"),col = 'red', lwd = 1)
+abline(v = as.Date("2012-07-13"),col = 'red', lwd = 1)
+abline(v = as.Date("2012-08-14"),col = 'red', lwd = 1)
+abline(v = as.Date("2012-10-09"),col = 'red', lwd = 1)
+abline(v = as.Date("2013-04-01"),col = 'red', lwd = 1)
+abline(v = as.Date("2013-05-01"),col = 'red', lwd = 1)
+abline(v = as.Date("2015-02-01"),col = 'red', lwd = 1)
+abline(v = as.Date("2015-10-01"),col = 'red', lwd = 1)
+abline(v = as.Date("2016-09-01"),col = 'red', lwd = 1)
+abline(v = as.Date("2016-11-01"),col = 'red', lwd = 1)
+grid(lty = 0, lwd = 0)
+
+```
+- Each red line represents a controversy for the bank 
+- A particularly interesting one is in September of 2016
+
+Wells Fargo EDA
+========================================================
+```{r echo = FALSE, cache = FALSE}
+plt = wf_data %>% filter(Date.received > '2016-09-01' & Date.received < '2016-12-01') #%>% #select(c(Timely.response.,Product,Consumer.disputed.))
+#mosaicplot(table(plt),shade = T, las = 2)
+plt %>% group_by(Product,Consumer.disputed.) %>% summarize(count = n()) %>%
+  ggplot(aes(x=Product, y=count, fill = Consumer.disputed.)) + geom_bar(stat='identity') + 
+  theme(axis.text.x = element_text(angle = 90)) + 
+  ggtitle(paste('Complaints by Product',',','2016-09-01','to','2016-12-01',collapse=' '))
+```
+
+Wells Fargo Weekly Complaint Mean for Bank Account Services
+========================================================
+title=false
+```{r echo = FALSE, cache = FALSE}
+plt = wf_data %>% filter(Product == 'Bank account or service') %>% group_by(Date.received) %>% summarize(count=n())
+plt = apply.weekly(xts(plt$count, order.by = plt$Date.received), sum)
+plt = data.frame(index(plt),plt[,1])
+plot(plt,type = 'l', las = 2, ylab = 'Weekly Counts', xlab = '', main = 'Wells Fargo Weekly Complaint Sums for Bank Account Services')
+# plt %>% group_by(Product,Consumer.disputed.) %>% summarize(count = n()) %>%
+#   ggplot(aes(x=Product, y=count, fill = Consumer.disputed.)) + geom_bar(stat='identity') + 
+#   theme(axis.text.x = element_text(angle = 90)) + 
+#   ggtitle(paste('Complaints by Product',',','2016-09-01','to','2016-12-01',collapse=' '))
+```
+
+
+Wells Fargo EDA
+========================================================
+```{r echo = FALSE, cache = FALSE}
+wf_data %>% group_by(region) %>% summarize(count = n()) %>% 
+  ggplot(aes(x=reorder(region,count),y=count,fill=region)) + geom_bar(stat = 'identity') + 
+  theme(axis.text.x = element_text(angle = 90), axis.ticks.x = element_line(color='black'),
+        legend.position = 'none', panel.grid.major.y = element_line(color = 'black')) +   
+  xlab('State') + 
+  ggtitle('Complaints against Wells Fargo by State')
+
+
+```
+Continued...
+========================================================
+```{r echo = FALSE, cache = FALSE}
+wf_data %>% group_by(city) %>% filter(!is.na(city)) %>% summarize(count = n()) %>% top_n(30) %>%
+  ggplot(aes(x=reorder(city,count),y=count,fill=city)) + geom_bar(stat = 'identity') + 
+  theme(axis.text.x = element_text(angle = 90), axis.ticks.x = element_line(color='black'),
+        legend.position = 'none', panel.grid.major.y = element_line(color = 'black')) +   
+  xlab('City') + 
+  ggtitle('Complaints against Wells Fargo by City')
+
+
+```
+
+Continued...
+========================================================
+```{r echo = FALSE, cache = FALSE}
+ plt = wf_data %>% select(c(Company, Submitted.via, Product))
+  mosaicplot(table(plt), shade = T, las = 2)
+```
+
+Relevant Links
+========================================================
+
+- [Consumer Complaints Database](https://catalog.data.gov/dataset/consumer-complaint-database#topic=consumer_navigation)
+
+- [Customer Financial Protection Bureau](https://cfpb.gov)
+
+- [Database information](https://cfpb.github.io/api/ccdb//fields.html)
+
+Notes
+========================================================
+-Concerning the Issue variable
+
+"On December 18, 2013 the issues for student loan complaints were revised. “Repaying your loan” and “Problems when you are unable to pay” were removed and “Can’t pay my loan” and “Dealing with my lender or servicer” were added. Complaints received beginning on that date reflect this change. Complaints received before that date remain unchanged."
+
+Slide With Code
+========================================================
+
+```{r}
+summary(cars)
+```
+
+Slide With Plot
+========================================================
+
+```{r, echo=FALSE}
+plot(cars)
+```

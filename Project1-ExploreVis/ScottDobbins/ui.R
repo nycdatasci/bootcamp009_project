@@ -1,14 +1,19 @@
 # @author Scott Dobbins
-# @version 0.8.1
-# @date 2017-04-23 18:45
+# @version 0.9
+# @date 2017-04-23 23:45
 
 ### import useful packages ###
 library(shiny)            # app formation
 library(shinydashboard)   # web display
 library(leaflet)          # map source
 
+
+### constants ###
+
+# appearance
 sidebar_width = 240
 title_width = 360
+
 
 ### UI component ###
 shinyUI(dashboardPage(
@@ -24,14 +29,14 @@ shinyUI(dashboardPage(
     
     sidebarMenu(id = "tabs", 
                 menuItem("Overview", tabName = "overview", icon = icon("map")), 
-                menuItem("Data", tabName = "data", icon = icon("database")), 
+                # menuItem("Data", tabName = "data", icon = icon("database")), 
                 menuItem("WW I", tabName = "WW1", icon = icon('bar-chart', lib = 'font-awesome')), 
                 menuItem("WW II", tabName = "WW2", icon = icon('bar-chart', lib = 'font-awesome')), 
                 menuItem("Korea", tabName = "Korea", icon = icon('bar-chart', lib = 'font-awesome')), 
-                menuItem("Vietnam", tabName = "Vietnam", icon = icon('bar-chart', lib = 'font-awesome')), 
-                menuItem("Be a pilot", tabName = "pilot", icon = icon('fighter-jet', lib = 'font-awesome')), 
-                menuItem("Be a commander", tabName = "commander", icon = icon('map-o', lib = 'font-awesome')), 
-                menuItem("Be a civilian", tabName = "civilian", icon = icon('life-ring', lib = 'font-awesome'))
+                menuItem("Vietnam", tabName = "Vietnam", icon = icon('bar-chart', lib = 'font-awesome'))#, 
+                # menuItem("Be a pilot", tabName = "pilot", icon = icon('fighter-jet', lib = 'font-awesome')), 
+                # menuItem("Be a commander", tabName = "commander", icon = icon('map-o', lib = 'font-awesome')), 
+                # menuItem("Be a civilian", tabName = "civilian", icon = icon('life-ring', lib = 'font-awesome'))
     ), 
     
     # date picker
@@ -44,23 +49,23 @@ shinyUI(dashboardPage(
                    startview = "year", 
                    width = sidebar_width), 
     
-    selectizeInput(inputId = "country", 
-                   label = "Which country's air force?", 
-                   choices = c("one"), 
-                   selected = c(), 
-                   width = sidebar_width), 
-    
-    selectizeInput(inputId = "aircraft", 
-                   label = "Which types of aircraft?", 
-                   choices = c("one"), 
-                   selected = c(), 
-                   width = sidebar_width), 
-    
-    selectizeInput(inputId = "weapon", 
-                   label = "Which types of bombs?", 
-                   choices = c("one"), 
-                   selected = c(), 
-                   width = sidebar_width), 
+    # selectizeInput(inputId = "country", 
+    #                label = "Which country's air force?", 
+    #                choices = c("one"), 
+    #                selected = c(), 
+    #                width = sidebar_width), 
+    # 
+    # selectizeInput(inputId = "aircraft", 
+    #                label = "Which types of aircraft?", 
+    #                choices = c("one"), 
+    #                selected = c(), 
+    #                width = sidebar_width), 
+    # 
+    # selectizeInput(inputId = "weapon", 
+    #                label = "Which types of bombs?", 
+    #                choices = c("one"), 
+    #                selected = c(), 
+    #                width = sidebar_width), 
     
     numericInput(inputId = "sample_num", 
                  label = "Sample size = ?", 
@@ -119,10 +124,10 @@ shinyUI(dashboardPage(
               )
       ), 
       
-      # a closer look at the data
-      tabItem(tabName = "data", 
-        fluidRow(box(DT::dataTableOutput("table"), width = 12))
-      ), 
+      # # a closer look at the data
+      # tabItem(tabName = "data", 
+      #   fluidRow(box(DT::dataTableOutput("table"), width = 12))
+      # ), 
       
       # WW1-specific stats
       tabItem(tabName = "WW1",
@@ -132,8 +137,21 @@ shinyUI(dashboardPage(
       
       # WW2-specific stats
       tabItem(tabName = "WW2",
-              fluidRow(box(plotOutput("WW2_hist"))), 
-              fluidRow(box(sliderInput(inputId = "WW2_hist_slider", label = "# of bins", min = 7, value = 30, max = 84, step = 1)))
+              
+              fluidRow(
+                box(plotOutput("WW2_hist")), 
+                box(plotOutput("WW2_sandbox"))
+              ), 
+              
+              fluidRow(
+                box(sliderInput(inputId = "WW2_hist_slider", label = "# of bins", min = 7, value = 30, max = 84, step = 1), width = 6), 
+                box(selectizeInput(inputId = "WW2_sandbox_ind", label = "Which independent variable?", choices = c("Year", WW2_all_choices), selected = c("Year"), multiple = FALSE), width = 6)
+              ), 
+              
+              fluidRow(
+                box(selectizeInput(inputId = "WW2_sandbox_group", label = "Group by what?", choices = c("None", WW2_categorical_choices), selected = c("None"), multiple = FALSE), width = 6), 
+                box(selectizeInput(inputId = "WW2_sandbox_dep", label = "Which dependent variable?", choices = WW2_continuous_choices, selected = c("Number of Attacking Aircraft"), multiple = FALSE), width = 6)
+              )
       ),
       
       # Korea-specific stats
@@ -146,22 +164,22 @@ shinyUI(dashboardPage(
       tabItem(tabName = "Vietnam",
               fluidRow(box(plotOutput("Vietnam_hist"))), 
               fluidRow(box(sliderInput(inputId = "Vietnam_hist_slider", label = "# of bins", min = 4, value = 30, max = 240, step = 1)))
-      ), 
+      )#, 
       
-      # pilot stats
-      tabItem(tabName = "pilot", 
-              fluidRow()
-      ), 
-      
-      # commander stats
-      tabItem(tabName = "commander", 
-              fluidRow()
-      ), 
-      
-      # civilian stats
-      tabItem(tabName = "civilian", 
-              fluidRow()
-      )
+      # # pilot stats
+      # tabItem(tabName = "pilot", 
+      #         fluidRow()
+      # ), 
+      # 
+      # # commander stats
+      # tabItem(tabName = "commander", 
+      #         fluidRow()
+      # ), 
+      # 
+      # # civilian stats
+      # tabItem(tabName = "civilian", 
+      #         box(plotOutput("civilian_density", width = "100%"), width = 12)#, height = 768)
+      # )
     )
   )
 ))

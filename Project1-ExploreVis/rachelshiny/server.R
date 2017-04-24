@@ -143,8 +143,9 @@ shinyServer(function(input, output, session){
                     REGION_2==five_data[1,3],
                     HIGHDEG==five_data[1,5]) %>% 
         select(college=INSTNM, state=STABBR, control=CONTROL_2, tuition=TUITIONFEE_IN,
+               median_fam_income=FAMINC,
                undergrads=UGDS, admit_rate=ADM_RATE, high_deg=HIGHDEG, pct_pell=PCTPELL, 
-               median_income=MN_EARN_WNE_P7, grad_rate_4yr=C150_4, grad_rate_2yr=C150_L4)
+               median_grad_income=MN_EARN_WNE_P7, grad_rate_4yr=C150_4, grad_rate_2yr=C150_L4)
       if(as.logical(input$state)){
         d <- d %>% filter(state==five_data[1,4])
       }

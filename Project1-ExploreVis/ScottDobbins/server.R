@@ -1,15 +1,23 @@
 # @author Scott Dobbins
-# @version 0.8.1
-# @date 2017-04-23 18:45
+# @version 0.9
+# @date 2017-04-23 23:45
 
 ### import useful packages ###
 library(shiny)      # app formation
 library(leaflet)    # map source
 library(ggplot2)    # plots and graphs
+library(data.table) # data processing
 library(dplyr)      # data processing
+#library(plotly)     # pretty interactive graphs
 #library(maps)       # also helps with maps
 #library(htmltools)  # helps with tooltips
 library(DT)         # web tables
+
+
+# ### initialize plotly ###
+# 
+# Sys.setenv("plotly_username"="sdobbins")
+# Sys.setenv("plotly_api_key"="ElZwoGYrCyhDGcauIpUQ")
 
 
 ### server component ###
@@ -23,6 +31,9 @@ shinyServer(function(input, output, session) {
   WW2_selected <- FALSE
   Korea_selected <- FALSE
   Vietnam_selected <- FALSE
+  
+  # graphing behavior
+  opacity_now <- 0.2
   
   
   # # show data using DataTable
@@ -209,29 +220,98 @@ shinyServer(function(input, output, session) {
   })
   
   output$WW1_hist <- renderPlot({
-    WW1_plot <- ggplot(WW1_selection(), aes(x = Mission.Date)) + geom_histogram(bins = input$WW1_hist_slider)
-    WW1_plot
+    WW1_hist_plot <- ggplot(WW1_selection(), aes(x = Mission.Date)) + 
+                     geom_histogram(bins = input$WW1_hist_slider) + 
+                     ggtitle("Missions over time during World War One") + 
+                     xlab("Date") + 
+                     ylab("Number of Missions")
+    WW1_hist_plot
   })
   
   output$WW2_hist <- renderPlot({
-    WW2_plot <- ggplot(WW2_selection(), aes(x = Mission.Date)) + geom_histogram(bins = input$WW2_hist_slider)
-    WW2_plot
+    WW2_hist_plot <- ggplot(WW2_selection(), aes(x = Mission.Date)) + 
+                     geom_histogram(bins = input$WW2_hist_slider) + 
+                     ggtitle("Missions over time during World War Two") + 
+                     xlab("Date") + 
+                     ylab("Number of Missions")
+    WW2_hist_plot
+  })
+  
+  output$WW2_sandbox <- renderPlot({
+    if(input$WW2_sandbox_ind == "Year") {
+      plot_continuous <- WW2_continuous[[input$WW2_sandbox_dep]]
+      WW2_sandbox_plot <- ggplot(mapping = aes(x = year((WW2_selection())[, "Mission.Date"]), 
+                                               y = (WW2_selection())[, plot_continuous]))
+      WW2_sandbox_plot <- WW2_sandbox_plot + geom_col(position = 'dodge')
+    } else if(input$WW2_sandbox_ind %in% WW2_categorical_choices) {
+      plot_category <- WW2_categorical[[input$WW2_sandbox_ind]]
+      plot_continuous <- WW2_continuous[[input$WW2_sandbox_dep]]
+      if(input$WW2_sandbox_group == "None") {
+        WW2_sandbox_plot <- ggplot(mapping = aes(x = (WW2_selection())[, plot_category], 
+                                                 y = (WW2_selection())[, plot_continuous]))
+      } else {
+        group_category <- WW2_categorical[[input$WW2_sandbox_group]]
+        WW2_sandbox_plot <- ggplot(mapping = aes(x = (WW2_selection())[, plot_category], 
+                                                 y = (WW2_selection())[, plot_continuous], 
+                                                 group = (WW2_selection())[, group_category], 
+                                                 fill = (WW2_selection())[, group_category]))
+      }
+      WW2_sandbox_plot <- WW2_sandbox_plot + geom_col(position = 'dodge')
+    } else {
+      plot_independent <- WW2_continuous[[input$WW2_sandbox_ind]]
+      plot_dependent <- WW2_continuous[[input$WW2_sandbox_dep]]
+      if(input$WW2_sandbox_group == "None") {
+        WW2_sandbox_plot <- ggplot(mapping = aes(x = (WW2_selection())[, plot_independent], 
+                                                 y = (WW2_selection())[, plot_dependent]))
+      } else {
+        group_category <- WW2_categorical[[input$WW2_sandbox_group]]
+        WW2_sandbox_plot <- ggplot(mapping = aes(x = (WW2_selection())[, plot_independent], 
+                                                 y = (WW2_selection())[, plot_dependent], 
+                                                 color = (WW2_selection())[, group_category]))
+      }
+      WW2_sandbox_plot <- WW2_sandbox_plot + geom_point() + geom_smooth(method = 'lm')
+    }
+    WW2_sandbox_plot + 
+      ggtitle("World War 2 sandbox") + 
+      xlab(input$WW2_sandbox_ind) + 
+      ylab(input$WW2_sandbox_dep)
   })
   
   output$Korea_hist <- renderPlot({
-    Korea_plot <- ggplot(Korea_selection(), aes(x = Mission.Date)) + geom_histogram(bins = input$Korea_hist_slider)
-    Korea_plot
+    Korea_hist_plot <- ggplot(Korea_selection(), aes(x = Mission.Date)) + 
+                       geom_histogram(bins = input$Korea_hist_slider) + 
+                       ggtitle("Missions over time during the Korean War") + 
+                       xlab("Date") + 
+                       ylab("Number of Missions")
+    Korea_hist_plot
   })
   
   output$Vietnam_hist <- renderPlot({
-    Vietnam_plot <- ggplot(Vietnam_selection(), aes(x = Mission.Date)) + geom_histogram(bins = input$Vietnam_hist_slider)
-    Vietnam_plot
+    Vietnam_hist_plot <- ggplot(Vietnam_selection(), aes(x = Mission.Date)) + 
+                         geom_histogram(bins = input$Vietnam_hist_slider) + 
+                         ggtitle("Missions over time during the Vietnam War") + 
+                         xlab("Date") + 
+                         ylab("Number of Missions")
+    Vietnam_hist_plot
   })
+  
+  # output$civilian_density <- renderPlot({
+  #   civ_plot <- ggplot(world_map_df, aes(long, lat, group = group)) + geom_polygon() + coord_equal() + theme_opts
+  #   WW1_plot <- geom_density2d(data = WW1_selection(), aes(x = Target.Longitude, y = Target.Latitude, group = 0), color = 'blue')
+  #   WW2_plot <- geom_density2d(data = WW2_selection(), aes(x = Target.Longitude, y = Target.Latitude, group = 0), color = 'red')
+  #   Korea_plot <- geom_density2d(data = Korea_selection(), aes(x = Target.Longitude, y = Target.Latitude, group = 0), color = 'yellow')
+  #   Vietnam_plot <- geom_density2d(data = Vietnam_selection(), aes(x = Target.Longitude, y = Target.Latitude, group = 0), color = 'green')
+  #   if(WW1_selected) civ_plot <- civ_plot + WW1_plot
+  #   if(WW2_selected) civ_plot <- civ_plot + WW2_plot
+  #   if(Korea_selected) civ_plot <- civ_plot + Korea_plot
+  #   if(Vietnam_selected) civ_plot <- civ_plot + Vietnam_plot
+  #   civ_plot
+  # })
 
   # hanlder for changes in map type
   observeEvent(eventExpr = input$pick_map, ignoreNULL = FALSE, handlerExpr = {
     
-    if(debug_mode_on) print("map altered"); print(input$pick_map)
+    if(debug_mode_on) print("map altered")
     
     proxy <- leafletProxy("overview_map")
 
@@ -381,10 +461,10 @@ shinyServer(function(input, output, session) {
                              lng = ~Target.Longitude,
                              color = "darkblue",
                              weight = 5,
-                             opacity = 0.5,
+                             opacity = opacity_now,
                              fill = TRUE,
                              fillColor = "darkblue",
-                             fillOpacity = 0.5,
+                             fillOpacity = opacity_now,
                              popup = ~tooltip,
                              group = "WW1_unique_targets")
         WW1_selected <<- TRUE
@@ -401,9 +481,10 @@ shinyServer(function(input, output, session) {
                              lng = ~Target.Longitude,
                              color = "darkred",
                              weight = 5,
-                             opacity = 0.5,
+                             opacity = opacity_now,
                              fill = TRUE,
                              fillColor = "darkred",
+                             fillOpacity = opacity_now, 
                              popup = ~tooltip,
                              group = "WW2_unique_targets")
         WW2_selected <<- TRUE
@@ -420,9 +501,10 @@ shinyServer(function(input, output, session) {
                              lng = ~Target.Longitude,
                              color = "yellow",
                              weight = 5,
-                             opacity = 0.5,
+                             opacity = opacity_now,
                              fill = TRUE,
-                             fillColor = "yellow",
+                             fillColor = "yellow", 
+                             fillOpacity = opacity_now, 
                              popup = ~tooltip,
                              group = "Korea_unique_targets")
         Korea_selected <<- TRUE
@@ -439,9 +521,10 @@ shinyServer(function(input, output, session) {
                              lng = ~Target.Longitude,
                              color = "darkgreen",
                              weight = 5,
-                             opacity = 0.5,
+                             opacity = opacity_now,
                              fill = TRUE,
-                             fillColor = "darkgreen",
+                             fillColor = "darkgreen", 
+                             fillOpacity = opacity_now, 
                              popup = ~tooltip,
                              group = "Vietnam_unique_targets")
         Vietnam_selected <<- TRUE
@@ -467,26 +550,26 @@ shinyServer(function(input, output, session) {
     }
   })
   
-  # handler for country selection
-  observeEvent(eventExpr = input$country, ignoreNULL = FALSE, ignoreInit = TRUE, handlerExpr = {
-    if(debug_mode_on) print("country selected")
-    
-    proxy <- leafletProxy("overview_map")
-  })
-  
-  # handler for aircraft selection
-  observeEvent(eventExpr = input$aircraft, ignoreNULL = FALSE, ignoreInit = TRUE, handlerExpr = {
-    if(debug_mode_on) print("aircraft selected")
-    
-    proxy <- leafletProxy("overview_map")
-  })
-  
-  # handler for weapon selection
-  observeEvent(eventExpr = input$weapon, ignoreNULL = FALSE, ignoreInit = TRUE, handlerExpr = {
-    if(debug_mode_on) print("weapon selected")
-    
-    proxy <- leafletProxy("overview_map")
-  })
+  # # handler for country selection
+  # observeEvent(eventExpr = input$country, ignoreNULL = FALSE, ignoreInit = TRUE, handlerExpr = {
+  #   if(debug_mode_on) print("country selected")
+  #   
+  #   proxy <- leafletProxy("overview_map")
+  # })
+  # 
+  # # handler for aircraft selection
+  # observeEvent(eventExpr = input$aircraft, ignoreNULL = FALSE, ignoreInit = TRUE, handlerExpr = {
+  #   if(debug_mode_on) print("aircraft selected")
+  #   
+  #   proxy <- leafletProxy("overview_map")
+  # })
+  # 
+  # # handler for weapon selection
+  # observeEvent(eventExpr = input$weapon, ignoreNULL = FALSE, ignoreInit = TRUE, handlerExpr = {
+  #   if(debug_mode_on) print("weapon selected")
+  #   
+  #   proxy <- leafletProxy("overview_map")
+  # })
   
   # handler for sample size refresh
   observeEvent(eventExpr = input$sample_num, ignoreInit = TRUE, handlerExpr = {
