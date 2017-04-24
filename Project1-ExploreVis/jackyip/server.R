@@ -54,7 +54,7 @@ shinyServer(function(input, output, session) {
       scale_x_continuous(breaks = 0:23) +
       scale_y_continuous(labels=function(x) x/1000) +
       ylab('Count (K)') +
-      ggtitle("Noise Complaint by Hour of Day (Jan 2010 to Apr 2017)")
+      ggtitle("Noise Complaints by Hour of Day (Jan 2010 to Apr 2017)")
   })
   
 ## "2c. Noise: Hour of Day Data"
@@ -110,7 +110,7 @@ shinyServer(function(input, output, session) {
       scale_x_continuous(breaks = round(seq(min(2010), max(2016), by = 1))) +
       scale_y_continuous(labels=function(x) x/1000) +
       ylab('Count (K)') +
-      ggtitle('Noise vs Illegal Parking Count Comparison (Jan 2010 to Apr 2017)',
+      ggtitle('Noise vs Illegal Parking Count Comparison (Jan 2010 to Dec 2016)',
               subtitle = 'Note: Partial year counts (i.e. 2017) were excluded from this graphic')
     
   }) 
