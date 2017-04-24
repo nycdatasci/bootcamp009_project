@@ -1,0 +1,11 @@
+name: SpatialDataDigester_US_County
+title: SpatialDataDigester_US_County
+account: chaoshi
+server: shinyapps.io
+appId: 174635
+bundleId: 800730
+url: https://chaoshi.shinyapps.io/SpatialDataDigester_US_County/
+when: 1492996070.26744
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: data/ACS_15_5YR_S0701/ACS_15_5YR_S0701_metadata.csv|data/ACS_15_5YR_S0701/ACS_15_5YR_S0701_with_ann.csv|data/ACS_15_5YR_S0701/ACS_15_5YR_S0701.txt|data/ACS_15_5YR_S0701/aff_download_readme_ann.txt|data/PEP_2016_PEPANNRES/aff_download_readme_ann.txt|data/PEP_2016_PEPANNRES/PEP_2016_PEPANNRES_metadata.csv|data/PEP_2016_PEPANNRES/PEP_2016_PEPANNRES_with_ann.csv|data/PEP_2016_PEPANNRES/PEP_2016_PEPANNRES.txt
