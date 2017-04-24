@@ -3,6 +3,8 @@ library(ggplot2)
 library(plotly)
 library(tidyr)
 library(zoo)
+library(rgdal)
+library(rgeos)
 library(leaflet)
 library(shiny)
 
