@@ -1,13 +1,24 @@
 # server.R
 
-shinyServer(function(input, output) {
+shinyServer(function(input, output, session) {
     
-    #input$tickerSearch
-    #input$searchButton
-    dataInput <- reactive({
-        filter(fundamentals, Sector == input$selectSector)
+    observe({
+        tickers <- unique(fundamentals[fundamentals$Sector == input$selectSector, "Ticker"])
+        updateSelectizeInput(
+            session, "selectCompany",
+            choices = tickers,
+            selected = tickers[1])
     })
-    output$plot <- renderPlotly({
+    sectorData <- reactive({
+        fundamentals %>% 
+            filter(Sector == input$selectSector)
+    })
+    companyData <- reactive({
+        fundamentals %>% 
+            filter(Sector == input$selectCompany)
+    })
+    
+    output$all <- renderPlotly({
         #plot_ly(mtcars, x = ~mpg, y = ~wt)
         
         #plot_ly(diamonds, x = ~carat, y = ~price, color = ~carat,
@@ -18,40 +29,42 @@ shinyServer(function(input, output) {
                 type = "box", boxmean = TRUE, 
                 marker= list(symbol = "hexagon-open")
         ) %>% 
-                layout( showlegend = FALSE, 
-                        #autosize = TRUE,
-                        #width = 700,
-                        height = 500,
-                        margin = list(t = 0, r = 0, b = 20, l= 35, pad = 0), 
-                        xaxis = list(
-                            type = "category",
-                            ticks = "inside",
-                            showticklabels= TRUE,
-                            
-                            autorange = FALSE,
-                            tickmode = "auto",
-                            nticks = 3,
-                            #tick0 = 'Industrials',
-                            tickcolor = toRGB("blue")
+        layout( 
+            height = 500,
+            margin = list(t = 0, r = 0, b = 20, l= 35, pad = 0), 
+            showlegend = FALSE, 
+            xaxis = list(
+                        type = "category",
+                        ticks = "inside",
+                        showticklabels= TRUE,
+                        autorange = FALSE,
+                        tickmode = "auto",
+                        nticks = 3,
+                        tickcolor = toRGB("blue")
+                    )
+            ) 
+    })
+    output$sector <- renderPlotly({
+        
+        p <- sectorData() %>% 
+                plot_ly(x = ~Ticker, y = ~ZScore, alpha = 0.5) 
+        subplot(
+                add_markers(p, color = ~factor(ZScore), 
+                                colors = colorRamp(c("red", "blue"))
                         )
-                    ) 
-                
-                        
-                        
-                        
-                
-                        
-                
-                              
-                              
-        
-        #plot_ly(fundamentals, x = ~Sector, y = ~ZScore, alpha = 0.5) %>% 
-        #subplot(
-        #         add_markers(p, color = ~factor(ZScore), showlegend = FALSE,
-        #                     colors = colorRamp(c("red", "blue"))
-        #                     )
-        #    )
-        
+        ) %>% 
+            layout(title = input$selectSector,
+                   margin = list(t = 30, r = 0, b = 80, l= 35, pad = 0),
+                   showlegend = FALSE,
+                   yaxis = list(title = "Z-Score"),
+                   xaxis = list(title = "Company Symbol")
+                 )
+                 
+    })
+    output$company <- renderPlotly({
+        companyData() %>% 
+            plot_ly(x = ~ZScore, y = ~Close) 
+       
     })
     
 })
