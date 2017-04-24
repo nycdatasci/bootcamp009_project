@@ -1,0 +1,11 @@
+name: MHD_Proj1_Shiny
+title: MHD_Proj1_Shiny
+account: haseebsaccount
+server: shinyapps.io
+appId: 174742
+bundleId: 800978
+url: https://haseebsaccount.shinyapps.io/MHD_Proj1_Shiny/
+when: 1493012877.63922
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: .gitignore.txt|MHD_Shiny_Presentation.pptx|project1_shiny.R|zipcode_bar.rda
