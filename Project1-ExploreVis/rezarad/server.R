@@ -20,6 +20,10 @@ function(input, output) {
                                           select(`Stop Name`))
   })
 
+  # output$ts_per_station = DT::renderDataTable(collect(turnstile_db %>%
+  #   filter(STATION == input$station_stats) %>% 
+  #   distinct(SCP)))
+  # 
   output$fares_data = DT::renderDataTable(fares_by_date)
 
   }

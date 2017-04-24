@@ -84,7 +84,7 @@ europe_map=leaflet() %>% addTiles() %>%  # Add default OpenStreetMap map tiles
   addMarkers(lng=12.5674, lat=41.8719, popup="Italy Serie A",label='Avg. Success Rate - 53.3%') %>%
   addMarkers(lng=5.2913, lat=52.1326, popup="Netherlands Eredivisie",label='Avg. Success Rate - 55.5%') %>%
   addMarkers(lng=8.2245, lat=39.3999, popup="Portugal Liga ZON Sagres", label='Avg. Success Rate - 54.5%') %>%
-  addMarkers(lng=4.2518, lat=55.8333, popup="Scotland Premier League", label= 'Avg. Success Rate - 50.7%') %>%
+  addMarkers(lng=4.2026, lat=56.4907, popup="Scotland Premier League", label= 'Avg. Success Rate - 50.7%') %>%
   addMarkers(lng=3.7492, lat=40.4637, popup="Spain LIGA BBVA", label= 'Avg. Success Rate - 56.2%')
 
 
@@ -97,7 +97,7 @@ europe_map_max=leaflet() %>% addTiles() %>%  # Add default OpenStreetMap map til
   addMarkers(lng=12.5674, lat=41.8719, popup="Italy Serie A",label='Away Team/High Favored - 63.9%') %>%
   addMarkers(lng=5.2913, lat=52.1326, popup="Netherlands Eredivisie",label='Home Team/High Favored - 67.6%') %>%
   addMarkers(lng=8.2245, lat=39.3999, popup="Portugal Liga ZON Sagres", label='Home Team/High Favored - 67.57%') %>%
-  addMarkers(lng=4.2518, lat=55.8333, popup="Scotland Premier League", label= 'Away Team/High Favored - 66.8%') %>%
+  addMarkers(lng=4.2026, lat=56.4907, popup="Scotland Premier League", label= 'Away Team/High Favored - 66.8%') %>%
   addMarkers(lng=3.7492, lat=40.4637, popup="Spain LIGA BBVA", label= 'Away Team/High Favored - 68.2%')
 
 

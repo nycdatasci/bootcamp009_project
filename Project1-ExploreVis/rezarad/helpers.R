@@ -1,12 +1,3 @@
-## Miscaellaneous Functions
-capwords <- function(s, strict = FALSE) {
-  cap <- function(s) paste(toupper(substring(s, 1, 1)),
-                           {s <- substring(s, 2); if(strict) tolower(s) else s},
-                           sep = "", collapse = " " )
-  sapply(strsplit(s, split = " "), cap, USE.NAMES = !is.null(names(s)))
-}
-
-
 
 getFaresData = function() {
 require(dplyr)
@@ -60,22 +51,33 @@ fares_by_date = collect(fares_by_date) %>%
 fares_by_date
 } # returns a df of maximum fare card's sold per station per type
 
-cleanTurnstileData = function() {
+turnstileData = function() {
   require(dplyr)
   require(dbplyr)
   
   dbname = "db.sqlite"
   conn = DBI::dbConnect(RSQLite::SQLite(), dbname)
   
-  # turnstile data for every 4 hours 
   turnstile_db = tbl(conn,"turnstile_data")
-  stations = turnstile_db %>% 
-    distinct(STATION, LINENAME)
-    # mutate(strsplit(stations$LINENAME,split=""))
   
-  collect(stations)
+
+  # turnstile data for every 4 hours 
+  # stations = turnstile_db %>% 
+  #   filter(DATE == date & TIME == time & STATION == station)  
+   
+  turnstile_db
 }
 
+turnstileQuery = function(df, date = "03/01/2017", time = "11:00:00", station = "1 AV") {
+  require(dplyr)
+  
+  daily_entries = df %>% 
+    filter(DATE == date & TIME == time & STATION == station) %>% 
+    group_by(STATION) %>% 
+    summarise( `Entries` = max(ENTRIES) - min(ENTRIES), `Exits` = max(EXITS) - min(EXITS))
+  
+  daily_entries
+}
 
 getBaseMap = function() {
 require(leaflet)
@@ -84,7 +86,7 @@ map_style = "https://api.mapbox.com/styles/v1/rezarad77/cj1u20c5q000q2rqhg8zd822
 
 map = leaflet() %>%
   addTiles(map_style) %>%
-  setView(lng = -73.87, lat = 40.705, zoom = 12)
+  setView(lng = -73.97, lat = 40.805, zoom = 12)
 
 map
 }

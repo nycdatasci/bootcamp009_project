@@ -11,7 +11,7 @@ shinyServer(function(input, output) {
     ggplot(Agencies_success_rate, 
            aes(x = season , y= Agencies_success_rate, label= paste(round(Agencies_success_rate*100, digits= 2),"%"))) + 
     geom_text(size = 4,position = position_stack(vjust = 1.05)) + 
-      geom_bar(stat='identity') + ggtitle("Favored result success rate")
+      geom_bar(stat='identity') + ggtitle("Favored result success rate") + ylab('agencies success rate')
     
   })
   #4
@@ -20,7 +20,7 @@ shinyServer(function(input, output) {
     ggplot(game_winner_table, aes(x= reorder(game_winner,-Percent_of_total_games_played) , y= Percent_of_total_games_played,
     label = paste(round(Percent_of_total_games_played*100, digits= 2),"%")))+ geom_bar(stat = 'identity')+
     geom_text(size = 4, position = position_stack(vjust = 0.5)) +
-      ggtitle("Actual Matches Resulsts")
+      ggtitle("Actual Matche Results") + ylab('percent of games played') + xlab('game winner')
 
 
   })
@@ -31,7 +31,8 @@ shinyServer(function(input, output) {
     
     ggplot(min_max_odds, aes(x=max_odd,y=min_odd)) + geom_point(size = 0.005) + 
       scale_x_continuous(limits = c(1,12)) + ylim(1,3) + stat_binhex() + 
-      ggtitle("Scatter Plot Of Min and Max Odds Of Observations") 
+      ggtitle("Scatter Plot Of Minimum and Maximum Odds Of Observations") +
+      xlab('maximum odds') + ylab('minimum odds')
       
  
   
@@ -46,7 +47,7 @@ shinyServer(function(input, output) {
     ggplot(agencies_fav_table, aes(x= reorder(Agencies_fav,-Percent_of_total_games_played_af), y= Percent_of_total_games_played_af,
     label = paste(round(Percent_of_total_games_played_af*100, digits= 2),"%")))+ geom_bar(stat = 'identity') +
     geom_text(size = 4, position = position_stack(vjust = 0.5))+
-      ggtitle("Agencies Favored Result")
+      ggtitle("Agencies Favored Result") + xlab('locality') + ylab('percent of games played')
     } else {
 
     ggplot(results_table,aes(x=reorder(Agencies_fav,-values),y=values,label = paste(round(values*100, digits= 2),"%"))) +
@@ -73,7 +74,7 @@ shinyServer(function(input, output) {
   avg_success_rate <- paste(round(((matches %>% summarise(count_games = n(), success_ = sum(AgenciesVsgame_winner=="yes"), 
                                             s_rate = success_/count_games))[,3])*100, digits = 2),'%') 
   
-  infoBox("Avg. Success Rate",avg_success_rate, icon = icon("hand-o-up"))
+  infoBox("Success Rate",avg_success_rate, icon = icon("hand-o-up"))
   
   }) 
   
@@ -109,8 +110,9 @@ shinyServer(function(input, output) {
   ggplot(drow_breakdown, aes(x=reorder(Agencies_fav_level,-drow_percentage),
                             y=drow_percentage, 
                             label = paste(round(drow_percentage*100, digits= 2),"%"))) +
-    geom_bar(stat = 'identity') + ggtitle("Percentage of drow results from favores level")+
-     geom_text(size = 4, position = position_stack(vjust = 0.5))
+    geom_bar(stat = 'identity') + ggtitle("Percentage of draw results from favored level")+
+     geom_text(size = 4, position = position_stack(vjust = 0.5)) + xlab('favored level') +
+      ylab('draw percentage')
   
     
   })    
@@ -161,13 +163,13 @@ shinyServer(function(input, output) {
     if (input$show_hist) {
 
       ggplot(min_max_odds,aes(x=max_odd)) +
-        geom_histogram(bins =100) +scale_x_continuous(limits = c(1,15)) +
-        ggtitle('Max odd histogram')
+        geom_histogram(bins =20) +scale_x_continuous(limits = c(1,15)) +
+        ggtitle('Maximum Odds Histogram') + xlab('minimum odds')
 
     } else {
       ggplot(min_max_odds,aes(x=min_odd)) +
-        geom_histogram(bins =7) +
-        ggtitle('Min odd histogram')
+        geom_histogram(bins =20) + xlab('maximum odds') +
+        ggtitle('Minimum Odds Histogram')
       
     } 
       
@@ -177,9 +179,9 @@ shinyServer(function(input, output) {
   output$mid_odd_hist <- renderPlot({  
   
   ggplot(mid_odds,aes(x=mid_odd)) +
-  geom_histogram(bins = 100) +
-  ggtitle('Mid odd histogram') + 
-  scale_x_continuous(limits = c(1,10))
+  geom_histogram(bins = 20) +
+  ggtitle('Middle Odds Histogram') + 
+  scale_x_continuous(limits = c(1,10)) + xlab('middle odds') 
   
   
   

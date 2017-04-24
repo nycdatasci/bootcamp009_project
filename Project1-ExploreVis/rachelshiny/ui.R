@@ -59,7 +59,6 @@ shinyUI(dashboardPage(
                        box(
                          plotOutput('blackdensityPlot')
                        )),
-              
               fluidRow(box(plotOutput('controlPlot')))
       ),
       tabItem(tabName = 'sc', 
