@@ -67,3 +67,11 @@ I think that plotting the word count for a specific company versus the number of
       - Frequency by day of the week/month            (Done)
     b. group data into weeks/months to smooth out deviations
 27. Try to understand why the map gets mixed up when the counts are really low    (Done)  
+
+## Story
+1. Counts by state normalized
+2. Time frequency with corresponding statistical tests
+  a. Day of the week and month
+3. Complaints predicting events such as the wells fargo event (show a vertical line on the TS plot)
+4. Disproportionate submitted.via by state (shown well with mosaic plot)
+5. 
