@@ -1,6 +1,6 @@
 @author Scott Dobbins
-@version 0.8.1
-# @date 2017-04-23 18:45
+@version 0.9
+# @date 2017-04-23 23:45
 
 
 ## Version history ###
@@ -78,6 +78,11 @@ Major changes: full sidebar; tabs for each war
 	Made sampling occur after date restriction changes
 	Opacity now updates with sample size as well
 
+0.9
+Version for class lecture
+Major changes: Sandbox added; labeling added
+Notes: sidebar and other parts reduced to what works
+
 **Future version plans:
 *Tabs for exploring each separate conflict on its own in detail
 *Lots of ggplots, maybe a self-playing gif of bombs droppedover time for each conflict
@@ -107,34 +112,4 @@ Vietnam
 data source: data.mil
 data origin URL: https://insight.livestories.com/s/v2/vietnam/48973b96-8add-4898-9b33-af2a676b10bb/
 
-
-### Thomas recommendations ###
-# maybe do SQLite
-# maybe add pictures to pop up
-# maybe add hyperlinks to various Wikipedia pages
-# definitely add plots and summary stats
-
-### end ###
-
-
-
-***** PRIORITIES *****
-
-1. make histograms more editable: slicing data by aircraft and/or city etc.
-	measure intensity by number of bombs or total weight of bombs
-2. further flesh out tabs for individual conflicts
-3. fix tooltips by adding extra columns and doing a saved data refresh
-4. ensure that all data tables are in third normal form and coordinate with glossary tables
-5. get rid of all lapply statements in data cleaning section
-
-
-*** eventually ***
-- use branching to develop new features on local repository
-- remove debug features from a branched final dev version
-
-
-*** num missions should account for sortie duplicates
-*** num bombs should use totals across different types and better quality control on data
-*** weight bombs should use num aircraft * bombload in separate (new) column
-*** weight should all be converted into pounds or tons
-
+### END ###
