@@ -11,14 +11,16 @@ shinyUI(pageWithSidebar(
                   tags$a(href = "https://cfpb.gov", "Consumer Financial Protection Bureau")
                   ))),
     sidebarPanel(
-      #width = 3,
+      width = 3,
+      #### Map panel
       conditionalPanel(condition="input.conditionedPanels==1",
                        dateRangeInput('dateRange',
                                       label = 'Date range input: yyyy-mm-dd',
                                       start = min(complaints$Date.received), 
                                       end = max(complaints$Date.received)
                      ),
-                       checkboxInput("normalize", "Normalize Map Counts", value = FALSE),
+                       checkboxInput("normalize", "Normalize Map Counts by Population", value = FALSE),
+                     #checkboxInput("normalize", "Normalize Map Counts by Total State Count", value = FALSE),
                        selectInput("map_var", "Choose a variable:",
                                    choices = complaint_vars,
                                    selected = complaint_vars[1]),
@@ -27,11 +29,24 @@ shinyUI(pageWithSidebar(
                          choices = "", 
                          multiple = TRUE
                        ),
+                     fluidRow(
+                        column(width = 4,
+                          radioButtons("period", label = h3("Grouping Period"),
+                                  choices = list("Daily" = 1, "Weekly" = 2, 
+                                                 "Monthly" = 3, "Quarterly" = 4), 
+                                  selected = 1)),
+                        column(width = 4, offset = 2,
+                          radioButtons("period_func", label = h3("Period Function"),
+                                  choices = list("Mean" = "mean",
+                                                 "Sum" = "sum", 
+                                                 "Std" = "sd"), 
+                                  selected = "mean"))
+                     ),
                        plotOutput("ts_plot")
-                       #plotOutput("day_freq")
+                       
                        
       ),
-      
+      ##### Bar plot panel
       conditionalPanel(condition="input.conditionedPanels==2",
                        selectInput("primary", "Choose a primary variable:",
                                    choices = complaint_vars),
@@ -47,15 +62,36 @@ shinyUI(pageWithSidebar(
                        checkboxInput("no_leg", "Suppress Legend", value = F),
                        dataTableOutput("df")
       ),
-  
-      conditionalPanel(condition="input.conditionedPanels==4"
+    ###### Mosaic panel
+      conditionalPanel(condition="input.conditionedPanels==3",
+                       selectInput("mosaic_var1", "Choose a variable:",
+                                   choices = complaint_base,
+                                   selected = complaint_base[1]),
+                       selectizeInput('mosaic_list1', 'Possible values', 
+                         choices = "", 
+                         multiple = TRUE
+                       ),
+                       selectInput("mosaic_var2", "Choose a variable:",
+                                   choices = complaint_base,
+                                   selected = complaint_base[1]),
+                       selectizeInput('mosaic_list2', 'Possible values', 
+                         choices = "", 
+                         multiple = TRUE
+                       )
       ),
-      
-      conditionalPanel(condition="input.conditionedPanels==5",
+      ##### Wordcloud panel
+      conditionalPanel(condition="input.conditionedPanels==4",
                        selectizeInput(
-                         'company_var', 'Company', choices = companies, 
+                         'wordcloud_var', 'Grouping variable', choices = complaint_vars,
+                         selected = complaint_vars[1],
                          multiple = F
                        ),
+                       
+                       selectizeInput(
+                         'wordcloud_dep_list', 'Specific Item(s)', choices = "",
+                         multiple = T
+                       ),
+                      
                        actionButton("update", "Update Word Bubble"),
                        hr(),
                        sliderInput("freq",
@@ -68,37 +104,28 @@ shinyUI(pageWithSidebar(
     ),
     mainPanel(
         tabsetPanel(
-	        tabPanel("map", value = 1, 
+          #### map tab
+	        tabPanel("Map and Time Series", value = 1, 
                 leafletOutput("usmap", width = "100%", height = 500),
                 fluidRow(
                   column(width = 6, plotOutput("day_freq")),
                   column(width = 6, plotOutput("month_freq"))
                 )
-                # plotOutput("day_freq", width = "40%"),
-                # plotOutput("month_freq", width = "40%")
 	    ),
-	        tabPanel("bar_plots", value = 2,
+	    ######## bar tab
+	        tabPanel("Bar Plots", value = 2,
 	                 plotOutput("bars", width = "100%", height = 800)
 	    ),
-	    #     tabPanel("data_frame", value = 2,
-	    #          dataTableOutput("df")
-	    # ),
-	        tabPanel("mosaic_plots", value = 4,
-	             plotOutput("mosaics")
+	    ####### mosaic tab
+	        tabPanel("Mosaic Plots", value = 3,
+	             plotOutput("mosaic", width = "100%", height = 800)
 	    ),
-	        tabPanel("word_counts", value = 5,
+	    ###### wordcloud tab
+	        tabPanel("Word Cloud", value = 4,
 	             plotOutput("bubbles")
 	    ),
 	    id = "conditionedPanels"
-            # tabPanel("plot",
-            #     fluidRow(
-            #         column(6, plotOutput("count")),
-            #         column(6, plotOutput("delay"))
-            #             )
-            #         ),
-            # tabPanel("dataset",
-            #          dataTableOutput("old_faithful")
-            #         )
+
                    )
             )
   )

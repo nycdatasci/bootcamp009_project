@@ -12,6 +12,7 @@ library(ggthemes)
 library(dygraphs)
 library(xts)
 library(RColorBrewer)
+library(wordcloud)
 ###############################  data cleaning ###############################
 
 # data cleaning  table1 f : film location(data from nyc open data gov website), 
