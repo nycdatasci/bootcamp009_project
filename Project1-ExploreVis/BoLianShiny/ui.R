@@ -24,9 +24,9 @@ dashboardPage( skin='red',
 
       selectizeInput("selected",
                    "Select a Factor VS 
-                    Mental Health",choices= choice1)),
+                    Mental Health",choices= choice1),
       br(),
-      menuItem("Conclusions & Future Work", tabName = "con", icon = icon("smile-o"))
+      menuItem("Conclusions & Future Work", tabName = "con", icon = icon("smile-o")))
     
     ),
   
