@@ -1,7 +1,8 @@
 library(dplyr)
 library(shinydashboard)
 library(ggplot2)
-
+library(DT)
+library(data.table)
 
 #creat country table
 

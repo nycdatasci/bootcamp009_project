@@ -3,6 +3,12 @@ library(shiny)
 
 function(input, output){
   
+  # show data using DataTable
+  output$table <- DT::renderDataTable({
+    datatable(mental, rownames=FALSE) %>% 
+      formatStyle(input$selected, background="skyblue", fontWeight='bold')
+  })
+  
   output$population <- renderPlot({
     ggplot(data = country_10,aes(x=reorder(country,count), y=count))+
       geom_point(aes(color=country),size=5)+
@@ -42,16 +48,16 @@ function(input, output){
   # show statistics using infoBox
   output$X_Square<- renderInfoBox({
     a <- as.vector(chisq.test(filter(mental,mental[,input$selected] !='NA')$treatment,filter(mental,mental[,input$selected] !='NA')[,input$selected]))
-    infoBox(paste('Chi-Square: '), format(round(a[[1]],2), nsmall=2), icon = icon("times"))
+    infoBox(paste('Chi-Square: '), format(round(a[[1]],2), nsmall=2), icon = icon("times"), color = 'red')
   })
   
   output$DF <- renderInfoBox({
     a <- as.vector(chisq.test(filter(mental,mental[,input$selected] !='NA')$treatment,filter(mental,mental[,input$selected] !='NA')[,input$selected]))
     
-    infoBox(paste('D of Freedom: '), a[[2]], icon = icon("arrow-circle-o-up"))
+    infoBox(paste('D of Freedom: '), a[[2]], icon = icon("arrow-circle-o-up"),color = 'red')
   })
 
   output$P_Value <- renderInfoBox({
     a <- as.vector(chisq.test(filter(mental,mental[,input$selected] !='NA')$treatment,filter(mental,mental[,input$selected] !='NA')[,input$selected]))
-    infoBox(paste('P Value: '), format(a[[3]],scientific = T), icon = icon("calculator"))
+    infoBox(paste('P Value: '), format(a[[3]],scientific = T), icon = icon("calculator"), color = 'red')
 })}
