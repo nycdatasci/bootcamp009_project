@@ -84,7 +84,9 @@ dashboardPage( skin='red',
       tabItem(tabName = "population", 
              
             fluidRow(box(plotOutput("population"), height = 500),
-                        box(plotOutput("US_state"), height = 500))
+                        box(h3("States: US Employees"),
+                            htmlOutput("map"), height = 500))
+         
 
               ),
       
@@ -116,7 +118,7 @@ dashboardPage( skin='red',
             br(),
             h1('Future Work'),
             h3('More Visualization'),
-            h3('Complexity and subjectivity'),
+            h3('Complexity,subjectivity, location specifity'),
             h3('Integrating ongoing survey data'),
             h3('Interaction among factors'),
             h3('Prediction with multivariates')
