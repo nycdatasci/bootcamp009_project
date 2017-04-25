@@ -5,8 +5,9 @@ function(input, output){
   
   # show data using DataTable
   output$table <- DT::renderDataTable({
-    datatable(mental, rownames=FALSE) %>% 
-      formatStyle(input$selected, background="skyblue", fontWeight='bold')
+    datatable(mental, rownames=FALSE,options = list(scrollX = TRUE)) %>% 
+      formatStyle(input$selected, background="skyblue", fontWeight='bold',
+        pageLength=50, scrollX='400px', filter='top')
   })
   
   output$population <- renderPlot({
