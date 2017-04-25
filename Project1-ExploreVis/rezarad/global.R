@@ -1,12 +1,13 @@
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
+library(leaflet) 
+library(shiny)
+
 source("./helpers.R")
 
-# import stations information linked 
-stations_data = getStationData("./data/Updated_Stations.csv")
+dbname = "db.sqlite"
+conn = DBI::dbConnect(RSQLite::SQLite(), dbname)
 
-# import data into a df
-turnstile_db = turnstileData()
 
 # list of mta lines including hex code for color
 mta_lines = list("1" = "#EE352E","2" = "#EE352E","3" = "#EE352E",

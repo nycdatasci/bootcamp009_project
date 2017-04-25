@@ -2,11 +2,13 @@
 library(RSQLite)
 library(DBI)
 
+source("./helpers.R")
+
 # make sure your working directory is the directory of the project
 conn <- dbConnect(SQLite(), dbname)
 data_dir = paste(getwd(),"data", sep = "/")
 
-fares_dir = paste(data_dir, "fares", sep='/') # Directory of fares data
+fares_dir = "./data/fares/"
 fares_files = rev(paste(fares_dir, list.files(fares_dir), sep="/")) # list of fares data files
 
 for(file in fares_files) {
@@ -19,7 +21,7 @@ for(file in fares_files) {
   rm(temp_data)
 }
 
-turnstile_dir = paste(data_dir, "turnstile", sep='/') # Directory of turnstile data
+turnstile_dir = "./data/turnstile/"
 turnstile_files = rev(paste(turnstile_dir, list.files(turnstile_dir), sep="/")) # list of turnstile data files
 
 for(file in turnstile_files) {
@@ -28,12 +30,30 @@ for(file in turnstile_files) {
                value = file,
                append = TRUE,
                headers = TRUE,
-              d
                sep = ",")
 }
 
+### Number of Turnstiles per Station
+ts_count = getTurnstileData("turnstile_data") %>%
+  group_by(STATION) %>% 
+  summarise(`Number of Turnstiles` = n_distinct(SCP))
+ts_count = collect(ts_count)
 
-## list tables
-dbListTables(conn)
-## disconnect
-dbDisconnect(conn)
+stations_data = getStationData("./data/Stations.csv")
+ts_station_matcher = read.csv(file = "./data/stations_lookup_table.csv")
+ts_station_matcher = ts_station_matcher %>%
+  rename(`Stop Name` = csv_station_name) %>% 
+  inner_join(stations_data)
+
+ts_station_matcher = ts_station_matcher %>% 
+  rename(STATION = ts_station_name) %>% 
+  inner_join(ts_count)
+
+write.csv(ts_station_matcher,"./data/turnstile_count.csv")
+
+
+stations_data = stations_data %>% 
+  mutate(`Turnstile Station Name` = toupper(`Turnstile Station Name`))
+stations_data = stations_data %>% left_join(ts_count, by = c("Turnstile Station Name" = "STATION"))
+
+

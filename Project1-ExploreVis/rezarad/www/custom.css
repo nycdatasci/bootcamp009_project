@@ -1,19 +1,84 @@
+div.outer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 41px;
+  padding: 0;
+overflow: hidden;
+}
+
+label_stations {
+    font-weight: 100;
+    color: black;    
+}
+
+
+/* Customize fonts */
+body, label, input, button, select { 
+  font-family: 'Helvetica Neue', Helvetica;
+  font-weight: 200;
+}
+
+h1, h2, h3, h4 { font-weight: 500; }
+
+h5 {
+    width: 100%;
+    font-size: 32px;
+    font-weight: 300;
+    text-align: left;
+}
+
+h6 {
+    width: 100%;
+    font-weight: 250;
+    font-size: 22px;
+    text-align: left; 
+}
+
+
 #controls {
   /* Appearance */
-  background-color: lightslategrey;
-  padding: 0 0 10px 10px;
+  background-color: white;
+  padding: 20px 20px 20px 20px;
   cursor: move;
   /* Fade out while not hovering */
-  opacity: 0.35;
+  opacity: 0.75;
   zoom: 0.9;
-  transition: opacity 200ms 500ms;
+  transition: opacity 600ms 900ms;
 }
 #controls:hover {
   /* Fade in while hovering */
-  opacity: 0.85;
-  transition-delay: 0;
+  opacity: 0.95;
+  transition-delay: 100ms;
 }
 
-#h7 {
-    color: black
+/* Position and style citation */
+#cite {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  font-size: 10px;
+  color: dimgrey;    
+}
+
+#fares_table {
+    font-size: 80%;
+}
+
+#date_box {
+    padding: 15px;
+    
+}
+
+/* If not using map tiles, show a white background */
+.leaflet-container {
+  background-color: white !important;
+}
+
+.box_text {  
+  font-size: 26px;
+  font-weight: 300;
+  text-align: right;
+        
 }
