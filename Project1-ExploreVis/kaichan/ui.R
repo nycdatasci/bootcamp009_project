@@ -1,3 +1,8 @@
+##EDA Project Version 4
+## Issue with rendering if multiple plots on one tab
+## Changed t_df$conf_finals to factor type
+
+
 
 library(shiny)
 library(shinydashboard)
@@ -5,7 +10,7 @@ library(shinydashboard)
 shinyUI(dashboardPage(
   
   #Header
-  dashboardHeader(title = "Conference Finals Teams in the NBA Regular Season"),
+  dashboardHeader(title = "Conference Finalists in the NBA Regular Season"),
   
   #Sidebar
   dashboardSidebar(
@@ -14,43 +19,55 @@ shinyUI(dashboardPage(
                      image = "https://yt3.ggpht.com/-04uuTMHfDz4/AAAAAAAAAAI/AAAAAAAAAAA/Kjeupp-eNNg/s100-c-k-no-rj-c0xffffff/photo.jpg"),
     sidebarMenu(
       menuItem("Main", icon = icon("info"), tabName = "main"),
-      menuItem("Graphs", icon = icon("line-chart"), tabName = "graphs",
+      
+      menuItem("Density Functions", icon = icon("area-chart"), tabName = "graphs",
         menuSubItem("Offense", tabName = "offense"),
         menuSubItem("Defense", tabName = "defense"),
-        menuSubItem("Other", tabName = "other"))
+        menuSubItem("Other", tabName = "other")),
+      
+      menuItem("Boxplot", tabName = "statbox", icon=icon("line-chart"))
+
       )
     ),
   
   #Body
   dashboardBody(
-    
       
     tabItems(
-      tabItem
-             (tabName = "main", "Welcome!"),
+      tabItem(
+        tabName = "main", strong("Please use the dashboard to begin."), br(),
+        img(src='http://www.logodesignlove.com/wp-content/uploads/2011/04/nba-logo-on-wood.jpg')),
       
       tabItem(tabName = "offense",
+              fluidPage(
+                box(plotOutput("densityAT"), width=6),
+                box(plotOutput("densityshotprop"), width=6),
+                box(plotOutput("densityftpct"), width=6),
+                box(plotOutput("densitypts"), width=6)
+              )),
               
-              fluidRow(
-                box(plotOutput("densityAT")),
-                box(plotOutput("densityshotprop")),
-                box(plotOutput("densityftpct")),
-                box(plotOutput("densitypts"))
-                
-              )
-      ),
-      
       tabItem(tabName = "defense",
-              plotOutput("densitydrebs"),
-              plotOutput("densitydrebs"),
-              plotOutput("densityfouls")),
+              fluidPage(
+              box(plotOutput("densitydrebs"), width=4),
+              box(plotOutput("densitydrebs"), width=4),
+              box(plotOutput("densityfouls"), width=4)
+                  )),       
       
       tabItem(tabName = "other",
-              plotOutput("densitypminus"))
+              fluidPage(
+              box(plotOutput("densitypminus"),width=6)
+              )),
+      
+      tabItem(tabName = "statbox",
+              
+              selectizeInput(inputId= 'stat1',
+                             label = 'Please choose a statistic.',
+                             choices = fltrs),
+              box(plotOutput("box1")))
               
       
     ) #tabItems close
-      
+
     
   ) #dashboardBody close
 )) #ShinyUI/dashboardPage Close
