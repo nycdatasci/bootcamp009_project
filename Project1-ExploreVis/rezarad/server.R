@@ -4,8 +4,10 @@ function(input, output, session) {
   require(dbplyr)
   require(dplyr)
   
+  
   # Filter by MTA line from user input 
-  stations_data = getStationData("./data/Updated_Stations.csv")
+
+
   line_reactive = reactive({
     getBaseMap() %>% mapLineData(
                       filteredLineData(input$line, stations_data),
@@ -15,53 +17,67 @@ function(input, output, session) {
   
   output$mtamap = renderLeaflet(line_reactive())
   
-  
-  observeEvent(input$mtamap_marker_click, 
-               {
-                station_nm = (stations_data %>% 
-                                filter(`GTFS Latitude` == input$mtamap_marker_click$lat & 
-                                         `GTFS Longitude` ==  input$mtamap_marker_click$lng) %>% 
-                                transmute(`Stop Name`))[[1]]
-  
-                output$station_name = renderUI(station_nm)
-                
-                ts_data = read.csv("./data/turnstile_count.csv")
-                output$ts_per_station = renderPrint((ts_data %>%
-                                                       filter(Stop.Name == station_nm) %>% 
-                                                       select(Number.of.Turnstiles))[1,1]
-                                                    )
-                output$entries_year = renderPrint((ts_data %>%
-                                                       filter(Stop.Name == station_nm) %>% 
-                                                       select(Number.of.Turnstiles))[1,1]
-                )
-                
-                output$exits_year = renderPrint((ts_data %>%
-                                                       filter(Stop.Name == station_nm) %>% 
-                                                       select(Number.of.Turnstiles))[1,1]
-                )
-                output$entries_all = renderPrint((ts_data %>%
-                                                       filter(Stop.Name == station_nm) %>% 
-                                                       select(Number.of.Turnstiles))[1,1]
-                )
-                output$exits_all = renderPrint((ts_data %>%
-                                                       filter(Stop.Name == station_nm) %>% 
-                                                       select(Number.of.Turnstiles))[1,1]
-                )
-               })
-    
-  # observeEvent(input$station_name,
-  #                {
-  #                  ts_data = read.csv("./data/turnstile_count.csv")
-  #                  output$ts_per_station = renderPrint((ts_data %>%
-  #                                                     filter(Stop.Name == input$station_name) %>% 
-  #                                                     select(Number.of.Turnstiles))[1,1]
-  #                                             )
-  #                                   })
-    
-  # output$ts_per_station = renderPrint(ts_data_reactive())
-  
-  # output$fares_data = DT::renderDataTable(getFaresData("fares_data"), server = T)
+  observeEvent(input$mtamap_marker_click,
+     {
+       
+      station_nm = (stations_data %>%
+                      filter(`GTFS Latitude` == input$mtamap_marker_click$lat &
+                               `GTFS Longitude` ==  input$mtamap_marker_click$lng) %>%
+                      transmute(`Stop Name`))[[1]]
 
+      output$station_name = renderUI(station_nm)
+      
+      output$ts_per_station = renderText((ts_data %>%
+                                             filter(Stop.Name == station_nm) %>%
+                                             select(Number.of.Turnstiles))[1,1])
+      
+      observeEvent(input$button,
+                   {
+                     station_filter = ts_data %>%
+                       filter(Stop.Name == station_nm) %>%
+                       select(STATION)
+                     
+                     entries_year = collect(getTurnstileData("turnstile_data") %>%
+                                              filter(STATION %in% station_filter$STATION) %>% 
+                                              select(SCP, STATION, DATE, TIME, ENTRIES, EXITS))
+                     
+                     entries_year = entries_year %>%
+                       mutate(DATE = as.Date(DATE,format = "%m/%d/%Y")) %>%
+                       arrange(DATE, TIME)
+                     
+                     total_year = entries_year %>%
+                       filter(DATE >= input$daterange_turnstile[1] & DATE <= input$daterange_turnstile[2]) %>%
+                       group_by(SCP) %>% 
+                       arrange(DATE) 
+                       
+                     
+                     by_weekday = entries_year %>% 
+                       mutate(Weekday = weekdays(DATE)) %>% 
+                       group_by(STATION)
+                     
+                     
+                     
+                     # %>%
+                     #   summarise(ENTRIES = max(ENTRIES)-min(ENTRIES),EXITS = max(EXITS) - min(EXITS)) %>% 
+                     #   group_by(SCP, DATE)
+                     
+                     output$entries_year = DT::renderDataTable(total_year)
+                     output$by_day = DT::renderDataTable(by_weekday)
+                     # total = total_year[-1,] - total_year[-nrow(total_year),]
+
+                     # 
+                     # output$plot1 = renderPlot(ggplot(total_year,
+                     #                                  aes(x = DATE,
+                     #                                      y = max(ENTRIES))
+                     # ) + geom_smooth())
+                     
+                   }
+      )    
+     }
+     )
+  output$stations_compare = renderPrint(station_nm)
+  
 }
+    
 
 

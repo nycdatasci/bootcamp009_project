@@ -139,4 +139,3 @@ getTurnstileData = function(table) {
   
   tbl(conn, table)
 }
-

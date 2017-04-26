@@ -62,12 +62,15 @@ h6 {
   color: dimgrey;    
 }
 
-#fares_table {
+#table {
     font-size: 80%;
+    padding: 10px, 10px, 10px, 10px;
+    text-align: left;
 }
 
 #date_box {
     padding: 15px;
+    
     
 }
 
@@ -82,3 +85,5 @@ h6 {
   text-align: right;
         
 }
+
+
