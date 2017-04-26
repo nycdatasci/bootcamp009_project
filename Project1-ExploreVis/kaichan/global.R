@@ -4,34 +4,22 @@ library(tidyr)
 library(ggplot2)
 library(lubridate)
 
-load("teamdf.rda")
+load('teamdf.rda')
+
+##Lists
+
+fltrs <- list('Field Goals Made'= 'fgm','Field Goals Attempted'='fga','Field Goal %' = 'fg_pct',
+              '3-Pointers Made'='fg3m','3-Point Attempts'='fg3a',
+              'Free Throws Made' = 'ftm','Free Throws Attempted' ='fta','Free Throw Percentage' =' ft_pct',
+              'Offensive Rebounds'='oreb',
+              'Defensive Rebounds'='dreb',
+              'Total Rebounds' = 'reb',
+              'Assists'='ast',
+              'Steals'='stl',
+              'Blocks'='blk',
+              'Turnovers'='tov',
+              'Personal Fouls'='pf')
+
 
 ##Tables
-a_tov <- 
-  t_df %>%
-  group_by(conf_finals,tname,y,game_id) %>%
-  summarise(ast=sum(ast), tov=sum(tov))
 
-fga_3pa <- t_df %>%
-  group_by(conf_finals,tname,y,game_id) %>%
-  summarise(fga=sum(fga), fg3a=sum(fg3a))
-
-freethrows <- t_df %>%
-  group_by(conf_finals,tname,y,game_id) %>%
-  summarise(ftacc = sum(ft_pct), ft = sum(fta))
-
-avg_pts <- t_df %>%
-  group_by(conf_finals,tname,y) %>%
-  summarise(avgpts = round(mean(pts),0))
-
-drebs <- t_df %>%
-  group_by(conf_finals,tname,y,game_id) %>%
-  summarise(rebound = round(mean(dreb),0))
-
-plus_minus <- t_df %>%
-  group_by(conf_finals,tname,y,game_id) %>%
-  summarise(pminus = sum(plus_minus))
-
-fouls <- t_df %>%
-  group_by(conf_finals,tname,y,game_id) %>%
-  summarise(fouls = round(mean(pf),0))

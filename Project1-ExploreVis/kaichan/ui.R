@@ -1,42 +1,73 @@
+##EDA Project Version 4
+## Issue with rendering if multiple plots on one tab
+## Changed t_df$conf_finals to factor type
+
+
 
 library(shiny)
 library(shinydashboard)
 
 shinyUI(dashboardPage(
-  dashboardHeader(title = "EDA: NBA Regular Season"),
+  
+  #Header
+  dashboardHeader(title = "Conference Finalists in the NBA Regular Season"),
+  
+  #Sidebar
   dashboardSidebar(
     
-    sidebarUserPanel("NYC DSA",
+    sidebarUserPanel("Kai Chan",
                      image = "https://yt3.ggpht.com/-04uuTMHfDz4/AAAAAAAAAAI/AAAAAAAAAAA/Kjeupp-eNNg/s100-c-k-no-rj-c0xffffff/photo.jpg"),
     sidebarMenu(
-      menuItem("Main", text = 'Please select a graph in the submenu below.'),
-      menuItem("Graphs", tabName = 'graphs',
-        menuSubItem("Assists to Turnover", tabName = 'atov'),
-        menuSubItem("Field Goals to 3 Point Attempts", tabName = 'fg3p'),
-        menuSubItem("Free Throw Percentage", tabName = 'freethrows'),
-        menuSubItem("Average Points Scored", tabName = 'avg_pts'),
-        menuSubItem("Average Defensive Rebounds", tabName = 'drebs'),
-        menuSubItem("Plus Minus", tabName = 'pminus'),
-        menuSubItem("Density Fouls", tabName = 'fouls'))
-    
+      menuItem("Main", icon = icon("info"), tabName = "main"),
+      
+      menuItem("Density Functions", icon = icon("area-chart"), tabName = "graphs",
+        menuSubItem("Offense", tabName = "offense"),
+        menuSubItem("Defense", tabName = "defense"),
+        menuSubItem("Other", tabName = "other")),
+      
+      menuItem("Boxplot", tabName = "statbox", icon=icon("line-chart"))
+
+      )
     ),
+  
+  #Body
   dashboardBody(
+      
     tabItems(
-      tabItem(tabName = 'atov',
-              plotOutput('densityAT')),
-      tabItem(tabName = 'fg3p',
-              plotOutput('densityshotprop')),
-      tabItem(tabName = 'freethrows',
-              plotOutput('densityftpct')),
-      tabItem(tabName = 'avg_pts',
-              plotOutput('densitypts')),
-      tabItem(tabName = 'drebs',
-              plotOutput('densitydrebs')),
-      tabItem(tabName = 'pminus',
-              plotOutput('densitypminus')),
-      tabItem(tabName = 'fouls',
-              plotOutput('densityfouls'))
+      tabItem(
+        tabName = "main", strong("Please use the dashboard to begin."), br(),
+        img(src='http://www.logodesignlove.com/wp-content/uploads/2011/04/nba-logo-on-wood.jpg')),
+      
+      tabItem(tabName = "offense",
+              fluidPage(
+                box(plotOutput("densityAT"), width=6),
+                box(plotOutput("densityshotprop"), width=6),
+                box(plotOutput("densityftpct"), width=6),
+                box(plotOutput("densitypts"), width=6)
+              )),
               
-    )
-  )
-)))
+      tabItem(tabName = "defense",
+              fluidPage(
+              box(plotOutput("densitydrebs"), width=4),
+              box(plotOutput("densitydrebs"), width=4),
+              box(plotOutput("densityfouls"), width=4)
+                  )),       
+      
+      tabItem(tabName = "other",
+              fluidPage(
+              box(plotOutput("densitypminus"),width=6)
+              )),
+      
+      tabItem(tabName = "statbox",
+              
+              selectizeInput(inputId= 'stat1',
+                             label = 'Please choose a statistic.',
+                             choices = fltrs),
+              box(plotOutput("box1")))
+              
+      
+    ) #tabItems close
+
+    
+  ) #dashboardBody close
+)) #ShinyUI/dashboardPage Close
