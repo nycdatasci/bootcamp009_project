@@ -1,6 +1,6 @@
-##EDA Project Version 4
+##EDA Project Version 6
 ## Issue with rendering if multiple plots on one tab
-## Changed t_df$conf_finals to factor type
+## Added check for facet
 
 
 
@@ -55,7 +55,11 @@ shinyUI(dashboardPage(
       
       tabItem(tabName = "other",
               fluidPage(
-              box(plotOutput("densitypminus"),width=6)
+              box(plotOutput("densitypminus"),width=6),
+              selectizeInput(inputId = 'year1',
+                             label = 'Team 1 Year',
+                             choices = t_df$y,
+                             selected = 'None Selected')
               )),
       
       tabItem(tabName = "statbox",
@@ -63,6 +67,9 @@ shinyUI(dashboardPage(
               selectizeInput(inputId= 'stat1',
                              label = 'Please choose a statistic.',
                              choices = fltrs),
+              checkboxInput(inputId = 'fcheck',
+                            label = 'Facet by Year?',
+                            value = FALSE),
               box(plotOutput("box1")))
               
       

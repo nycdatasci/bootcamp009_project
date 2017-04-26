@@ -10,13 +10,15 @@ shinyServer(function(input, output){
   output$box1 <- reactive({
     renderPlot({
     
-      t_df %>%
+     tsub <- t_df %>%
         group_by(conf_finals,y, tname, game_id) %>%
-        summarise(stat = sum(input$stat1)) %>%
-      ggplot(aes(x=conf_finals, y= input$stat1, colour=conf_finals))+
-        labs(title="Conference Finalist Comparisons", x="Conf. Finalists?", y="Points")+
-        geom_boxplot()+
-        facet_grid(~y)
+        summarise(ystat = sum(input$stat1)) %>%
+      g <- ggplot(aes(tsub, x=conf_finals, y= tsub$ystat, colour=conf_finals))+
+        labs(title="Conference Finalist Comparisons", x="Conf. Finalists?", y=input$stat1)+
+        geom_boxplot()
+      
+      if(input$fcheck == T)
+       g + facet_grid(~y)
     
       })
     

@@ -18,7 +18,9 @@ fltrs <- list('Field Goals Made'= 'fgm','Field Goals Attempted'='fga','Field Goa
               'Steals'='stl',
               'Blocks'='blk',
               'Turnovers'='tov',
-              'Personal Fouls'='pf')
+              'Points'='pts',
+              'Personal Fouls'='pf',
+              'Plus Minus' = 'plus_minus')
 
 
 ##Tables
