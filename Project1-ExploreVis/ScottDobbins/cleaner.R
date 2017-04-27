@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9
-# @date 2017-04-23 23:45
+# @version 0.9.1
+# @date 2017-04-27 12:30
 
 ### import useful packages ###
 
@@ -532,21 +532,27 @@ WW2_bombs[, Aircraft.Total := .(ifelse(!is.na(Aircraft.Attacking.Num), Aircraft.
 
 ### clean out obviously wrong values ###
 
+# drop out of bounds and (0,0) Latitude and Longitude values
 if(debug_mode_on) print("cleaning WW1")
-WW1_clean <- WW1_bombs[Target.Latitude <= 90 & Target.Latitude >= -90
-                       & Target.Longitude <= 180 & Target.Longitude >= -180,]
+WW1_clean <- WW1_bombs[Target.Latitude <= 90 & Target.Latitude >= -90 
+                       & Target.Longitude <= 180 & Target.Longitude >= -180 
+                       & !(Target.Latitude == 0 & Target.Longitude == 0), ]
+WW1_clean <- 
 
 if(debug_mode_on) print("cleaning WW2")
-WW2_clean <- WW2_bombs[Target.Latitude <= 90 & Target.Latitude >= -90
-                       & Target.Longitude <= 180 & Target.Longitude >= -180,]
+WW2_clean <- WW2_bombs[Target.Latitude <= 90 & Target.Latitude >= -90 
+                       & Target.Longitude <= 180 & Target.Longitude >= -180 
+                       & !(Target.Latitude == 0 & Target.Longitude == 0), ]
 
 if(debug_mode_on) print("cleaning Korea2")
-Korea_clean2 <- Korea_bombs2[Target.Latitude <= 90 & Target.Latitude >= -90
-                             & Target.Longitude <= 180 & Target.Longitude >= -180,]
+Korea_clean2 <- Korea_bombs2[Target.Latitude <= 90 & Target.Latitude >= -90 
+                             & Target.Longitude <= 180 & Target.Longitude >= -180 
+                             & !(Target.Latitude == 0 & Target.Longitude == 0), ]
 
 if(debug_mode_on) print("cleaning Vietnam")
-Vietnam_clean <- Vietnam_bombs[Target.Latitude <= 90 & Target.Latitude >= -90
-                               & Target.Longitude <= 180 & Target.Longitude >= -180,]
+Vietnam_clean <- Vietnam_bombs[Target.Latitude <= 90 & Target.Latitude >= -90 
+                               & Target.Longitude <= 180 & Target.Longitude >= -180 
+                               & !(Target.Latitude == 0 & Target.Longitude == 0), ]
 
 
 ### add tooltips ###

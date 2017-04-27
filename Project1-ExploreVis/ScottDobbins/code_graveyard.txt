@@ -1,6 +1,6 @@
 @author Scott Dobbins
-@version 0.9
-# @date 2017-04-23 23:45
+@version 0.9.1
+# @date 2017-04-27 12:30
 
 ### Code Graveyard ###
 # where buggy or formerly useful but now unnecessary code lays to rest
@@ -235,6 +235,17 @@ Vietnam_sample <- Vietnam_unique_target[sample(x = c(TRUE, FALSE), replace = TRU
     checkboxInput(inputId = "show_Vietnam",
                   label = "Show Vietnam Bombings",
                   value = FALSE),
+
+    civ_plot <- ggplot(world_map_df, aes(long, lat, group = group)) + geom_polygon() + coord_equal() + theme_opts
+    WW1_plot <- geom_density2d(data = WW1_selection(), aes(x = Target.Longitude, y = Target.Latitude, group = 0), color = 'blue')
+    WW2_plot <- geom_density2d(data = WW2_selection(), aes(x = Target.Longitude, y = Target.Latitude, group = 0), color = 'red')
+    Korea_plot <- geom_density2d(data = Korea_selection(), aes(x = Target.Longitude, y = Target.Latitude, group = 0), color = 'yellow')
+    Vietnam_plot <- geom_density2d(data = Vietnam_selection(), aes(x = Target.Longitude, y = Target.Latitude, group = 0), color = 'green')
+    if(WW1_selected) civ_plot <- civ_plot + WW1_plot
+    if(WW2_selected) civ_plot <- civ_plot + WW2_plot
+    if(Korea_selected) civ_plot <- civ_plot + Korea_plot
+    if(Vietnam_selected) civ_plot <- civ_plot + Vietnam_plot
+    civ_plot
 
 ### custom.css ###
 .sidebar .widget {

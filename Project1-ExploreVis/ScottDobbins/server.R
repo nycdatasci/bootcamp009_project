@@ -1,17 +1,18 @@
 # @author Scott Dobbins
-# @version 0.9
-# @date 2017-04-23 23:45
+# @version 0.9.1
+# @date 2017-04-27 12:30
 
 ### import useful packages ###
-library(shiny)      # app formation
-library(leaflet)    # map source
-library(ggplot2)    # plots and graphs
-library(data.table) # data processing
-library(dplyr)      # data processing
-#library(plotly)     # pretty interactive graphs
-#library(maps)       # also helps with maps
-#library(htmltools)  # helps with tooltips
-library(DT)         # web tables
+library(shiny)          # app formation
+library(leaflet)        # map source
+library(leaflet.extras) # map extras
+library(ggplot2)        # plots and graphs
+library(data.table)     # data processing
+library(dplyr)          # data processing
+#library(plotly)         # pretty interactive graphs
+#library(maps)           # also helps with maps
+#library(htmltools)      # helps with tooltips
+library(DT)             # web tables
 
 
 # ### initialize plotly ###
@@ -213,10 +214,16 @@ shinyServer(function(input, output, session) {
   })
   
   
-  # initialize leaflet map
+  # initialize overview leaflet map
   output$overview_map <- renderLeaflet({
     overview <- leaflet()
     overview
+  })
+  
+  # initialize civilian leaflet map
+  output$civilian_map <- renderLeaflet({
+    civilian <- leaflet() %>% addProviderTiles("CartoDB.Positron", layerId = "civilian_base")
+    civilian
   })
   
   output$WW1_hist <- renderPlot({
@@ -240,34 +247,42 @@ shinyServer(function(input, output, session) {
   output$WW2_sandbox <- renderPlot({
     if(input$WW2_sandbox_ind == "Year") {
       plot_continuous <- WW2_continuous[[input$WW2_sandbox_dep]]
-      WW2_sandbox_plot <- ggplot(mapping = aes(x = year((WW2_selection())[, "Mission.Date"]), 
-                                               y = (WW2_selection())[, plot_continuous]))
+      if(input$WW2_sandbox_group == "None") {
+        WW2_sandbox_plot <- ggplot(mapping = aes(x = year((WW2_selection())[, "Mission.Date"]), 
+                                                 y = (WW2_selection())[, plot_continuous]))
+      } else {
+        group_category <- WW2_categorical[[input$WW2_sandbox_group]]
+        WW2_sandbox_plot <- ggplot(mapping = aes(x = year((WW2_selection())[, "Mission.Date"]), 
+                                                 y = (WW2_selection())[, plot_continuous], 
+                                                 group = (WW2_selection())[, group_category], 
+                                                 fill = (WW2_selection())[, group_category]))
+      }
       WW2_sandbox_plot <- WW2_sandbox_plot + geom_col(position = 'dodge')
     } else if(input$WW2_sandbox_ind %in% WW2_categorical_choices) {
       plot_category <- WW2_categorical[[input$WW2_sandbox_ind]]
       plot_continuous <- WW2_continuous[[input$WW2_sandbox_dep]]
       if(input$WW2_sandbox_group == "None") {
-        WW2_sandbox_plot <- ggplot(mapping = aes(x = (WW2_selection())[, plot_category], 
-                                                 y = (WW2_selection())[, plot_continuous]))
+        WW2_sandbox_plot <- ggplot(data = WW2_selection(), mapping = aes_string(x = plot_category, 
+                                                 y = plot_continuous))
       } else {
         group_category <- WW2_categorical[[input$WW2_sandbox_group]]
-        WW2_sandbox_plot <- ggplot(mapping = aes(x = (WW2_selection())[, plot_category], 
-                                                 y = (WW2_selection())[, plot_continuous], 
-                                                 group = (WW2_selection())[, group_category], 
-                                                 fill = (WW2_selection())[, group_category]))
+        WW2_sandbox_plot <- ggplot(data = WW2_selection(), mapping = aes_string(x = plot_category, 
+                                                 y = plot_continuous, 
+                                                 group = group_category, 
+                                                 fill = group_category))
       }
       WW2_sandbox_plot <- WW2_sandbox_plot + geom_col(position = 'dodge')
     } else {
       plot_independent <- WW2_continuous[[input$WW2_sandbox_ind]]
       plot_dependent <- WW2_continuous[[input$WW2_sandbox_dep]]
       if(input$WW2_sandbox_group == "None") {
-        WW2_sandbox_plot <- ggplot(mapping = aes(x = (WW2_selection())[, plot_independent], 
-                                                 y = (WW2_selection())[, plot_dependent]))
+        WW2_sandbox_plot <- ggplot(data = WW2_selection(), mapping = aes_string(x = plot_independent, 
+                                                 y = plot_dependent))
       } else {
         group_category <- WW2_categorical[[input$WW2_sandbox_group]]
-        WW2_sandbox_plot <- ggplot(mapping = aes(x = (WW2_selection())[, plot_independent], 
-                                                 y = (WW2_selection())[, plot_dependent], 
-                                                 color = (WW2_selection())[, group_category]))
+        WW2_sandbox_plot <- ggplot(data = WW2_selection(), mapping = aes_string(x = plot_independent, 
+                                                 y = plot_dependent, 
+                                                 color = group_category))
       }
       WW2_sandbox_plot <- WW2_sandbox_plot + geom_point() + geom_smooth(method = 'lm')
     }
@@ -294,31 +309,18 @@ shinyServer(function(input, output, session) {
                          ylab("Number of Missions")
     Vietnam_hist_plot
   })
-  
-  # output$civilian_density <- renderPlot({
-  #   civ_plot <- ggplot(world_map_df, aes(long, lat, group = group)) + geom_polygon() + coord_equal() + theme_opts
-  #   WW1_plot <- geom_density2d(data = WW1_selection(), aes(x = Target.Longitude, y = Target.Latitude, group = 0), color = 'blue')
-  #   WW2_plot <- geom_density2d(data = WW2_selection(), aes(x = Target.Longitude, y = Target.Latitude, group = 0), color = 'red')
-  #   Korea_plot <- geom_density2d(data = Korea_selection(), aes(x = Target.Longitude, y = Target.Latitude, group = 0), color = 'yellow')
-  #   Vietnam_plot <- geom_density2d(data = Vietnam_selection(), aes(x = Target.Longitude, y = Target.Latitude, group = 0), color = 'green')
-  #   if(WW1_selected) civ_plot <- civ_plot + WW1_plot
-  #   if(WW2_selected) civ_plot <- civ_plot + WW2_plot
-  #   if(Korea_selected) civ_plot <- civ_plot + Korea_plot
-  #   if(Vietnam_selected) civ_plot <- civ_plot + Vietnam_plot
-  #   civ_plot
-  # })
 
   # hanlder for changes in map type
   observeEvent(eventExpr = input$pick_map, ignoreNULL = FALSE, handlerExpr = {
     
     if(debug_mode_on) print("map altered")
     
-    proxy <- leafletProxy("overview_map")
+    overview_proxy <- leafletProxy("overview_map")
 
     # remove other tiles and add designated map
     if(input$pick_map == "Color Map") {
 
-      proxy %>%
+      overview_proxy %>%
         clearTiles() %>%
         addProviderTiles("Stamen.Watercolor", layerId = "map_base")#,
                          #options = providerTileOptions(attribution = 'Map tiles by <a href="http://stamen.com">Stamen Design</a>,
@@ -327,7 +329,7 @@ shinyServer(function(input, output, session) {
 
     } else if(input$pick_map == "Plain Map") {
 
-      proxy %>%
+      overview_proxy %>%
         clearTiles() %>%
         addProviderTiles("CartoDB.PositronNoLabels",
                          layerId = "map_base")#,
@@ -337,7 +339,7 @@ shinyServer(function(input, output, session) {
 
     } else if(input$pick_map == "Terrain Map") {
 
-      proxy %>%
+      overview_proxy %>%
         clearTiles() %>%
         addProviderTiles("Stamen.TerrainBackground",
                          layerId = "map_base")#,
@@ -347,7 +349,7 @@ shinyServer(function(input, output, session) {
 
     } else if(input$pick_map == "Street Map") {
 
-      proxy %>%
+      overview_proxy %>%
         clearTiles() %>%
         addProviderTiles("HERE.basicMap",
                          layerId = "map_base",
@@ -358,7 +360,7 @@ shinyServer(function(input, output, session) {
 
     } else if(input$pick_map == "Satellite Map") {
 
-      proxy %>%
+      overview_proxy %>%
         clearTiles() %>%
         addProviderTiles("Esri.WorldImagery",
                          layerId = "map_base")#,
@@ -371,13 +373,13 @@ shinyServer(function(input, output, session) {
     if("Borders" %in% input$pick_labels) {
       if("Text" %in% input$pick_labels) {
 
-        proxy %>%
+        overview_proxy %>%
           removeTiles(layerId = "map_labels") %>%
           addProviderTiles("Stamen.TonerHybrid", layerId = "map_labels")
 
       } else {
 
-        proxy %>%
+        overview_proxy %>%
           removeTiles(layerId = "map_labels") %>%
           addProviderTiles("Stamen.TonerLines", layerId = "map_labels")
 
@@ -385,13 +387,13 @@ shinyServer(function(input, output, session) {
     } else {
       if("Text" %in% input$pick_labels) {
 
-        proxy %>%
+        overview_proxy %>%
           removeTiles(layerId = "map_labels") %>%
           addProviderTiles("Stamen.TonerLabels", layerId = "map_labels")
 
       } else {
 
-        proxy %>%
+        overview_proxy %>%
           removeTiles(layerId = "map_labels")
 
       }
@@ -403,21 +405,21 @@ shinyServer(function(input, output, session) {
 
     if(debug_mode_on) print("labels altered")
 
-    proxy <- leafletProxy("overview_map")
+    overview_proxy <- leafletProxy("overview_map")
 
     # remove current label tiles and re-add designated label tiles
     if("Borders" %in% input$pick_labels) {
       if("Text" %in% input$pick_labels) {
         if(debug_mode_on) print("Both borders and text")
 
-        proxy %>%
+        overview_proxy %>%
           removeTiles(layerId = "map_labels") %>%
           addProviderTiles("Stamen.TonerHybrid", layerId = "map_labels")
 
       } else {
         if(debug_mode_on) print("Just borders; no text")
 
-        proxy %>%
+        overview_proxy %>%
           removeTiles(layerId = "map_labels") %>%
           addProviderTiles("Stamen.TonerLines", layerId = "map_labels")
 
@@ -428,14 +430,14 @@ shinyServer(function(input, output, session) {
       if("Text" %in% input$pick_labels) {
         if(debug_mode_on) print("Just text; no borders")
 
-        proxy %>%
+        overview_proxy %>%
           removeTiles(layerId = "map_labels") %>%
           addProviderTiles("Stamen.TonerLabels", layerId = "map_labels")
 
       } else {
         if(debug_mode_on) print("Neither text nor borders")
 
-        proxy %>%
+        overview_proxy %>%
           removeTiles(layerId = "map_labels")
 
       }
@@ -447,102 +449,135 @@ shinyServer(function(input, output, session) {
     
     if(debug_mode_on) print("wars selected")
     
-    proxy <- leafletProxy("overview_map")
+    overview_proxy <- leafletProxy("overview_map")
+    civilian_proxy <- leafletProxy("civilian_map")
     
     if(xor(WW1_selected, WW1_string %in% input$which_war)) {
       if(WW1_selected) {
         if(debug_mode_on) print("WW1 deselected")
-        proxy %>% clearGroup(group = "WW1_unique_targets")
+        overview_proxy %>% clearGroup(group = "WW1_unique_targets")
+        civilian_proxy %>% clearGroup(group = "WW1_heatmap")
         WW1_selected <<- FALSE
       } else {
         if(debug_mode_on) print("WW1 selected")
-        proxy %>% addCircles(data = WW1_sample(),
-                             lat = ~Target.Latitude,
-                             lng = ~Target.Longitude,
-                             color = "darkblue",
-                             weight = 5,
-                             opacity = opacity_now,
-                             fill = TRUE,
-                             fillColor = "darkblue",
-                             fillOpacity = opacity_now,
-                             popup = ~tooltip,
-                             group = "WW1_unique_targets")
+        overview_proxy %>% addCircles(data = WW1_sample(),
+                                      lat = ~Target.Latitude,
+                                      lng = ~Target.Longitude,
+                                      color = "darkblue",
+                                      weight = 5,
+                                      opacity = opacity_now,
+                                      fill = TRUE,
+                                      fillColor = "darkblue",
+                                      fillOpacity = opacity_now,
+                                      popup = ~tooltip,
+                                      group = "WW1_unique_targets")
+        civilian_proxy %>% addHeatmap(lng = WW1_selection()$Target.Longitude, 
+                                      lat = WW1_selection()$Target.Latitude, 
+                                      blur = 20, 
+                                      max = 0.05, 
+                                      radius = 15, 
+                                      group = "WW1_heatmap")
         WW1_selected <<- TRUE
       }
     } else if(xor(WW2_selected, WW2_string %in% input$which_war)) {
       if(WW2_selected) {
         if(debug_mode_on) print("WW2 deselected")
-        proxy %>% clearGroup(group = "WW2_unique_targets")
+        overview_proxy %>% clearGroup(group = "WW2_unique_targets")
+        civilian_proxy %>% clearGroup(group = "WW2_heatmap")
         WW2_selected <<- FALSE
       } else {
         if(debug_mode_on) print("WW2 selected")
-        proxy %>% addCircles(data = WW2_sample(),
-                             lat = ~Target.Latitude,
-                             lng = ~Target.Longitude,
-                             color = "darkred",
-                             weight = 5,
-                             opacity = opacity_now,
-                             fill = TRUE,
-                             fillColor = "darkred",
-                             fillOpacity = opacity_now, 
-                             popup = ~tooltip,
-                             group = "WW2_unique_targets")
+        overview_proxy %>% addCircles(data = WW2_sample(),
+                                      lat = ~Target.Latitude,
+                                      lng = ~Target.Longitude,
+                                      color = "darkred",
+                                      weight = 5,
+                                      opacity = opacity_now,
+                                      fill = TRUE,
+                                      fillColor = "darkred",
+                                      fillOpacity = opacity_now, 
+                                      popup = ~tooltip,
+                                      group = "WW2_unique_targets")
+        civilian_proxy %>% addHeatmap(lng = WW2_selection()$Target.Longitude, 
+                                      lat = WW2_selection()$Target.Latitude, 
+                                      blur = 20, 
+                                      max = 0.05, 
+                                      radius = 15, 
+                                      group = "WW2_heatmap")
         WW2_selected <<- TRUE
       }
     } else if(xor(Korea_selected, Korea_string %in% input$which_war)) {
       if(Korea_selected) {
         if(debug_mode_on) print("Korea deselected")
-        proxy %>% clearGroup(group = "Korea_unique_targets")
+        overview_proxy %>% clearGroup(group = "Korea_unique_targets")
+        civilian_proxy %>% clearGroup(group = "Korea_heatmap")
         Korea_selected <<- FALSE
       } else {
         if(debug_mode_on) print("Korea selected")
-        proxy %>% addCircles(data = Korea_sample(),
-                             lat = ~Target.Latitude,
-                             lng = ~Target.Longitude,
-                             color = "yellow",
-                             weight = 5,
-                             opacity = opacity_now,
-                             fill = TRUE,
-                             fillColor = "yellow", 
-                             fillOpacity = opacity_now, 
-                             popup = ~tooltip,
-                             group = "Korea_unique_targets")
+        overview_proxy %>% addCircles(data = Korea_sample(),
+                                      lat = ~Target.Latitude,
+                                      lng = ~Target.Longitude,
+                                      color = "yellow",
+                                      weight = 5,
+                                      opacity = opacity_now,
+                                      fill = TRUE,
+                                      fillColor = "yellow", 
+                                      fillOpacity = opacity_now, 
+                                      popup = ~tooltip,
+                                      group = "Korea_unique_targets")
+        civilian_proxy %>% addHeatmap(lng = Korea_selection()$Target.Longitude, 
+                                      lat = Korea_selection()$Target.Latitude, 
+                                      blur = 20, 
+                                      max = 0.05, 
+                                      radius = 15, 
+                                      group = "Korea_heatmap")
         Korea_selected <<- TRUE
       }
     } else if(xor(Vietnam_selected, Vietnam_string %in% input$which_war)) {
       if(Vietnam_selected) {
         if(debug_mode_on) print("Vietnam deselected")
-        proxy %>% clearGroup(group = "Vietnam_unique_targets")
+        overview_proxy %>% clearGroup(group = "Vietnam_unique_targets")
+        civilian_proxy %>% clearGroup(group = "Vietnam_heatmap")
         Vietnam_selected <<- FALSE
       } else {
         if(debug_mode_on) print("Vietnam selected")
-        proxy %>% addCircles(data = Vietnam_sample(),
-                             lat = ~Target.Latitude,
-                             lng = ~Target.Longitude,
-                             color = "darkgreen",
-                             weight = 5,
-                             opacity = opacity_now,
-                             fill = TRUE,
-                             fillColor = "darkgreen", 
-                             fillOpacity = opacity_now, 
-                             popup = ~tooltip,
-                             group = "Vietnam_unique_targets")
+        overview_proxy %>% addCircles(data = Vietnam_sample(),
+                                      lat = ~Target.Latitude,
+                                      lng = ~Target.Longitude,
+                                      color = "darkgreen",
+                                      weight = 5,
+                                      opacity = opacity_now,
+                                      fill = TRUE,
+                                      fillColor = "darkgreen", 
+                                      fillOpacity = opacity_now, 
+                                      popup = ~tooltip,
+                                      group = "Vietnam_unique_targets")
+        civilian_proxy %>% addHeatmap(lng = Vietnam_selection()$Target.Longitude, 
+                                      lat = Vietnam_selection()$Target.Latitude, 
+                                      blur = 20, 
+                                      max = 0.05, 
+                                      radius = 15, 
+                                      group = "Vietnam_heatmap")
         Vietnam_selected <<- TRUE
       }
     } else {
       if(debug_mode_on) print("all wars deselected")
       print(stupid_var)
       if(WW1_selected) {
-        proxy %>% clearGroup(group = "WW1_unique_targets")
+        overview_proxy %>% clearGroup(group = "WW1_unique_targets")
+        civilian_proxy %>% clearGroup(group = "WW1_heatmap")
         WW1_selected <<- FALSE
       } else if(WW2_selected) {
-        proxy %>% clearGroup(group = "WW2_unique_targets")
+        overview_proxy %>% clearGroup(group = "WW2_unique_targets")
+        civilian_proxy %>% clearGroup(group = "WW2_heatmap")
         WW2_selected <<- FALSE
       } else if(Korea_selected) {
-        proxy %>% clearGroup(group = "Korea_unique_targets")
+        overview_proxy %>% clearGroup(group = "Korea_unique_targets")
+        civilian_proxy %>% clearGroup(group = "Korea_heatmap")
         Korea_selected <<- FALSE
       } else if(Vietnam_selected) {
-        proxy %>% clearGroup(group = "Vietnam_unique_targets")
+        overview_proxy %>% clearGroup(group = "Vietnam_unique_targets")
+        civilian_proxy %>% clearGroup(group = "Vietnam_heatmap")
         Vietnam_selected <<- FALSE
       } else {
         if(debug_mode_on) print("something else happened")
@@ -572,9 +607,9 @@ shinyServer(function(input, output, session) {
   # })
   
   # handler for sample size refresh
-  observeEvent(eventExpr = input$sample_num, ignoreInit = TRUE, handlerExpr = {
+  observeEvent(eventExpr = input$sample_num, ignoreNULL = TRUE, ignoreInit = TRUE, handlerExpr = {
     
-    proxy <- leafletProxy("overview_map")
+    overview_proxy <- leafletProxy("overview_map")
     
     if(input$sample_num > 1024) opacity_now <<- 0.1
     else if(input$sample_num > 512) opacity_now <<- 0.2
@@ -588,7 +623,7 @@ shinyServer(function(input, output, session) {
     else opacity_now <<- 1.0
     
     if(WW1_selected) {
-      proxy %>% 
+      overview_proxy %>% 
         clearGroup(group = "WW1_unique_targets") %>% 
         addCircles(data = WW1_sample(),
                    lat = ~Target.Latitude,
@@ -603,7 +638,7 @@ shinyServer(function(input, output, session) {
                    group = "WW1_unique_targets")
     }
     if(WW2_selected) {
-      proxy %>% 
+      overview_proxy %>% 
         clearGroup(group = "WW2_unique_targets") %>% 
         addCircles(data = WW2_sample(),
                    lat = ~Target.Latitude,
@@ -618,7 +653,7 @@ shinyServer(function(input, output, session) {
                    group = "WW2_unique_targets")
     }
     if(Korea_selected) {
-      proxy %>% 
+      overview_proxy %>% 
         clearGroup(group = "Korea_unique_targets") %>% 
         addCircles(data = Korea_sample(),
                    lat = ~Target.Latitude,
@@ -633,7 +668,7 @@ shinyServer(function(input, output, session) {
                    group = "Korea_unique_targets")
     }
     if(Vietnam_selected) {
-      proxy %>% 
+      overview_proxy %>% 
         clearGroup(group = "Vietnam_unique_targets") %>% 
         addCircles(data = Vietnam_sample(),
                    lat = ~Target.Latitude,
@@ -647,6 +682,74 @@ shinyServer(function(input, output, session) {
                    popup = ~tooltip,
                    group = "Vietnam_unique_targets")
     }
+  })
+  
+  # handler for date range refresh
+  observeEvent(eventExpr = input$dateRange, ignoreNULL = TRUE, ignoreInit = TRUE, handlerExpr = {
+    
+    overview_proxy <- leafletProxy("overview_map")
+    
+    if(WW1_selected) {
+      overview_proxy %>% 
+        clearGroup(group = "WW1_unique_targets") %>% 
+        addCircles(data = WW1_sample(),
+                   lat = ~Target.Latitude,
+                   lng = ~Target.Longitude,
+                   color = "darkblue",
+                   weight = 5,
+                   opacity = opacity_now,
+                   fill = TRUE,
+                   fillColor = "darkblue",
+                   fillOpacity = opacity_now,
+                   popup = ~tooltip,
+                   group = "WW1_unique_targets")
+    }
+    if(WW2_selected) {
+      overview_proxy %>% 
+        clearGroup(group = "WW2_unique_targets") %>% 
+        addCircles(data = WW2_sample(),
+                   lat = ~Target.Latitude,
+                   lng = ~Target.Longitude,
+                   color = "darkred",
+                   weight = 5,
+                   opacity = opacity_now,
+                   fill = TRUE,
+                   fillColor = "darkred",
+                   fillOpacity = opacity_now, 
+                   popup = ~tooltip,
+                   group = "WW2_unique_targets")
+    }
+    if(Korea_selected) {
+      overview_proxy %>% 
+        clearGroup(group = "Korea_unique_targets") %>% 
+        addCircles(data = Korea_sample(),
+                   lat = ~Target.Latitude,
+                   lng = ~Target.Longitude,
+                   color = "yellow",
+                   weight = 5,
+                   opacity = opacity_now,
+                   fill = TRUE,
+                   fillColor = "yellow", 
+                   fillOpacity = opacity_now, 
+                   popup = ~tooltip,
+                   group = "Korea_unique_targets")
+    }
+    if(Vietnam_selected) {
+      overview_proxy %>% 
+        clearGroup(group = "Vietnam_unique_targets") %>% 
+        addCircles(data = Vietnam_sample(),
+                   lat = ~Target.Latitude,
+                   lng = ~Target.Longitude,
+                   color = "darkgreen",
+                   weight = 5,
+                   opacity = opacity_now,
+                   fill = TRUE, 
+                   fillColor = "darkgreen", 
+                   fillOpacity = opacity_now, 
+                   popup = ~tooltip,
+                   group = "Vietnam_unique_targets")
+    }
+    
   })
   
 })

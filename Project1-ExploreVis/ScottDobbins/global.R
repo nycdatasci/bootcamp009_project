@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9
-# @date 2017-04-23 23:45
+# @version 0.9.1
+# @date 2017-04-27 12:30
 
 ### import useful packages ###
 library(shiny)      # app formation
@@ -13,12 +13,16 @@ library(rgdal)      # map reading
 ### toggles for app behavior ###
 
 # data refresh
-has_data = TRUE
-refresh_data = FALSE
-full_write = FALSE
+if(exists("WW1_clean") & exists("WW2_clean") & exists("Korea_clean2") & exists("Vietnam_clean")) {
+  has_data <- TRUE
+} else {
+  has_data <- FALSE
+}
+refresh_data <- FALSE
+full_write <- FALSE
 
 # debug control
-debug_mode_on = FALSE
+debug_mode_on <- FALSE
 
 # default plotting complexity
 sample_num <- 1000
@@ -65,7 +69,7 @@ WW2_continuous_choices = c("Number of Attacking Aircraft",
                            "Number of Aircraft Aborted due to Mechanical Issues", 
                            "Number of Aircraft Aborted for Other Reasons")
 
-WW2_all_choices <- c(WW2_category_choices, WW2_continuous_choices)
+WW2_all_choices <- c(WW2_categorical_choices, WW2_continuous_choices)
 
 WW2_categorical = list("Theater of Operations" = "Mission.Theater", 
                        "Military Regiment" = "Unit.Service", 
@@ -107,7 +111,7 @@ if(!has_data) {
     source(file = 'cleaner.R')
   } else {
     # just read the pre-saved data
-    load('saves/Shiny_2017-04-22.RData')
+    load('saves/Shiny_2017-04-22_downsampled.RData')
   }
 }
 
