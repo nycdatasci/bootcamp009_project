@@ -46,7 +46,7 @@ class GcorSpider(Spider):
 	def parse_cor_all(self, response):
 		item = response.meta['item']
 		item['assoc_term'] = response.xpath('//div[@class="left results"]/h2/strong/text()').extract()
-		corr_series = response.xpath('/html/head/script[8]/text()').extract()								#Scraping data set of time series nested in head for jc graph generation.
+		corr_series = response.xpath('/html/head/script[8]/text()').extract()[0].split('\n')[2]				#Scraping data set of time series nested in head for jc graph generation.
 		assoc_terms = response.xpath('//div[@class="left results"]/h2/strong/text()').extract()				#Scraping initial assoc. search term to initiate list.
 		assoc_cor = [u'1']																					#Assigning a full correlation for the initial assoc. search term to itself.
 		assoc_terms.extend(response.xpath('//li[@class="result selected"]/span/text()').extract())			#Scraping and concating name of selected highest correlated search term.
