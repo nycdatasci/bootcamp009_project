@@ -13,9 +13,13 @@ BOT_NAME = 'gcor'
 
 SPIDER_MODULES = ['gcor.spiders']
 NEWSPIDER_MODULE = 'gcor.spiders'
-ITEM_PIPELINES = {'gcor.files.FilesPipeline': 1}
+ITEM_PIPELINES = {
+					'gcor.files.FilesPipeline': 1,
+					'gcor.pipelines.ValidateItemPipeline': 100,
+					'gcor.pipelines.WriteItemPipeline': 200
+					}
 FILES_STORE = '/Users/WesAull/GoogleDrive/NYCDSA/bootcamp009_project/Project2-WebScraping/WesAull/gcor'
-DOWNLOAD_DELAY = 5
+DOWNLOAD_DELAY = 3
 CONCURRENT_REQUESTS_PER_DOMAIN = 1
 CONCURRENT_REQUESTS = 1
 CONCURRENT_ITEMS = 1

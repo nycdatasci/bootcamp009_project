@@ -8,16 +8,19 @@
 import scrapy
 from scrapy import Item, Field
 
+class GcorTopItem(scrapy.Item):
+    # define the fields for your item here like:
+    # name = scrapy.Field()
+    search_terms = Field()
+    cor = Field()
+
 class GcorItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
-    search_name = Field()
-    search_series = Field()
- 	high_corr_name = Field()
- 	high_corr_corr = Field()
- 	other_series_names = Field()
- 	other_series_corr = Field()  
-
+    search_term = Field()
+    corr_series = Field()
+    assoc_terms = Field() 
+    assoc_cor = Field()
 
 class GcorCSVItem(scrapy.Item):
     # define the fields for your item here like:
