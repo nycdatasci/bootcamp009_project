@@ -11,13 +11,11 @@ from scrapy import Item, Field
 class GcorItem(scrapy.Item):
 # define the fields for your item here like:
 # name = scrapy.Field()
+	assoc_search = Field()
 	search_term = Field()
-	search_terms = Field()
-	cor = Field()
-	assoc_term = Field()
-	corr_series = Field()
-	assoc_terms = Field()
-	assoc_cor = Field()
+	hist_search_activity = Field()
+	corr_terms = Field()
+	corr_terms_cor = Field()
 
 class GcorCSVItem(scrapy.Item):
     # define the fields for your item here like:
