@@ -8,8 +8,8 @@ class deejay_spider(scrapy.Spider):
 
 def parse(self, response):
     # url = response.xpath('//*[@id="myIframe"]/@src').extract_first()
-    page_num = range(1,291)
-    table_urls  = ['https://www.deejay.de/content.php/?param=/m_All/sm_Labels/page_{1}'.format(url,page) for page in page_num]
+    page_nums = range(1,291)
+    table_urls  = ['https://www.deejay.de/content.php/?param=/m_All/sm_Labels/page_{0}'.format(page) for page in page_nums]
 
     for url in table_urls
         yield scrapy.Request(url, callback=self.parse_labels)
