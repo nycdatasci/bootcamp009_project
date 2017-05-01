@@ -1,0 +1,101 @@
+X,City,State_Abbr,n
+1,Albany,NY,17
+2,Albuquerque,NM,18
+3,Allentown,PA,13
+4,Anaheim,CA,22
+5,Arlington,TX,12
+6,Atlanta,GA,44
+7,Aurora,CO,14
+8,Austin,TX,34
+9,Baltimore,MD,25
+10,Baton Rouge,LA,25
+11,Bayamon,PR,23
+12,Berkeley,CA,12
+13,Birmingham,AL,14
+14,Boise,ID,17
+15,Boston,MA,42
+16,Brooklyn,NY,46
+17,Charlotte,NC,34
+18,Chicago,IL,86
+19,Chula Vista,CA,15
+20,Cincinnati,OH,30
+21,Cleveland,OH,13
+22,Colorado Springs,CO,21
+23,Columbia,SC,24
+24,Columbia,MO,14
+25,Columbus,OH,30
+26,Dallas,TX,46
+27,Dayton,OH,15
+28,Denver,CO,30
+29,Detroit,MI,12
+30,Durham,NC,13
+31,El Paso,TX,25
+32,Fort Myers,FL,15
+33,Fort Wayne,IN,14
+34,Fort Worth,TX,12
+35,Fresno,CA,14
+36,Grand Rapids,MI,15
+37,Greensboro,NC,15
+38,Greenville,SC,12
+39,Hialeah,FL,12
+40,Honolulu,HI,17
+41,Houston,TX,82
+42,Indianapolis,IN,47
+43,Jacksonville,FL,35
+44,Kansas City,MO,28
+45,Knoxville,TN,13
+46,Las Vegas,NV,24
+47,Lexington,KY,12
+48,Lincoln,NE,19
+49,Little Rock,AR,18
+50,Los Angeles,CA,63
+51,Louisville,KY,32
+52,Madison,WI,19
+53,Memphis,TN,29
+54,Miami,FL,57
+55,Milwaukee,WI,19
+56,Minneapolis,MN,16
+57,Montgomery,AL,14
+58,Nashville,TN,36
+59,New Orleans,LA,18
+60,New York,NY,91
+61,Norfolk,VA,13
+62,Oakland,CA,16
+63,Oklahoma City,OK,24
+64,Omaha,NE,18
+65,Ontario,CA,16
+66,Orem,UT,13
+67,Orlando,FL,26
+68,Overland Park,KS,13
+69,Pasadena,CA,12
+70,Philadelphia,PA,46
+71,Phoenix,AZ,41
+72,Pittsburgh,PA,35
+73,Portland,OR,35
+74,Raleigh,NC,17
+75,Richmond,VA,14
+76,Riverside,CA,21
+77,Rochester,NY,20
+78,Sacramento,CA,23
+79,Saint Louis,MO,25
+80,Saint Paul,MN,20
+81,Salt Lake City,UT,26
+82,San Antonio,TX,58
+83,San Diego,CA,34
+84,San Francisco,CA,23
+85,San Juan,PR,20
+86,San Marcos,CA,14
+87,Schenectady,NY,14
+88,Seattle,WA,25
+89,Shreveport,LA,15
+90,Spokane,WA,13
+91,Springfield,MO,32
+92,Springfield,IL,17
+93,Stockton,CA,16
+94,Tampa,FL,32
+95,Tempe,AZ,16
+96,Tucson,AZ,21
+97,Tulsa,OK,31
+98,Virginia Beach,VA,15
+99,Washington,DC,26
+100,Wichita,KS,16
