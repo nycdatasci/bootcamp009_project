@@ -1,6 +1,6 @@
 @author Scott Dobbins
-@version 0.9.2
-# @date 2017-04-30 21:30
+@version 0.9.3
+# @date 2017-05-01 03:00
 
 
 ## Version history ###
@@ -92,6 +92,9 @@ Notes: sidebar and other parts reduced to what works
 	Put comma delimiters in infoBoxes
 	Increased maximum sample size
 	Filtered out (0,0) GPS locations
+
+0.9.3	Properly formatted tooltips for all conflicts
+	Included all sandboxes for all conflicts
 
 **Future version plans:
 *Lots of ggplots, maybe a self-playing gif of bombs droppedover time for each conflict

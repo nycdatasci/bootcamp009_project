@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.2
-# @date 2017-04-30 21:30
+# @version 0.9.3
+# @date 2017-05-01 01:30
 
 ### import useful packages ###
 library(shiny)            # app formation
@@ -22,65 +22,65 @@ shinyUI(dashboardPage(
   dashboardHeader(title = "Aerial Bombing Operations", titleWidth = title_width), 
   
   dashboardSidebar(width = sidebar_width, 
-    
-    # Sidebar Panel
-    sidebarUserPanel("Scott Dobbins", 
-                     image = "https://yt3.ggpht.com/-04uuTMHfDz4/AAAAAAAAAAI/AAAAAAAAAAA/Kjeupp-eNNg/s100-c-k-no-rj-c0xffffff/photo.jpg"), 
-    
-    sidebarMenu(id = "tabs", 
-                menuItem("Overview", tabName = "overview", icon = icon("map")), 
-                # menuItem("Data", tabName = "data", icon = icon("database")), 
-                menuItem("WW I", tabName = "WW1", icon = icon('bar-chart', lib = 'font-awesome')), 
-                menuItem("WW II", tabName = "WW2", icon = icon('bar-chart', lib = 'font-awesome')), 
-                menuItem("Korea", tabName = "Korea", icon = icon('bar-chart', lib = 'font-awesome')), 
-                menuItem("Vietnam", tabName = "Vietnam", icon = icon('bar-chart', lib = 'font-awesome')), 
-                # menuItem("Be a pilot", tabName = "pilot", icon = icon('fighter-jet', lib = 'font-awesome')), 
-                # menuItem("Be a commander", tabName = "commander", icon = icon('map-o', lib = 'font-awesome')), 
-                menuItem("Be a civilian", tabName = "civilian", icon = icon('life-ring', lib = 'font-awesome'))
-    ), 
-    
-    # war picker
-    selectizeInput(inputId = "which_war", 
-                   label = "Which wars?", 
-                   choices = c(WW1_string, WW2_string, Korea_string, Vietnam_string), 
-                   selected = c(), 
-                   multiple = TRUE, 
-                   width = sidebar_width), 
-    
-    # date picker
-    dateRangeInput(inputId = "dateRange", 
-                   label = "Select which dates to show", 
-                   start = "1914-07-28", 
-                   end = "1975-04-30", 
-                   min = "1914-07-28", 
-                   max = "1975-04-30", 
-                   startview = "year", 
-                   width = sidebar_width), 
-    
-    # selectizeInput(inputId = "country", 
-    #                label = "Which country's air force?", 
-    #                choices = c("one"), 
-    #                selected = c(), 
-    #                width = sidebar_width), 
-    # 
-    # selectizeInput(inputId = "aircraft", 
-    #                label = "Which types of aircraft?", 
-    #                choices = c("one"), 
-    #                selected = c(), 
-    #                width = sidebar_width), 
-    # 
-    # selectizeInput(inputId = "weapon", 
-    #                label = "Which types of bombs?", 
-    #                choices = c("one"), 
-    #                selected = c(), 
-    #                width = sidebar_width), 
-    
-    numericInput(inputId = "sample_num", 
-                 label = "Sample size = ?", 
-                 value = 1024, 
-                 min = 1, 
-                 max = 4096)
-    
+                   
+                   # Sidebar Panel
+                   sidebarUserPanel("Scott Dobbins", 
+                                    image = "https://yt3.ggpht.com/-04uuTMHfDz4/AAAAAAAAAAI/AAAAAAAAAAA/Kjeupp-eNNg/s100-c-k-no-rj-c0xffffff/photo.jpg"), 
+                   
+                   sidebarMenu(id = "tabs", 
+                               menuItem("Overview", tabName = "overview", icon = icon("map")), 
+                               # menuItem("Data", tabName = "data", icon = icon("database")), 
+                               menuItem("WW I", tabName = "WW1", icon = icon('bar-chart', lib = 'font-awesome')), 
+                               menuItem("WW II", tabName = "WW2", icon = icon('bar-chart', lib = 'font-awesome')), 
+                               menuItem("Korea", tabName = "Korea", icon = icon('bar-chart', lib = 'font-awesome')), 
+                               menuItem("Vietnam", tabName = "Vietnam", icon = icon('bar-chart', lib = 'font-awesome')), 
+                               # menuItem("Be a pilot", tabName = "pilot", icon = icon('fighter-jet', lib = 'font-awesome')), 
+                               # menuItem("Be a commander", tabName = "commander", icon = icon('map-o', lib = 'font-awesome')), 
+                               menuItem("Be a civilian", tabName = "civilian", icon = icon('life-ring', lib = 'font-awesome'))
+                   ), 
+                   
+                   # war picker
+                   selectizeInput(inputId = "which_war", 
+                                  label = "Which wars?", 
+                                  choices = c(WW1_string, WW2_string, Korea_string, Vietnam_string), 
+                                  selected = c(), 
+                                  multiple = TRUE, 
+                                  width = sidebar_width), 
+                   
+                   # date picker
+                   dateRangeInput(inputId = "dateRange", 
+                                  label = "Select which dates to show", 
+                                  start = "1914-07-28", 
+                                  end = "1975-04-30", 
+                                  min = "1914-07-28", 
+                                  max = "1975-04-30", 
+                                  startview = "year", 
+                                  width = sidebar_width), 
+                   
+                   # selectizeInput(inputId = "country", 
+                   #                label = "Which country's air force?", 
+                   #                choices = c("one"), 
+                   #                selected = c(), 
+                   #                width = sidebar_width), 
+                   # 
+                   # selectizeInput(inputId = "aircraft", 
+                   #                label = "Which types of aircraft?", 
+                   #                choices = c("one"), 
+                   #                selected = c(), 
+                   #                width = sidebar_width), 
+                   # 
+                   # selectizeInput(inputId = "weapon", 
+                   #                label = "Which types of bombs?", 
+                   #                choices = c("one"), 
+                   #                selected = c(), 
+                   #                width = sidebar_width), 
+                   
+                   numericInput(inputId = "sample_num", 
+                                label = "Sample size = ?", 
+                                value = 1024, 
+                                min = 1, 
+                                max = 4096)
+                   
   ),
   
   dashboardBody(
@@ -139,8 +139,21 @@ shinyUI(dashboardPage(
       
       # WW1-specific stats
       tabItem(tabName = "WW1",
-              fluidRow(box(plotOutput("WW1_hist"))), 
-              fluidRow(box(sliderInput(inputId = "WW1_hist_slider", label = "# of bins", min = 4, value = 30, max = 48, step = 1)))
+              
+              fluidRow(
+                box(plotOutput("WW1_hist")), 
+                box(plotOutput("WW1_sandbox"))
+              ), 
+              
+              fluidRow(
+                box(sliderInput(inputId = "WW1_hist_slider", label = "# of bins", min = 4, value = 30, max = 48, step = 1), width = 6), 
+                box(selectizeInput(inputId = "WW1_sandbox_ind", label = "Which independent variable?", choices = c("Year", WW1_all_choices), selected = c("Year"), multiple = FALSE), width = 6)
+              ), 
+              
+              fluidRow(
+                box(selectizeInput(inputId = "WW1_sandbox_group", label = "Group by what?", choices = c("None", WW1_categorical_choices), selected = c("None"), multiple = FALSE), width = 6), 
+                box(selectizeInput(inputId = "WW1_sandbox_dep", label = "Which dependent variable?", choices = WW1_continuous_choices, selected = c("Number of Attacking Aircraft"), multiple = FALSE), width = 6)
+              )
       ),
       
       # WW2-specific stats
@@ -164,15 +177,41 @@ shinyUI(dashboardPage(
       
       # Korea-specific stats
       tabItem(tabName = "Korea",
-              fluidRow(box(plotOutput("Korea_hist"))), 
-              fluidRow(box(sliderInput(inputId = "Korea_hist_slider", label = "# of bins", min = 4, value = 30, max = 48, step = 1)))
+              
+              fluidRow(
+                box(plotOutput("Korea_hist")), 
+                box(plotOutput("Korea_sandbox"))
+              ), 
+              
+              fluidRow(
+                box(sliderInput(inputId = "Korea_hist_slider", label = "# of bins", min = 4, value = 30, max = 48, step = 1), width = 6), 
+                box(selectizeInput(inputId = "Korea_sandbox_ind", label = "Which independent variable?", choices = c("Year", Korea_all_choices), selected = c("Year"), multiple = FALSE), width = 6)
+              ), 
+              
+              fluidRow(
+                box(selectizeInput(inputId = "Korea_sandbox_group", label = "Group by what?", choices = c("None", Korea_categorical_choices), selected = c("None"), multiple = FALSE), width = 6), 
+                box(selectizeInput(inputId = "Korea_sandbox_dep", label = "Which dependent variable?", choices = Korea_continuous_choices, selected = c("Number of Attacking Aircraft"), multiple = FALSE), width = 6)
+              )
       ),
       
       # Vietnam-specific stats
       tabItem(tabName = "Vietnam",
-              fluidRow(box(plotOutput("Vietnam_hist"))), 
-              fluidRow(box(sliderInput(inputId = "Vietnam_hist_slider", label = "# of bins", min = 4, value = 30, max = 240, step = 1)))
-      ), 
+              
+              fluidRow(
+                box(plotOutput("Vietnam_hist")), 
+                box(plotOutput("Vietnam_sandbox"))
+              ), 
+              
+              fluidRow(
+                box(sliderInput(inputId = "Vietnam_hist_slider", label = "# of bins", min = 4, value = 30, max = 240, step = 1), width = 6), 
+                box(selectizeInput(inputId = "Vietnam_sandbox_ind", label = "Which independent variable?", choices = c("Year", Vietnam_all_choices), selected = c("Year"), multiple = FALSE), width = 6)
+              ), 
+              
+              fluidRow(
+                box(selectizeInput(inputId = "Vietnam_sandbox_group", label = "Group by what?", choices = c("None", Vietnam_categorical_choices), selected = c("None"), multiple = FALSE), width = 6), 
+                box(selectizeInput(inputId = "Vietnam_sandbox_dep", label = "Which dependent variable?", choices = Vietnam_continuous_choices, selected = c("Number of Attacking Aircraft"), multiple = FALSE), width = 6)
+              )
+      ),
       
       # # pilot stats
       # tabItem(tabName = "pilot", 
@@ -183,7 +222,7 @@ shinyUI(dashboardPage(
       # tabItem(tabName = "commander", 
       #         fluidRow()
       # ), 
-
+      
       # civilian stats
       tabItem(tabName = "civilian",
               

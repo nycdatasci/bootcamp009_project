@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.2
-# @date 2017-04-30 21:30
+# @version 0.9.3
+# @date 2017-05-01 01:30
 
 ### import useful packages ###
 library(shiny)      # app formation
@@ -22,10 +22,10 @@ refresh_data <- FALSE
 full_write <- FALSE
 
 # debug control
-debug_mode_on <- FALSE
+debug_mode_on <- TRUE
 
 # default plotting complexity
-sample_num <- 1000
+sample_num <- 1024
 
 
 ### global static variables ###
@@ -36,7 +36,50 @@ WW2_string = "World War II (1939-1945)"
 Korea_string = "Korean War (1950-1953)"
 Vietnam_string = "Vietnam War (1955-1975)"
 
-# lists and such
+### WW1 labels ###
+
+WW1_categorical_choices = c("Operation Supported", 
+                            "Military Regiment", 
+                            "Country of Origin", 
+                            "Target Country", 
+                            "Target City", 
+                            "Target Type", 
+                            "Aircraft Model", 
+                            "Bomb Type", 
+                            "Takeoff Time of Day", 
+                            "Takeoff Base", 
+                            "Weather")
+
+WW1_continuous_choices = c("Number of Attacking Aircraft", 
+                           "Altitude at Bomb Drop", 
+                           "Number of Bombs Dropped", 
+                           "Weight of Bombs Dropped", 
+                           "Bombload (weight of bombs per plane)", 
+                           "Number of Aircraft Lost")
+
+WW1_all_choices <- c(WW1_categorical_choices, WW1_continuous_choices)
+
+WW1_categorical = list("Operation Supported" = "Operation", 
+                       "Military Regiment" = "Unit.Service", 
+                       "Country of Origin" = "Unit.Country", 
+                       "Target Country" = "Target.Country", 
+                       "Target City" = "Target.City", 
+                       "Target Type" = "Target.Type", 
+                       "Aircraft Model" = "Aircraft.Type", 
+                       "Bomb Type" = "Weapons.Type", 
+                       "Takeoff Time of Day" = "Takeoff.Day.Period", 
+                       "Takeoff Base" = "Takeoff.Base", 
+                       "Weather" = "Target.Weather")
+
+WW1_continuous = list("Number of Attacking Aircraft" = "Aircraft.Attacking.Num", 
+                      "Altitude at Bomb Drop" = "Bomb.Altitude", 
+                      "Number of Bombs Dropped" = "Weapons.Expended", 
+                      "Weight of Bombs Dropped" = "Weapons.Weight", 
+                      "Bombload (weight of bombs per plane)" = "Aircraft.Bombload", 
+                      "Number of Aircraft Lost" = "Casualties.Friendly")
+
+
+### WW2 labels ###
 
 WW2_categorical_choices = c("Theater of Operations", 
                          "Military Regiment", 
@@ -103,6 +146,96 @@ WW2_continuous = list("Number of Attacking Aircraft" = "Aircraft.Attacking.Num",
                       "Number of Aircraft Aborted for Other Reasons" = "Aircraft.Fail.Misc.Num")
 
 
+### Korea labels ###
+
+Korea_categorical_choices = c("Military Division", 
+                               "Mission Type", 
+                               "Target City", 
+                               "Target Type", 
+                               "Aircraft Model", 
+                               "Bomb Type", 
+                               "Sighting Method", 
+                               "Nose Fuze", 
+                               "Tail Fuze")
+
+Korea_continuous_choices = c("Number of Attacking Aircraft", 
+                              "Altitude at Bomb Drop", 
+                              "Number of Bombs Dropped", 
+                              "Bombload (weight of bombs per plane)", 
+                              "Number of Aircraft Lost", 
+                              "Number of Aircraft Aborted")
+
+Korea_all_choices <- c(Korea_categorical_choices, Korea_continuous_choices)
+
+Korea_categorical = list("Military Division" = "Unit.Order", 
+                          "Mission Type" = "Mission.Type", 
+                          "Target City" = "Target.Name", 
+                          "Target Type" = "Target.Type", 
+                          "Aircraft Model" = "Aircraft.Type", 
+                          "Bomb Type" = "Weapons.Type", 
+                          "Sighting Method" = "Bomb.Sighting.Method", 
+                          "Nose Fuze" = "Nose.Fuze", 
+                          "Tail Fuze" = "Tail.Fuze")
+
+Korea_continuous = list("Number of Attacking Aircraft" = "Aircraft.Attacking.Num", 
+                         "Altitude at Bomb Drop" = "Bomb.Altitude.Feet.Low", 
+                         "Number of Bombs Dropped" = "Weapons.Num", 
+                         "Bombload (weight of bombs per plane)" = "Aircraft.Bombload.Calculated.Pounds", 
+                         "Number of Aircraft Lost" = "Aircraft.Lost.Num", 
+                         "Number of Aircraft Aborted" = "Aircraft.Aborted.Num")
+
+
+### Vietnam labels ###
+
+Vietnam_categorical_choices = c("Operation Supported", 
+                                "Military Regiment", 
+                                "Country of Origin", 
+                                "Target Country", 
+                                "Target Type", 
+                                "Aircraft Model", 
+                                "Bomb Type", 
+                                "Bomb Class", 
+                                "Takeoff City", 
+                                "Takeoff Time of Day", 
+                                "Target Control", 
+                                "Target Weather", 
+                                "Target Cloudcover", 
+                                "Geozone")
+
+Vietnam_continuous_choices = c("Number of Attacking Aircraft", 
+                               "Altitude at Bomb Drop", 
+                               "Speed at Bomb Drop", 
+                               "Number of Bombs Dropped", 
+                               "Number of Bombs Jettisoned", 
+                               "Number of Bombs Returned", 
+                               "Flight Hours")
+
+Vietnam_all_choices <- c(Vietnam_categorical_choices, Vietnam_continuous_choices)
+
+Vietnam_categorical = list("Operation Supported" = "Operation.Supported", 
+                           "Military Regiment" = "Unit.Service", 
+                           "Country of Origin" = "Unit.Country", 
+                           "Target Country" = "Target.Country", 
+                           "Target Type" = "Target.Type", 
+                           "Aircraft Model" = "Aircraft.Root.Valid", 
+                           "Bomb Type" = "Weapon.Type", 
+                           "Bomb Class" = "Weapon.Type.Class", 
+                           "Takeoff City" = "Takeoff.Location", 
+                           "Takeoff Time of Day" = "Mission.Day.Period", 
+                           "Target Control" = "Target.Control", 
+                           "Target Weather" = "Target.Weather", 
+                           "Target Cloudcover" = "Target.CloudCover", 
+                           "Geozone" = "Target.Geozone")
+
+Vietnam_continuous = list("Number of Attacking Aircraft" = "Aircraft.Num", 
+                          "Altitude at Bomb Drop" = "Bomb.Altitude", 
+                          "Speed at Bomb Drop" = "Bomb.Speed", 
+                          "Number of Bombs Dropped" = "Weapons.Delivered.Num", 
+                          "Number of Bombs Jettisoned" = "Weapons.Jettisoned.Num", 
+                          "Number of Bombs Returned" = "Weapons.Returned.Num", 
+                          "Flight Hours" = "Flight.Hours")
+
+
 ### get data ###
 
 if(!has_data) {
@@ -111,27 +244,6 @@ if(!has_data) {
     source(file = 'cleaner.R')
   } else {
     # just read the pre-saved data
-    load('saves/Shiny_2017-04-22_downsampled.RData')
+    load('saves/Shiny_2017-04-30.RData')
   }
 }
-
-
-# ### world map stuff ###
-# # based on blog post by Kristoffer Magnusson
-# # http://rpsychologist.com/working-with-shapefiles-projections-and-world-maps-in-ggplot
-# 
-# world_map <- readOGR(dsn="countries")
-# world_map_df <- fortify(world_map)
-# 
-# theme_opts <- list(theme(panel.grid.minor = element_blank(),
-#                          panel.grid.major = element_blank(),
-#                          panel.background = element_blank(),
-#                          plot.background = element_rect(fill="#e6e8ed"),
-#                          panel.border = element_blank(),
-#                          axis.line = element_blank(),
-#                          axis.text.x = element_blank(),
-#                          axis.text.y = element_blank(),
-#                          axis.ticks = element_blank(),
-#                          axis.title.x = element_blank(),
-#                          axis.title.y = element_blank(),
-#                          plot.title = element_text(size=22)))

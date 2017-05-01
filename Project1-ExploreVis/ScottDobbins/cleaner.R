@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.2
-# @date 2017-04-30 21:30
+# @version 0.9.3
+# @date 2017-05-01 01:30
 
 ### import useful packages ###
 
@@ -350,7 +350,7 @@ WW1_bombs[, Mission.Date := .(ymd(Mission.Date))]
 WW2_bombs[, Mission.Date := .(mdy(Mission.Date))]
 Korea_bombs1[, Mission.Date := .(mdy(Mission.Date) - years(100))]
 Korea_bombs2[, Mission.Date := .(mdy(Mission.Date) - years(100))]
-Vietnam_bombs[, Mission.Date := .(ymd(Mission.Date))] # 50000 dates are missing
+Vietnam_bombs[, Mission.Date := .(ymd(Mission.Date))]
 
 # sort by mission date for efficient searching
 if(debug_mode_on) print("setting keys")
@@ -516,7 +516,7 @@ Vietnam_bombs[Weapons.Returned.Num == -1, c("Weapons.Returned.Num")] <- NA
 if(debug_mode_on) print("14")
 Vietnam_bombs[Weapons.Weight.Loaded == -1, c("Weapons.Weight.Loaded")] <- NA
 if(debug_mode_on) print("15")
-Vietnam_bombs[, Bomb.Altitude := .(as.integer(Bomb.Altitude*1000))] # assumed factor of 1000 here (in ft)--otherwise makes no sense
+Vietnam_bombs[, Bomb.Altitude := .(ifelse(Bomb.Altitude == 0, NA, as.integer(Bomb.Altitude*1000)))] # assumed factor of 1000 here (in ft)--otherwise makes no sense
 if(debug_mode_on) print("16")
 Vietnam_bombs[, Bomb.Time := .(format(strptime(Target.Time.Off, format = "%H%M"), format = "%H:%M"))]
 if(debug_mode_on) print("17")
@@ -532,57 +532,185 @@ WW2_bombs[, Aircraft.Total := .(ifelse(!is.na(Aircraft.Attacking.Num), Aircraft.
 
 ### clean out obviously wrong values ###
 
-# drop out of bounds and (0,0) Latitude and Longitude values
+# drop missions without date
+# drop out of bounds Latitude and Longitude values
+# drop (0,0) Latitude and Longitude values
+# drop out of reasonable bounds bombing Altitude values
 if(debug_mode_on) print("cleaning WW1")
-WW1_clean <- WW1_bombs[Target.Latitude <= 90 & Target.Latitude >= -90 
+WW1_clean <- WW1_bombs[!is.na(Mission.Date)
+                       & Target.Latitude <= 90 & Target.Latitude >= -90 
                        & Target.Longitude <= 180 & Target.Longitude >= -180 
-                       & !(Target.Latitude == 0 & Target.Longitude == 0), ]
-WW1_clean <- 
+                       & !(Target.Latitude == 0 & Target.Longitude == 0)
+                       & (Bomb.Altitude < 100000 | is.na(Bomb.Altitude)), ]
 
 if(debug_mode_on) print("cleaning WW2")
-WW2_clean <- WW2_bombs[Target.Latitude <= 90 & Target.Latitude >= -90 
+WW2_clean <- WW2_bombs[!is.na(Mission.Date)
+                       & Target.Latitude <= 90 & Target.Latitude >= -90 
                        & Target.Longitude <= 180 & Target.Longitude >= -180 
-                       & !(Target.Latitude == 0 & Target.Longitude == 0), ]
+                       & !(Target.Latitude == 0 & Target.Longitude == 0)
+                       & (Bomb.Altitude.Feet < 100000 | is.na(Bomb.Altitude.Feet)), ]
 
 if(debug_mode_on) print("cleaning Korea2")
-Korea_clean2 <- Korea_bombs2[Target.Latitude <= 90 & Target.Latitude >= -90 
+Korea_clean2 <- Korea_bombs2[!is.na(Mission.Date)
+                             & Target.Latitude <= 90 & Target.Latitude >= -90 
                              & Target.Longitude <= 180 & Target.Longitude >= -180 
-                             & !(Target.Latitude == 0 & Target.Longitude == 0), ]
+                             & !(Target.Latitude == 0 & Target.Longitude == 0)
+                             & (Bomb.Altitude.Feet.Low < 100000 | is.na(Bomb.Altitude.Feet.Low)), ]
 
 if(debug_mode_on) print("cleaning Vietnam")
-Vietnam_clean <- Vietnam_bombs[Target.Latitude <= 90 & Target.Latitude >= -90 
+Vietnam_clean <- Vietnam_bombs[!is.na(Mission.Date)
+                               & Target.Latitude <= 90 & Target.Latitude >= -90 
                                & Target.Longitude <= 180 & Target.Longitude >= -180 
-                               & !(Target.Latitude == 0 & Target.Longitude == 0), ]
+                               & !(Target.Latitude == 0 & Target.Longitude == 0)
+                               & (Bomb.Altitude < 100000 | is.na(Bomb.Altitude)), ]
+
+
+### prepare tooltip helpers ###
+
+if(debug_mode_on) print("preparing tooltips WW1")
+WW1_clean[, tooltip_datetime := .(ifelse(is.na(Takeoff.Time), 
+                                         ifelse(is.na(Takeoff.Day.Period), 
+                                                paste0("On ", Mission.Date, ","), 
+                                                paste0("On ", Mission.Date, " during the ", Takeoff.Day.Period, ",")), 
+                                         paste0("On ", Mission.Date, " at ", Takeoff.Time, " hours,")))]
+WW1_clean[, tooltip_aircraft_num := .(ifelse(is.na(Aircraft.Attacking.Num), 
+                                             "some", 
+                                             toString(Aircraft.Attacking.Num)))]
+WW1_clean[, tooltip_aircraft_type := .(ifelse(is.na(Aircraft.Type), 
+                                              "aircraft", 
+                                              Aircraft.Type))]
+WW1_clean[, tooltip_aircraft_numtype := .(ifelse((tooltip_aircraft_num == "1" | tooltip_aircraft_type == "aircraft"), 
+                                                 paste0(tooltip_aircraft_num, " ", tooltip_aircraft_type), 
+                                                 paste0(tooltip_aircraft_num, " ", tooltip_aircraft_type, "s")))]
+WW1_clean[, tooltip_aircraft := .(ifelse(Unit.Service == "", 
+                                         paste0(tooltip_aircraft_numtype, " dropped"), 
+                                         paste0(tooltip_aircraft_numtype, " of the ", Unit.Service, " division dropped")))]
+WW1_clean[, tooltip_bombload := .(ifelse(is.na(Aircraft.Bombload), 
+                                         "some bombs on", 
+                                         paste0(toString(Aircraft.Bombload), " pounds of bombs on")))]
+WW1_clean[, tooltip_targetType := .(ifelse(Target.Type == "", 
+                                           "a target", 
+                                           Target.Type))]
+WW1_clean[, tooltip_targetLocation := .(ifelse((Target.City == "" & Target.Country == ""), 
+                                               "in this area", 
+                                               ifelse(Target.City == "", 
+                                                      paste0("in this area of ", Target.Country), 
+                                                      ifelse(Target.Country == "", 
+                                                             paste0("in ", Target.City), 
+                                                             paste0("in ", Target.City, ", ", Target.Country)))))]
+
+if(debug_mode_on) print("preparing tooltips WW2")
+WW2_clean[, tooltip_datetime := .(paste0("On ", 
+                                         Mission.Date, 
+                                         ","))]
+WW2_clean[, tooltip_aircraft_num := .(ifelse(is.na(Aircraft.Total), 
+                                             "some", 
+                                             toString(Aircraft.Total)))]
+WW2_clean[, tooltip_aircraft_type := .(ifelse(is.na(Aircraft.Name), 
+                                              "aircraft", 
+                                              Aircraft.Name))]
+WW2_clean[, tooltip_aircraft_numtype := .(ifelse((tooltip_aircraft_num == "1" | tooltip_aircraft_type == "aircraft"), 
+                                                 paste0(tooltip_aircraft_num, " ", tooltip_aircraft_type), 
+                                                 paste0(tooltip_aircraft_num, " ", tooltip_aircraft_type, "s")))]
+WW2_clean[, tooltip_aircraft := .(ifelse(Unit.Service == "", 
+                                         paste0(tooltip_aircraft_numtype, " dropped"), 
+                                         paste0(tooltip_aircraft_numtype, " of the ", Unit.Service, " division dropped")))]
+WW2_clean[, tooltip_bombload := .(ifelse(is.na(Bomb.Total.Tons), 
+                                         "some bombs on", 
+                                         paste0(toString(Bomb.Total.Tons), " tons of bombs on")))]
+WW2_clean[, tooltip_targetType := .(ifelse(Target.Type == "", 
+                                           "a target", 
+                                           Target.Type))]
+WW2_clean[, tooltip_targetLocation := .(ifelse((Target.City == "" & Target.Country == ""), 
+                                               "in this area", 
+                                               ifelse(Target.City == "", 
+                                                      paste0("in this area of ", Target.Country), 
+                                                      ifelse(Target.Country == "", 
+                                                             paste0("in ", Target.City), 
+                                                             paste0("in ", Target.City, ", ", Target.Country)))))]
+
+if(debug_mode_on) print("preparing tooltips Korea")
+Korea_clean2[, tooltip_datetime := .(paste0("On ", 
+                                            Mission.Date, 
+                                            ","))]
+Korea_clean2[, tooltip_aircraft_num := .(ifelse(is.na(Aircraft.Attacking.Num), 
+                                                "some", 
+                                                toString(Aircraft.Attacking.Num)))]
+Korea_clean2[, tooltip_aircraft_type := .(ifelse(is.na(Aircraft.Type), 
+                                                 "aircraft", 
+                                                 Aircraft.Type))]
+Korea_clean2[, tooltip_aircraft_numtype := .(ifelse((tooltip_aircraft_num == "1" | tooltip_aircraft_type == "aircraft"), 
+                                                    paste0(tooltip_aircraft_num, " ", tooltip_aircraft_type), 
+                                                    paste0(tooltip_aircraft_num, " ", tooltip_aircraft_type, "s")))]
+Korea_clean2[, tooltip_aircraft := .(ifelse(Unit.Group == "", 
+                                            paste0(tooltip_aircraft_numtype, " dropped"), 
+                                            paste0(tooltip_aircraft_numtype, " of the ", Unit.Group, " division dropped")))]
+Korea_clean2[, tooltip_bombload := .(ifelse(is.na(Aircraft.Bombload.Calculated.Pounds), 
+                                            "some bombs on", 
+                                            paste0(toString(Aircraft.Bombload.Calculated.Pounds), " pounds of bombs on")))]
+Korea_clean2[, tooltip_targetType := .(ifelse(Target.Type == "", 
+                                              "a target", 
+                                              Target.Type))]
+Korea_clean2[, tooltip_targetLocation := .(ifelse(Target.Name == "", 
+                                                  "in this area", 
+                                                  paste0("in ", Target.Name)))]
+
+if(debug_mode_on) print("preparing tooltips Vietnam")
+Vietnam_clean[, tooltip_datetime := .(paste0("On ", 
+                                             Mission.Date, 
+                                             ","))]
+Vietnam_clean[, tooltip_aircraft_num := .(ifelse(is.na(Aircraft.Num), 
+                                                 "some", 
+                                                 toString(Aircraft.Num)))]
+Vietnam_clean[, tooltip_aircraft_type := .(ifelse(is.na(Aircraft.Root.Valid), 
+                                                  "aircraft", 
+                                                  Aircraft.Root.Valid))]
+Vietnam_clean[, tooltip_aircraft_numtype := .(ifelse((tooltip_aircraft_num == "1" | tooltip_aircraft_type == "aircraft"), 
+                                                     paste0(tooltip_aircraft_num, " ", tooltip_aircraft_type), 
+                                                     paste0(tooltip_aircraft_num, " ", tooltip_aircraft_type, "s")))]
+Vietnam_clean[, tooltip_aircraft := .(ifelse(Unit.Service == "", 
+                                             paste0(tooltip_aircraft_numtype, " dropped bombs on"), 
+                                             paste0(tooltip_aircraft_numtype, " of the ", Unit.Service, " division dropped bombs on")))]
+Vietnam_clean[, tooltip_targetType := .(ifelse(Target.Type == "", 
+                                               "a target", 
+                                               Target.Type))]
+Vietnam_clean[, tooltip_targetLocation := .(ifelse(Target.Country == "", 
+                                                   "in this area", 
+                                                   paste0("in ", Target.Country)))]
 
 
 ### add tooltips ###
 
 if(debug_mode_on) print("tooltips WW1")
-WW1_clean[, tooltip := .(paste0("On ", Mission.Date, " during the ", Takeoff.Time, ",<br>",
-                                Aircraft.Attacking.Num, " ", Unit.Service, " ", Aircraft.Type, "s dropped <br>",
-                                Aircraft.Bombload, " lbs of bombs on <br>",
-                                Target.Type, "<br>",
-                                "in ", Target.City, ', ', Target.Country))]
+WW1_clean[, tooltip := .(paste(tooltip_datetime, 
+                               tooltip_aircraft, 
+                               tooltip_bombload, 
+                               tooltip_targetType, 
+                               tooltip_targetLocation, 
+                               collapse = "<br>"))]
 
 if(debug_mode_on) print("tooltips WW2")
-WW2_clean[, tooltip := .(paste0("On ", Mission.Date, ",<br>",
-                                Aircraft.Total, " ", Unit.Service, " ", Aircraft.Name, "s dropped <br>",
-                                Bomb.Total.Tons, " tons of bombs on <br>",
-                                Target.Type, "<br>",
-                                "in ", Target.City, ", ", Target.Country))]
+WW2_clean[, tooltip := .(paste(tooltip_datetime, 
+                               tooltip_aircraft, 
+                               tooltip_bombload, 
+                               tooltip_targetType, 
+                               tooltip_targetLocation, 
+                               collapse = "<br>"))]
 
 if(debug_mode_on) print("tooltips Korea2")
-Korea_clean2[, tooltip := .(paste0("On ", Mission.Date, ",<br>",
-                                   Aircraft.Attacking.Num, " ", Unit.Group, " ", Aircraft.Type, "s dropped <br>",
-                                   Aircraft.Bombload.Calculated.Pounds, " pounds of bombs on <br>",
-                                   Target.Type, "<br>",
-                                   "in ", Target.Name))]
+Korea_clean2[, tooltip := .(paste(tooltip_datetime, 
+                                  tooltip_aircraft, 
+                                  tooltip_bombload, 
+                                  tooltip_targetType, 
+                                  tooltip_targetLocation, 
+                                  collapse = "<br>"))]
 
 if(debug_mode_on) print("tooltips Vietnam")
-Vietnam_clean[, tooltip := .(paste0("On ", Mission.Date, ",<br>",
-                                    Aircraft.Num, " ", Unit.Service, " ", Aircraft.Root.Valid, "s dropped bombs on <br>",
-                                    Target.Type, "<br>",
-                                    "in ", Target.Country))]
+Vietnam_clean[, tooltip := .(paste(tooltip_datetime, 
+                                   tooltip_aircraft, 
+                                   tooltip_targetType, 
+                                   tooltip_targetLocation, 
+                                   collapse = "<br>"))]
 
 
 ### find unique targets etc ###
@@ -607,21 +735,26 @@ Korea_sample <- sample_n(Korea_unique_target2, size = 1000)
 if(debug_mode_on) print("sampling Vietnam")
 Vietnam_sample <- sample_n(Vietnam_unique_target, size = 1000)
 
-### can write samples for quick tests ###
-if(debug_mode_on) print("writing WW1")
-write.csv(x = data.frame(WW1_sample), file = 'saves/WW1_sample.csv', quote = TRUE)
-if(full_write) write.csv(x = data.frame(WW1_clean), file = 'saves/WW1_clean.csv', quote = TRUE)
-if(full_write) save(WW1_bombs, file = 'saves/WW1_bombs.Rda')
-if(debug_mode_on) print("writing WW2")
-write.csv(x = data.frame(WW2_sample), file = 'saves/WW2_sample.csv', quote = TRUE)
-if(full_write) write.csv(x = data.frame(WW2_clean), file = 'saves/WW2_clean.csv', quote = TRUE)
-if(full_write) save(WW2_bombs, file = 'saves/WW2_bombs.Rda')
-if(debug_mode_on) print("writing Korea")
-write.csv(x = data.frame(Korea_sample), file = 'saves/Korea_sample.csv', quote = TRUE)
-if(full_write) write.csv(x = data.frame(Korea_clean2), file = 'saves/Korea_clean.csv', quote = TRUE)
-if(full_write) save(Korea_bombs2, file = 'saves/Korea_bombs2.Rda')
-if(debug_mode_on) print("writing Vietnam")
-write.csv(x = data.frame(Vietnam_sample), file = 'saves/Vietnam_sample.csv', quote = TRUE)
-if(full_write) write.csv(x = data.frame(Vietnam_clean), file = 'saves/Vietnam_clean.csv', quote = TRUE)
-if(full_write) save(Vietnam_bombs, file = 'saves/Vietnam_bombs.Rda')
-if(full_write) save.image(file = 'saves/Shiny_2017-04-22.RData')
+# ### can write samples for quick tests ###
+# if(debug_mode_on) print("writing WW1")
+# write.csv(x = data.frame(WW1_sample), file = 'saves/WW1_sample.csv', quote = TRUE)
+# if(full_write) write.csv(x = data.frame(WW1_clean), file = 'saves/WW1_clean.csv', quote = TRUE)
+# if(full_write) save(WW1_bombs, file = 'saves/WW1_bombs.Rda')
+# if(debug_mode_on) print("writing WW2")
+# write.csv(x = data.frame(WW2_sample), file = 'saves/WW2_sample.csv', quote = TRUE)
+# if(full_write) write.csv(x = data.frame(WW2_clean), file = 'saves/WW2_clean.csv', quote = TRUE)
+# if(full_write) save(WW2_bombs, file = 'saves/WW2_bombs.Rda')
+# if(debug_mode_on) print("writing Korea")
+# write.csv(x = data.frame(Korea_sample), file = 'saves/Korea_sample.csv', quote = TRUE)
+# if(full_write) write.csv(x = data.frame(Korea_clean2), file = 'saves/Korea_clean.csv', quote = TRUE)
+# if(full_write) save(Korea_bombs2, file = 'saves/Korea_bombs2.Rda')
+# if(debug_mode_on) print("writing Vietnam")
+# write.csv(x = data.frame(Vietnam_sample), file = 'saves/Vietnam_sample.csv', quote = TRUE)
+# if(full_write) write.csv(x = data.frame(Vietnam_clean), file = 'saves/Vietnam_clean.csv', quote = TRUE)
+# if(full_write) save(Vietnam_bombs, file = 'saves/Vietnam_bombs.Rda')
+# if(debug_mode_on) print("saving workspace")
+# if(full_write) save.image(file = 'saves/Shiny_2017-04-30.RData')
+# Vietnam_unique_target <- sample_n(tbl = Vietnam_unique_target, size = 100000, replace = FALSE)
+# Vietnam_clean <- Vietnam_unique_target
+# Vietnam_sample <- sample_n(tbl = Vietnam_unique_target, size = sample_num, replace = FALSE)
+# save.image('saves/Shiny_2017-04-30_downsampled.RData')
