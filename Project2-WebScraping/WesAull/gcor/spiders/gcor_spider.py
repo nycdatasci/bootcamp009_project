@@ -3,7 +3,6 @@ import scrapy
 from scrapy import Spider
 from scrapy.selector import Selector
 from gcor.items import GcorItem
-from gcor.items import GcorCSVItem
 
 class GcorSpider(Spider):
 	name = 'googlecorrelate'
