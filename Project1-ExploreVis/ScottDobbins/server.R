@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.1
-# @date 2017-04-27 12:30
+# @version 0.9.2
+# @date 2017-04-30 21:30
 
 ### import useful packages ###
 library(shiny)          # app formation
@@ -13,6 +13,9 @@ library(dplyr)          # data processing
 #library(maps)           # also helps with maps
 #library(htmltools)      # helps with tooltips
 library(DT)             # web tables
+
+# get helper functions if not already present
+require(helper.R)
 
 
 # ### initialize plotly ###
@@ -101,7 +104,7 @@ shinyServer(function(input, output, session) {
   
   WW1_missions_reactive <- reactive({
     if(WW1_string %in% input$which_war) {
-      WW1_selection() %>% summarize(n = n())
+      (WW1_selection() %>% summarize(n = n()))$n
     } else {
       0
     }
@@ -109,7 +112,7 @@ shinyServer(function(input, output, session) {
   
   WW2_missions_reactive <- reactive({
     if(WW2_string %in% input$which_war) {
-      WW2_selection() %>% summarize(n = n())
+      (WW2_selection() %>% summarize(n = n()))$n
     } else {
       0
     }
@@ -117,7 +120,7 @@ shinyServer(function(input, output, session) {
   
   Korea_missions_reactive <- reactive({
     if(Korea_string %in% input$which_war) {
-      Korea_selection() %>% summarize(n = n())
+      (Korea_selection() %>% summarize(n = n()))$n
     } else {
       0
     }
@@ -125,7 +128,7 @@ shinyServer(function(input, output, session) {
   
   Vietnam_missions_reactive <- reactive({
     if(Vietnam_string %in% input$which_war) {
-      Vietnam_selection() %>% summarize(n = n())
+      (Vietnam_selection() %>% summarize(n = n()))$n
     } else {
       0
     }
@@ -133,7 +136,7 @@ shinyServer(function(input, output, session) {
   
   WW1_bombs_reactive <- reactive({
     if(WW1_string %in% input$which_war) {
-      WW1_selection() %>% summarize(sum = sum(Weapons.Expended, na.rm = TRUE))
+      (WW1_selection() %>% summarize(sum = sum(Weapons.Expended, na.rm = TRUE)))$sum
     } else {
       0
     }
@@ -141,7 +144,7 @@ shinyServer(function(input, output, session) {
   
   WW2_bombs_reactive <- reactive({
     if(WW2_string %in% input$which_war) {
-      WW2_selection() %>% summarize(sum = sum(Bomb.HE.Num, na.rm = TRUE))
+      (WW2_selection() %>% summarize(sum = sum(Bomb.HE.Num, na.rm = TRUE)))$sum
     } else {
       0
     }
@@ -149,7 +152,7 @@ shinyServer(function(input, output, session) {
   
   Korea_bombs_reactive <- reactive({
     if(Korea_string %in% input$which_war) {
-      Korea_selection() %>% summarize(sum = sum(Weapons.Num, na.rm = TRUE))
+      (Korea_selection() %>% summarize(sum = sum(Weapons.Num, na.rm = TRUE)))$sum
     } else {
       0
     }
@@ -157,7 +160,7 @@ shinyServer(function(input, output, session) {
   
   Vietnam_bombs_reactive <- reactive({
     if(Vietnam_string %in% input$which_war) {
-      Vietnam_selection() %>% summarize(sum = sum(Weapons.Delivered.Num, na.rm = TRUE))
+      (Vietnam_selection() %>% summarize(sum = sum(Weapons.Delivered.Num, na.rm = TRUE)))$sum
     } else {
       0
     }
@@ -165,7 +168,7 @@ shinyServer(function(input, output, session) {
   
   WW1_weight_reactive <- reactive({
     if(WW1_string %in% input$which_war) {
-      WW1_selection() %>% summarize(sum = sum(Aircraft.Bombload, na.rm = TRUE))
+      (WW1_selection() %>% summarize(sum = sum(Aircraft.Bombload, na.rm = TRUE)))$sum
     } else {
       0
     }
@@ -173,7 +176,7 @@ shinyServer(function(input, output, session) {
   
   WW2_weight_reactive <- reactive({
     if(WW2_string %in% input$which_war) {
-      WW2_selection() %>% summarize(sum = sum(Bomb.Total.Pounds, na.rm = TRUE))
+      (WW2_selection() %>% summarize(sum = sum(Bomb.Total.Pounds, na.rm = TRUE)))$sum
     } else {
       0
     }
@@ -181,7 +184,7 @@ shinyServer(function(input, output, session) {
   
   Korea_weight_reactive <- reactive({
     if(Korea_string %in% input$which_war) {
-      Korea_selection() %>% summarize(sum = sum(Aircraft.Bombload.Calculated.Pounds, na.rm = TRUE))
+      (Korea_selection() %>% summarize(sum = sum(Aircraft.Bombload.Calculated.Pounds, na.rm = TRUE)))$sum
     } else {
       0
     }
@@ -189,7 +192,7 @@ shinyServer(function(input, output, session) {
   
   Vietnam_weight_reactive <- reactive({
     if(Vietnam_string %in% input$which_war) {
-      Vietnam_selection() %>% summarize(sum = sum(Weapon.Type.Weight, na.rm = TRUE))
+      (Vietnam_selection() %>% summarize(sum = sum(Weapon.Type.Weight, na.rm = TRUE)))$sum
     } else {
       0
     }
@@ -198,19 +201,23 @@ shinyServer(function(input, output, session) {
   # number of missions
   output$num_missions <- renderInfoBox({
     total_missions <- WW1_missions_reactive() + WW2_missions_reactive() + Korea_missions_reactive() + Vietnam_missions_reactive()
-    infoBox(title = "Number of Missions", total_missions, icon = icon('chevron-up', lib = 'font-awesome'))
+    # print(toString(total_missions))
+    # print(add_commas(total_missions))
+    # print(typeof(toString(total_missions)))
+    # print(typeof(add_commas(total_missions)))
+    infoBox(title = "Number of Missions", value = add_commas(total_missions), icon = icon('chevron-up', lib = 'font-awesome'))
   })
   
   # number of bombs
   output$num_bombs <- renderInfoBox({
     total_bombs <- WW1_bombs_reactive() + WW2_bombs_reactive() + Korea_bombs_reactive() + Vietnam_bombs_reactive()
-    infoBox(title = "Number of Bombs", total_bombs, icon = icon('bomb', lib = 'font-awesome'))
+    infoBox(title = "Number of Bombs", value = add_commas(total_bombs), icon = icon('bomb', lib = 'font-awesome'))
   })
   
   # weight of bombs
   output$total_weight <- renderInfoBox({
     total_weight <- WW1_weight_reactive() + WW2_weight_reactive() + Korea_weight_reactive() + Vietnam_weight_reactive()
-    infoBox(title = "Weight of Bombs", total_weight, icon = icon('fire', lib = 'font-awesome'))
+    infoBox(title = "Weight of Bombs", value = add_commas(total_weight), icon = icon('fire', lib = 'font-awesome'))
   })
   
   
@@ -218,6 +225,14 @@ shinyServer(function(input, output, session) {
   output$overview_map <- renderLeaflet({
     overview <- leaflet()
     overview
+  })
+  
+  output$overview_text <- renderText({"<i>Hints on use:</i><br>
+                                      <b>Color</b> map is best for aesthetic appearance<br>
+                                      <b>Plain</b> map is best for finding individual points<br>
+                                      <b>Terrain</b> map is best for investigating bomb locations with respect to terrain<br>
+                                      <b>Street</b> map is best for investigating bomb locations with respect to civil infrastructure<br>
+                                      <b>Satellite</b> map is best for investigating bomb locations with respect to current-day city features"
   })
   
   # initialize civilian leaflet map

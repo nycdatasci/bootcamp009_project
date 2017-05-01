@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.1
-# @date 2017-04-27 12:30
+# @version 0.9.2
+# @date 2017-04-30 21:30
 
 ### import useful packages ###
 library(shiny)            # app formation
@@ -79,7 +79,7 @@ shinyUI(dashboardPage(
                  label = "Sample size = ?", 
                  value = 1024, 
                  min = 1, 
-                 max = 2048)
+                 max = 4096)
     
   ),
   
@@ -122,6 +122,13 @@ shinyUI(dashboardPage(
                                    multiple = TRUE), 
                     width = 6) 
                 
+              ), 
+              
+              # text box whose sole purpose is actually just to add spacing to the bottom of the window
+              fluidRow(
+                box(htmlOutput(outputId = "overview_text", 
+                               inline = FALSE), 
+                    width = 12)
               )
       ), 
       

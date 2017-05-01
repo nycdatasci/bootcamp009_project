@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.1
-# @date 2017-04-27 12:30
+# @version 0.9.2
+# @date 2017-04-30 21:30
 
 ### text formatting functions ###
 
@@ -44,4 +44,28 @@ remove_quotes <- function(cell) {
 
 remove_nonASCII_chars <- function(cell) {
   return(gsub(pattern = '[^ -~]+', replacement = "", cell))
+}
+
+add_commas <- function(number) {
+  num_groups <- log(number, base = 1000)
+  if(num_groups < 1) {
+    return(toString(number))
+  } else {
+    num_rounds <- floor(num_groups)
+    output_string <- ""
+    for(round in 1:num_rounds) {
+      this_group_int <- number %% 1000
+      if(this_group_int < 10) {
+        this_group_string <- paste0("00", toString(this_group_int))
+      } else if(this_group_int < 100) {
+        this_group_string <- paste0("0", toString(this_group_int))
+      } else {
+        this_group_string <- toString(this_group_int)
+      }
+      output_string <- paste0(",", this_group_string, output_string)
+      number <- number %/% 1000
+    }
+    output_string <- paste0(toString(number), output_string)
+    return(output_string)
+  }
 }
