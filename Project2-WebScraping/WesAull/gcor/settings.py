@@ -15,7 +15,6 @@ SPIDER_MODULES = ['gcor.spiders']
 NEWSPIDER_MODULE = 'gcor.spiders'
 ITEM_PIPELINES = {
 					'gcor.files.FilesPipeline': 1,
-					'gcor.pipelines.ValidateItemPipeline': 100,
 					'gcor.pipelines.WriteItemSQLitePipeline': 200
 					}
 FILES_STORE = '/Users/WesAull/GoogleDrive/NYCDSA/bootcamp009_project/Project2-WebScraping/WesAull/'
