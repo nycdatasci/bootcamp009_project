@@ -1,11 +1,14 @@
 library(dplyr)
 library(shinydashboard)
 library(ggplot2)
-
+library(DT)
+library(data.table)
+library(googleVis)
 
 #creat country table
 
 mental=read.csv("mentalsurvey.csv")
+state=read.csv('state.csv')
 gage=ggplot(data = mental, aes(x= age))
 country_count <- mental %>%
   group_by(country) %>%

@@ -30,7 +30,8 @@ shinyUI(dashboardPage(
     tabItems(
       tabItem(tabName = "mainpage",
               h2("Select any tab to start learning"),
-              imageOutput("mainpage")
+              imageOutput("mainpage"),
+              textOutput("mainpage2")
       ),
       tabItem(tabName = 'subItemOne',
               h2('Accuracy, Select a Variable'),
@@ -79,7 +80,7 @@ shinyUI(dashboardPage(
                              "Select Dependent Variable",
                              items,
                              selected = "CLOSE_DEF_DIST"))),
-              verbatimTextOutput("comparative")
+              plotOutput(outputId="comparative")
       ),
     tabItem(tabName = "ev",
             h2('Expected value vs. Shot Distance/Type'),
