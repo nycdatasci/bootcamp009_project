@@ -3,19 +3,14 @@ import scrapy
 
 class redeyerecords_spider(scrapy.Spider):
     name = 'redeyerecords'
+    start_urls = []
+    genres  = ['house','techno-electro']
+    sections = ['new-releases','sale-section','super-sale-section','back-catalogue']
+    page_nums = range(1,62)
 
-    def start_requests(self):
-        urls = []
-        genres  = ['house','techno-electro']
-        sections = ['new-releases','sale-section','super-sale-section','back-catalogue']
-        page_nums = range(1,62)
-
-        for genre in genres:
-            for section in sections:
-                urls  = urls + ["https://www.redeyerecords.co.uk/{0}/{1}/page_{2}".format(genre,section,page) for page in page_nums]
-
-        for url in urls:
-            yield scrapy.Request(url, callback=self.parse)
+    for genre in genres:
+        for section in sections:
+            start_urls  = start_urls + ["https://www.redeyerecords.co.uk/{0}/{1}/page_{2}".format(genre,section,page) for page in page_nums]
 
     def parse(self, response):
 
