@@ -12,6 +12,7 @@ class RedeyeItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
     artist = scrapy.Field()
+    release = scrapy.Field()
     tracks = scrapy.Field()
     label  = scrapy.Field()
     front_cover = scrapy.Field()

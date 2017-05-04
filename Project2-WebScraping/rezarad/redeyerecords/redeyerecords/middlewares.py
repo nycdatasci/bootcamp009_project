@@ -37,7 +37,6 @@ class RedeyerecordsSpiderMiddleware(object):
         pass
 
     def process_start_requests(start_requests, spider):
-
         for r in start_requests:
             yield r
 

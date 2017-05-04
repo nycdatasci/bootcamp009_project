@@ -13,7 +13,8 @@ BOT_NAME = 'redeyerecords'
 
 SPIDER_MODULES = ['redeyerecords.spiders']
 NEWSPIDER_MODULE = 'redeyerecords.spiders'
-
+# FEED_EXPORT_ENCODING = 'utf-8'
+# FEED_FORMAT: csv
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'deejay (+http://www.yourdomain.com)'
 USER_AGENT  = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/603.1.30 (KHTML, like Gecko) Version/10.1 Safari/603.1.30'
@@ -49,14 +50,14 @@ DOWNLOAD_DELAY =  3
 
 # Enable or disable spider middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/spider-middleware.html
-SPIDER_MIDDLEWARES = {
-   'redeyerecords.middlewares.RedeyerecordsSpiderMiddleware': 543,
-}
-
-# Enable or disable downloader middlewares
-# See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
+# SPIDER_MIDDLEWARES = {
+#    'redeyerecords.middlewares.RedeyerecordsSpiderMiddleware': 543,
+# }
+#
+# # Enable or disable downloader middlewares
+# # See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
 # DOWNLOADER_MIDDLEWARES = {
-#    'redeyerecords.middlewares.MyCustomDownloaderMiddleware': 543,
+#    'redeyerecords.middlewares.RedeyerecordsDownloaderMiddleware': 544,
 # }
 
 # Enable or disable extensions
@@ -69,6 +70,7 @@ SPIDER_MIDDLEWARES = {
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {'redeyerecords.pipelines.ValidateItemPipeline': 100,
                         'redeyerecords.pipelines.WriteItemPipeline': 200 }
+
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See http://doc.scrapy.org/en/latest/topics/autothrottle.html

@@ -5,13 +5,10 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
 
-
-
-
 from scrapy.exceptions import DropItem
 from scrapy.exporters import CsvItemExporter
 
-class RedeyerecordsPipeline(object):
+class ValidateItemPipeline(object):
     def process_item(self, item, spider):
         if not all(item.values()):
             raise DropItem("Missing values!")
@@ -21,7 +18,7 @@ class RedeyerecordsPipeline(object):
 class WriteItemPipeline(object):
 
     def __init__(self):
-        self.filename = 'reviews.csv'
+        self.filename = 'redeyerecords.csv'
 
     def open_spider(self, spider):
         self.csvfile = open(self.filename, 'wb')
