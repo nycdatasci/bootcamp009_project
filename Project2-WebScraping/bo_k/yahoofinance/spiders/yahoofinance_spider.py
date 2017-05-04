@@ -6,7 +6,7 @@ from yahoofinance.items import YahooFinanceItem
 class yahoofinance_spider(scrapy.Spider):
     name = 'yahoofinance'
     allowed_urls = ['https://finance.yahoo.com/']
-    start_urls = ['https://finance.yahoo.com/quote/TSLA/options?p=TSLA']
+    start_urls = ['https://finance.yahoo.com/quote/TSLA/options?p=TSLA&date=1494547200']
 
     def verify(self, content):
         if isinstance(content, list):
