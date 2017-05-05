@@ -23,19 +23,17 @@ class GcorSpider(Spider):
 
 	def parse(self, response):
 		search_list=[
-		"ExlService",
-		"Facebook",
-		"Fair+Isaac",
-		"FBL+Financial",
-		"Federated+National",
-		"Fidelity+&+Guaranty+Life",
-		"Fidelity+National+Information+Services",
-		"FireEye",
-		"First+Data",
-		"Fiserv",
-		"Fitbit",
-		"Five9",
-		"Flexsteel+Industries",
+		"Endurance+International",
+		"EnerNOC",
+		"EPAM+Systems",
+		"Erie+Indemnity",
+		"Escalade",
+		"Ethan+Allen",
+		"Euronet+Worldwide",
+		"Everbridge",
+		"Everest+Re",
+		"EVERTEC",
+		"Exa+Corporation",
 		]
 		search_url = [('https://www.google.com/trends/correlate/search?e=' + x + '&t=weekly&p=us') for x in search_list]
 		for url in search_url:
@@ -197,17 +195,7 @@ class GcorSpider(Spider):
 		# "Ellie+Mae",
 		# "EMC+Insurance",
 		# "Employers+Holdings",
-		# "Endurance+International",
-		# "EnerNOC",
-		# "EPAM+Systems",
-		# "Erie+Indemnity+Company",
-		# "Escalade",
-		# "Ethan+Allen+Interiors",
-		# "Euronet+Worldwide",
-		# "Everbridge",
-		# "Everest+Re",
-		# "EVERTEC",
-		# "Exa+Corporation",
+
 
 
 
@@ -219,6 +207,19 @@ class GcorSpider(Spider):
 
 
 		# Factset Select Index Pulled:
+		# "ExlService",
+		# "Facebook",
+		# "Fair+Isaac",
+		# "FBL+Financial",
+		# "Federated+National",
+		# "Fidelity+&+Guaranty+Life",
+		# "Fidelity+National+Information+Services",
+		# "FireEye",
+		# "First+Data",
+		# "Fiserv",
+		# "Fitbit",
+		# "Five9",
+		# "Flexsteel",
 		# "Ford",
 		# "Fossil+Group",
 		# "Fox+Factory",
