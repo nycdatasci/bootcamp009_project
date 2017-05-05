@@ -23,17 +23,17 @@ class GcorSpider(Spider):
 
 	def parse(self, response):
 		search_list=[
-		"CoreLogic",
-		"Cornerstone+Ondemand",
-		"CoStar+Group",
-		"Coupa+Software",
-		"CPI+Card",
-		"Crocs",
-		"CSG+Systems",
-		"CSRA",
-		"CyberArk",
-		"D.R.+Horton",
-		"Deckers+Outdoor",
+		"Citrix+Systems",
+		"Cloudera",
+		"CNO+Financial",
+		"Cognizant+Technology",
+		"Columbia+Sportswear",
+		"CommerceHub",
+		"CommVault",
+		"Computer+Programs+and+Systems",
+		"Computer+Services",
+		"Convergys",
+		"Cooper+Tire",
 		]
 		search_url = [('https://www.google.com/trends/correlate/search?e=' + x + '&t=weekly&p=us') for x in search_list]
 		for url in search_url:
@@ -160,17 +160,7 @@ class GcorSpider(Spider):
 		# "Chubb+Limited",
 		# "Cincinnati+Financial",
 		# "Citizens",
-		# "Citrix+Systems",
-		# "Cloudera",
-		# "CNO+Financial+Group",
-		# "Cognizant+Technology",
-		# "Columbia+Sportswear",
-		# "CommerceHub",
-		# "CommVault",
-		# "Computer+Programs+and+Systems",
-		# "Computer+Services",
-		# "Convergys",
-		# "Cooper+Tire",
+
 
 
 
@@ -185,6 +175,17 @@ class GcorSpider(Spider):
 
 
 		# Factset Select Index Pulled:
+		# "CoreLogic",
+		# "Cornerstone+Ondemand",
+		# "CoStar+Group",
+		# "Coupa+Software",
+		# "CPI+Card",
+		# "Crocs",
+		# "CSG+Systems",
+		# "CSRA",
+		# "CyberArk",
+		# "D.R.+Horton",
+		# "Deckers+Outdoor",
 		# "DHI+Group",
 		# "Digimarc",
 		# "Donegal+Group",
