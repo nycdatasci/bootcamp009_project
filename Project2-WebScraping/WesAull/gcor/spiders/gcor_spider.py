@@ -23,17 +23,19 @@ class GcorSpider(Spider):
 
 	def parse(self, response):
 		search_list=[
-		"Endurance+International",
-		"EnerNOC",
-		"EPAM+Systems",
-		"Erie+Indemnity",
-		"Escalade",
-		"Ethan+Allen",
-		"Euronet+Worldwide",
-		"Everbridge",
-		"Everest+Re",
-		"EVERTEC",
-		"Exa+Corporation",
+		"DHI+Group",
+		"Digimarc",
+		"Donegal+Group+Inc.",
+		"Dorman+Products",
+		"DST+Systems",
+		"Duluth+Holdings",
+		"DXC+Technology",
+		"eHealth",
+		"Electronic+Arts",
+		"Elio+Motors",
+		"Ellie+Mae",
+		"EMC+Insurance",
+		"Employers+Holdings",
 		]
 		search_url = [('https://www.google.com/trends/correlate/search?e=' + x + '&t=weekly&p=us') for x in search_list]
 		for url in search_url:
@@ -182,19 +184,7 @@ class GcorSpider(Spider):
 		# "CyberArk",
 		# "D.R.+Horton",
 		# "Deckers+Outdoor",
-		# "DHI+Group",
-		# "Digimarc",
-		# "Donegal+Group+Inc.",
-		# "Dorman+Products",
-		# "DST+Systems",
-		# "Duluth+Holdings",
-		# "DXC+Technology",
-		# "eHealth",
-		# "Electronic+Arts",
-		# "Elio+Motors",
-		# "Ellie+Mae",
-		# "EMC+Insurance",
-		# "Employers+Holdings",
+
 
 
 
@@ -207,6 +197,17 @@ class GcorSpider(Spider):
 
 
 		# Factset Select Index Pulled:
+		# "Endurance+International",
+		# "EnerNOC",
+		# "EPAM+Systems",
+		# "Erie+Indemnity",
+		# "Escalade",
+		# "Ethan+Allen",
+		# "Euronet+Worldwide",
+		# "Everbridge",
+		# "Everest+Re",
+		# "EVERTEC",
+		# "Exa+Corporation",
 		# "ExlService",
 		# "Facebook",
 		# "Fair+Isaac",
