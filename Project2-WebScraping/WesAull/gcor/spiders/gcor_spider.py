@@ -23,12 +23,20 @@ class GcorSpider(Spider):
 
 	def parse(self, response):
 		search_list=[
-		"MicroStrategy+Incorporated",
-		"Mimecast",
-		"MINDBODY",
-		"Mitek+Systems",
-		"MobileIron",
-		"Model+N",
+		"Pandora+Media",
+		"Park+City+Group",
+		"Paychex",
+		"Paycom",
+		"Paylocity",
+		"PayPal",
+		"PC+Connection",
+		"Pegasystems",
+		"Perry+Ellis",
+		"Polaris",
+		"Presidio",
+		"Primerica",
+		"Progress+Software",
+		"Progressive",
 		]
 		search_url = [('https://www.google.com/trends/correlate/search?e=' + x + '&t=weekly&p=us') for x in search_list]
 		for url in search_url:
@@ -342,23 +350,14 @@ class GcorSpider(Spider):
 		# "National+General",
 		# "National+Instruments",
 		# "National+Presto",
+		# "MicroStrategy+Incorporated",
+		# "Mimecast",
+		# "MINDBODY",
+		# "Mitek+Systems",
+		# "MobileIron",
+		# "Model+N",
 
 
-		#NOT DONE:
-		# "Pandora+Media",
-		# "Park+City+Group",
-		# "Paychex",
-		# "Paycom",
-		# "Paylocity",
-		# "PayPal",
-		# "PC+Connection",
-		# "Pegasystems",
-		# "Perry+Ellis+International",
-		# "Polaris+Industries",
-		# "Presidio",
-		# "Primerica",
-		# "Progress+Software",
-		# "Progressive",
 
 
 
