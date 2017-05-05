@@ -22,27 +22,29 @@ class WriteItemSQLitePipeline(object):
         self.cur.execute("CREATE TABLE IF NOT EXISTS Google (search_term text, date text, search_activity real)")
 
     def createGoogleCorTable(self):
-        self.cur.execute("CREATE TABLE IF NOT EXISTS GoogleCor (search_term text, corr_term text, corr real, assoc_term text)")
+        self.cur.execute("CREATE TABLE IF NOT EXISTS GoogleCor (search_term text,corr_term text,pearson real)")
 
     def process_item(self, item, spider):
         self.storeInDb(item)        
         return item
 
     def storeInDb(self,item):
+
         for i in item['hist_search_activity']:
             x = (item['search_term'], i['date'], i['value'])
             self.cur.execute("INSERT INTO Google(search_term, date, search_activity) VALUES(?,?,?)", x)
-            print 'Activity Stored in Database'
-            print '---------------------------'
             self.conn.commit()
+        print 'Activity Stored in Database'
+        print '---------------------------'
+
 
         corr = zip(item['corr_terms'],item['corr_terms_cor'])
         for i,j in corr:
-            y = (item['search_term'], i, j, item['assoc_search'])
-            self.cur.execute("INSERT INTO GoogleCor(search_term, corr_term, corr, assoc_term) VALUES(?,?,?,?)", y)
-            print 'Correlation Stored in Database'
-            print '------------------------------'
+            y = (item['search_term'], i, j)
+            self.cur.execute("INSERT INTO GoogleCor(search_term, corr_term, pearson) VALUES(?,?,?)", y)
             self.conn.commit()
+        print 'Correlation Stored in Database'
+        print '------------------------------'
 
     def closeDB(self):
         self.conn.close()

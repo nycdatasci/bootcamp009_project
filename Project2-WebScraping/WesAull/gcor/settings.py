@@ -18,10 +18,15 @@ ITEM_PIPELINES = {
 					'gcor.pipelines.WriteItemSQLitePipeline': 200
 					}
 FILES_STORE = '/Users/WesAull/GoogleDrive/NYCDSA/bootcamp009_project/Project2-WebScraping/WesAull/'
-DOWNLOAD_DELAY = 3
-CONCURRENT_REQUESTS_PER_DOMAIN = 1
-CONCURRENT_REQUESTS = 1
-CONCURRENT_ITEMS = 1
+DOWNLOAD_DELAY = 4
+CONCURRENT_REQUESTS_PER_DOMAIN = 3
+CONCURRENT_REQUESTS = 3
+CONCURRENT_ITEMS = 3
+
+DOWNLOADER_MIDDLEWARES = {
+        'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware' : None,
+        'gcor.rotate_useragent.RotateUserAgentMiddleware' :400
+    }
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'gcor (+http://www.yourdomain.com)'
