@@ -19,7 +19,8 @@ class DeejayItem(scrapy.Item):
         available = scrapy.Field()
         vinyl  = scrapy.Field()
         label_img_url = scrapy.Field()
-        label_url = scrapy.Field()
+        label_urls = scrapy.Field()
+
 
         # # From each release page
         # url = scrapy.Field()

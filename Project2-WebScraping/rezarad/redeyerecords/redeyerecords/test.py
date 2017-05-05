@@ -20,7 +20,13 @@ for url in table_urls:
 
 
 page_nums = range(1,292)
-urls  = ["https://www.deejay.de/content.php/?param=/m_All/sm_Labels/page_{0}".format(page) for page in page_nums]
+urls  = ["https://www.deejay.de/content.php/?param=/m_All/sm_Labels/page_" + str( page) for page in page_nums]
 map(lambda s: s.decode('utf8').encode('ascii', errors='ignore'),urls)
 map(lambda s: s.replace('\\', ""),urls)
 print urls
+
+import re
+
+print re.search("add","addToBasket") != None
+
+# print re .split(" - ","Nebraska - F&r 003")[0]

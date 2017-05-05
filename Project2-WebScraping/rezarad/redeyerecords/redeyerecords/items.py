@@ -19,3 +19,5 @@ class RedeyeItem(scrapy.Item):
     catalog_num = scrapy.Field()
     price = scrapy.Field()
     available = scrapy.Field()
+    link = scrapy.Field()
+    
