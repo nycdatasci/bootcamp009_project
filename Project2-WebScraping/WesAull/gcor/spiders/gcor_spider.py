@@ -23,17 +23,25 @@ class GcorSpider(Spider):
 
 	def parse(self, response):
 		search_list=[
-		"Guidance+Software",
-		"Guidewire",
-		"Hallmark+Financial",
-		"Hanesbrands",
-		"Hanover+Insurance",
-		"Harley-Davidson",
-		"Hasbro",
-		"HCI+Group",
-		"HealthStream",
-		"Helen+of+Troy+Limited",
-		"Heritage+Insurance",
+		"Ford",
+		"Fossil+Group",
+		"Fox+Factory",
+		"G-III+Apparel",
+		"General+Motors",
+		"Genworth+Financial",
+		"Gigamon",
+		"Global+Indemnity",
+		"Global+Payments",
+		"Globant",
+		"Glu+Mobile",
+		"GoDaddy",
+		"Goodyear+Tire",
+		"GoPro",
+		"Green+Brick+Partners",
+		"Greenlight+Capital+Re",
+		"GrubHub",
+		"Guess",
+
 		]
 		search_url = [('https://www.google.com/trends/correlate/search?e=' + x + '&t=weekly&p=us') for x in search_list]
 		for url in search_url:
@@ -219,24 +227,7 @@ class GcorSpider(Spider):
 		# "Fitbit",
 		# "Five9",
 		# "Flexsteel+Industries",
-		# "Ford+Motor+Company",
-		# "Fossil+Group",
-		# "Fox+Factory+Holding",
-		# "G-III+Apparel+Group",
-		# "General+Motors",
-		# "Genworth+Financial",
-		# "Gigamon+Inc.",
-		# "Global+Indemnity",
-		# "Global+Payments",
-		# "Globant+SA",
-		# "Glu+Mobile",
-		# "GoDaddy",
-		# "Goodyear+Tire",
-		# "GoPro",
-		# "Green+Brick+Partners",
-		# "Greenlight+Capital+Re",
-		# "GrubHub",
-		# "Guess",
+
 
 
 
@@ -246,6 +237,17 @@ class GcorSpider(Spider):
 
 
 		# Factset Select Index Pulled:
+		# "Guidance+Software",
+		# "Guidewire",
+		# "Hallmark+Financial",
+		# "Hanesbrands",
+		# "Hanover+Insurance",
+		# "Harley-Davidson",
+		# "Hasbro",
+		# "HCI+Group",
+		# "HealthStream",
+		# "Helen+of+Troy+Limited",
+		# "Heritage+Insurance",
 		# "HomeFed",
 		# "Hooker+Furniture",
 		# "Horizon+Global",
