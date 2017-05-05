@@ -23,18 +23,14 @@ class GcorSpider(Spider):
 
 	def parse(self, response):
 		search_list=[
-		"Paychex",
-		"Paycom",
-		"Paylocity",
-		"PayPal",
-		"PC+Connection",
-		"Pegasystems",
-		"Perry+Ellis+International",
-		"Polaris+Industries",
-		"Presidio",
-		"Primerica",
-		"Progress+Software",
-		"Progressive",
+		"National+Western+Life+Group",
+		"Nautilus+Inc",
+		"Navigators+Group",
+		"NetScout+Systems",
+		"NeuStar",
+		"New+Home+Co.",
+		"New+Relic",
+		"Newell+Brands",
 		]
 		search_url = [('https://www.google.com/trends/correlate/search?e=' + x + '&t=weekly&p=us') for x in search_list]
 		for url in search_url:
@@ -326,14 +322,10 @@ class GcorSpider(Spider):
 		# "National+General",
 		# "National+Instruments",
 		# "National+Presto",
-		# "National+Western+Life+Group",
-		# "Nautilus+Inc",
-		# "Navigators+Group",
-		# "NetScout+Systems",
-		# "NeuStar",
-		# "New+Home+Co.",
-		# "New+Relic",
-		# "Newell+Brands",
+
+
+
+		#DONE:
 		# "NIC+Inc",
 		# "NIKE",
 		# "NMI+Holdings",
@@ -348,10 +340,23 @@ class GcorSpider(Spider):
 		# "OneBeacon+Insurance",
 		# "Oracle+Corporation",
 		# "Oxford+Industries",
+
+
+		#NOT DONE:
 		# "Pandora+Media",
 		# "Park+City+Group",
-
-
+		# "Paychex",
+		# "Paycom",
+		# "Paylocity",
+		# "PayPal",
+		# "PC+Connection",
+		# "Pegasystems",
+		# "Perry+Ellis+International",
+		# "Polaris+Industries",
+		# "Presidio",
+		# "Primerica",
+		# "Progress+Software",
+		# "Progressive",
 
 
 
