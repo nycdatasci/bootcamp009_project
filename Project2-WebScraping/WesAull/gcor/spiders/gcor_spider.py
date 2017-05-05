@@ -23,17 +23,17 @@ class GcorSpider(Spider):
 
 	def parse(self, response):
 		search_list=[
-		"Lincoln+National",
-		"LivePerson",
-		"LKQ+Corporation",
-		"Loews+Corporation",
-		"LogMeIn",
-		"Luxoft+Holding",
-		"M.D.C.+Holdings",
-		"M/I+Homes",
-		"Maiden+Holdings",
-		"Malibu+Boats+Inc",
-		"Manhattan+Associates",
+		"Kate+Spade",
+		"KB+Home",
+		"LaZBoy",
+		"Leaf+Group",
+		"Leggett+&+Platt",
+		"Leidos+Holdings",
+		"Lennar",
+		"LGI+Homes",
+		"Libbey",
+		"Lifetime+Brands",
+		"Limelight+Networks",
 		]
 		search_url = [('https://www.google.com/trends/correlate/search?e=' + x + '&t=weekly&p=us') for x in search_list]
 		for url in search_url:
@@ -274,17 +274,7 @@ class GcorSpider(Spider):
 		# "Jive+Software",
 		# "Johnson+Outdoors",
 		# "Kansas+City+Life+Insurance+Company",
-		# "Kate+Spade",
-		# "KB+Home",
-		# "LaZBoy",
-		# "Leaf+Group",
-		# "Leggett+&+Platt",
-		# "Leidos+Holdings",
-		# "Lennar",
-		# "LGI+Homes",
-		# "Libbey",
-		# "Lifetime+Brands",
-		# "Limelight+Networks",
+
 
 
 
@@ -296,7 +286,18 @@ class GcorSpider(Spider):
 
 		# Factset Select Index Pulled:
 
-		
+
+		# "Lincoln+National",
+		# "LivePerson",
+		# "LKQ+Corporation",
+		# "Loews+Corporation",
+		# "LogMeIn",
+		# "Luxoft+Holding",
+		# "M.D.C.+Holdings",
+		# "M/I+Homes",
+		# "Maiden+Holdings",
+		# "Malibu+Boats+Inc",
+		# "Manhattan+Associates",
 		# "Marine+Products",
 		# "Match+Group",
 		# "Mattel",
