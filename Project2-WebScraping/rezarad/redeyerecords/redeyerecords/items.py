@@ -8,7 +8,16 @@
 import scrapy
 
 
-class RedeyerecordsItem(scrapy.Item):
+class RedeyeItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
-    pass
+    artist = scrapy.Field()
+    release = scrapy.Field()
+    tracks = scrapy.Field()
+    label  = scrapy.Field()
+    front_cover = scrapy.Field()
+    catalog_num = scrapy.Field()
+    price = scrapy.Field()
+    available = scrapy.Field()
+    link = scrapy.Field()
+    

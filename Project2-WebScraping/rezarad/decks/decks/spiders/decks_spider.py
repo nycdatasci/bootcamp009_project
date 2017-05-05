@@ -1,4 +1,4 @@
-## USE SELENIUM FOR DECKS!
+## USE SELENIUM FOR DECKS! page numbers need to be clicked through.
 
 # from decks_spider.items import DecksItem
 # import scrapy
@@ -16,7 +16,4 @@
 #         yield scrapy.Request(url, callback=self.parse_labels)
 #
 # def parse_releases_techno(self, response):
-#
-#
-#
-#
+    

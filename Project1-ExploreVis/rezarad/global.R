@@ -1,14 +1,20 @@
 library(leaflet) 
 library(shiny)
 library(ggplot2)
+library(dbplyr)
+library(dplyr)
 
 source("./helpers.R")
 
-dbname = "db.mta"
-conn = DBI::dbConnect(RSQLite::SQLite(), dbname)
-
+# dbname = "./data/mta.db"
+# conn = DBI::dbConnect(RSQLite::SQLite(), dbname)
+# 
+# turnstile_data = tbl(conn, "cleaned_turnstile_data")
+# fares_data = tbl(conn, "fares_data")
 stations_data = getStationData("./data/Updated_Stations.csv")
 ts_data = read.csv("./data/turnstile_count.csv")
+
+
 
 # list of mta lines including hex code for color
 mta_lines = list("1" = "#EE352E","2" = "#EE352E","3" = "#EE352E",
