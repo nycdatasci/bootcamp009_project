@@ -23,17 +23,21 @@ class GcorSpider(Spider):
 
 	def parse(self, response):
 		search_list=[
-		"Kate+Spade",
-		"KB+Home",
-		"LaZBoy",
-		"Leaf+Group",
-		"Leggett+&+Platt",
-		"Leidos+Holdings",
-		"Lennar",
-		"LGI+Homes",
-		"Libbey",
-		"Lifetime+Brands",
-		"Limelight+Networks",
+		"Infinity+Property+and+Casualty",
+		"Inovalon+Holdings",
+		"Insight+Enterprises",
+		"Instructure",
+		"Internap",
+		"IBM",
+		"Interxion+Holding+N.V.",
+		"Intuit",
+		"iRobot",
+		"j2+Global",
+		"Jack+Henry+&+Associates",
+		"James+River",
+		"Jive+Software",
+		"Johnson+Outdoors",
+		"Kansas+City+Life+Insurance+Company",
 		]
 		search_url = [('https://www.google.com/trends/correlate/search?e=' + x + '&t=weekly&p=us') for x in search_list]
 		for url in search_url:
@@ -259,25 +263,6 @@ class GcorSpider(Spider):
 		# "Iconix+Brand+Group",
 		# "Imperva",
 		# "Independence+Holding",
-		# "Infinity+Property+and+Casualty",
-		# "Inovalon+Holdings",
-		# "Insight+Enterprises",
-		# "Instructure",
-		# "Internap",
-		# "IBM",
-		# "Interxion+Holding+N.V.",
-		# "Intuit",
-		# "iRobot",
-		# "j2+Global",
-		# "Jack+Henry+&+Associates",
-		# "James+River",
-		# "Jive+Software",
-		# "Johnson+Outdoors",
-		# "Kansas+City+Life+Insurance+Company",
-
-
-
-
 
 
 
@@ -286,7 +271,17 @@ class GcorSpider(Spider):
 
 		# Factset Select Index Pulled:
 
-
+		# "Kate+Spade",
+		# "KB+Home",
+		# "LaZBoy",
+		# "Leaf+Group",
+		# "Leggett+&+Platt",
+		# "Leidos+Holdings",
+		# "Lennar",
+		# "LGI+Homes",
+		# "Libbey",
+		# "Lifetime+Brands",
+		# "Limelight+Networks",
 		# "Lincoln+National",
 		# "LivePerson",
 		# "LKQ+Corporation",
