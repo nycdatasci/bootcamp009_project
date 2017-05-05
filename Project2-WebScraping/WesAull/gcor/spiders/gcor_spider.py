@@ -23,25 +23,19 @@ class GcorSpider(Spider):
 
 	def parse(self, response):
 		search_list=[
-		"Ford",
-		"Fossil+Group",
-		"Fox+Factory",
-		"G-III+Apparel",
-		"General+Motors",
-		"Genworth+Financial",
-		"Gigamon",
-		"Global+Indemnity",
-		"Global+Payments",
-		"Globant",
-		"Glu+Mobile",
-		"GoDaddy",
-		"Goodyear+Tire",
-		"GoPro",
-		"Green+Brick+Partners",
-		"Greenlight+Capital+Re",
-		"GrubHub",
-		"Guess",
-
+		"ExlService",
+		"Facebook",
+		"Fair+Isaac",
+		"FBL+Financial",
+		"Federated+National",
+		"Fidelity+&+Guaranty+Life",
+		"Fidelity+National+Information+Services",
+		"FireEye",
+		"First+Data",
+		"Fiserv",
+		"Fitbit",
+		"Five9",
+		"Flexsteel+Industries",
 		]
 		search_url = [('https://www.google.com/trends/correlate/search?e=' + x + '&t=weekly&p=us') for x in search_list]
 		for url in search_url:
@@ -214,19 +208,7 @@ class GcorSpider(Spider):
 		# "Everest+Re",
 		# "EVERTEC",
 		# "Exa+Corporation",
-		# "ExlService",
-		# "Facebook",
-		# "Fair+Isaac",
-		# "FBL+Financial",
-		# "Federated+National",
-		# "Fidelity+&+Guaranty+Life",
-		# "Fidelity+National+Information+Services",
-		# "FireEye",
-		# "First+Data",
-		# "Fiserv",
-		# "Fitbit",
-		# "Five9",
-		# "Flexsteel+Industries",
+
 
 
 
@@ -237,6 +219,24 @@ class GcorSpider(Spider):
 
 
 		# Factset Select Index Pulled:
+		# "Ford",
+		# "Fossil+Group",
+		# "Fox+Factory",
+		# "G-III+Apparel",
+		# "General+Motors",
+		# "Genworth+Financial",
+		# "Gigamon",
+		# "Global+Indemnity",
+		# "Global+Payments",
+		# "Globant",
+		# "Glu+Mobile",
+		# "GoDaddy",
+		# "Goodyear+Tire",
+		# "GoPro",
+		# "Green+Brick+Partners",
+		# "Greenlight+Capital+Re",
+		# "GrubHub",
+		# "Guess",
 		# "Guidance+Software",
 		# "Guidewire",
 		# "Hallmark+Financial",
