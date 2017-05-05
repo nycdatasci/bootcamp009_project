@@ -23,17 +23,17 @@ class GcorSpider(Spider):
 
 	def parse(self, response):
 		search_list=[
-		"Marine+Products",
-		"Match+Group",
-		"Mattel",
-		"Matthews+International",
-		"MCBC+Holdings",
-		"Medidata+Solutions",
-		"Meet+Group+Inc",
-		"Mercury+General",
-		"Meritage+Homes",
-		"MetLife",
-		"Microsoft",
+		"Lincoln+National",
+		"LivePerson",
+		"LKQ+Corporation",
+		"Loews+Corporation",
+		"LogMeIn",
+		"Luxoft+Holding",
+		"M.D.C.+Holdings",
+		"M/I+Homes",
+		"Maiden+Holdings",
+		"Malibu+Boats+Inc",
+		"Manhattan+Associates",
 		]
 		search_url = [('https://www.google.com/trends/correlate/search?e=' + x + '&t=weekly&p=us') for x in search_list]
 		for url in search_url:
@@ -285,17 +285,7 @@ class GcorSpider(Spider):
 		# "Libbey",
 		# "Lifetime+Brands",
 		# "Limelight+Networks",
-		# "Lincoln+National",
-		# "LivePerson",
-		# "LKQ+Corporation",
-		# "Loews+Corporation",
-		# "LogMeIn",
-		# "Luxoft+Holding",
-		# "M.D.C.+Holdings",
-		# "M/I+Homes",
-		# "Maiden+Holdings",
-		# "Malibu+Boats+Inc",
-		# "Manhattan+Associates",
+
 
 
 
@@ -305,6 +295,19 @@ class GcorSpider(Spider):
 
 
 		# Factset Select Index Pulled:
+
+		
+		# "Marine+Products",
+		# "Match+Group",
+		# "Mattel",
+		# "Matthews+International",
+		# "MCBC+Holdings",
+		# "Medidata+Solutions",
+		# "Meet+Group+Inc",
+		# "Mercury+General",
+		# "Meritage+Homes",
+		# "MetLife",
+		# "Microsoft",
 		# "MicroStrategy+Incorporated",
 		# "Mimecast",
 		# "MINDBODY",

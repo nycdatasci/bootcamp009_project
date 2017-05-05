@@ -1,8 +1,8 @@
 import sqlite3
 
 sqlite_file = 'IBD.db'    # name of the sqlite database file
-table_name = 'my_table_2'   # name of the table to be queried
-id_column = 'my_1st_column'
+table_name = 'Google'   # name of the table to be queried
+id_column = 'search_term'
 some_id = 123456
 column_2 = 'my_2nd_column'
 column_3 = 'my_3rd_column'
