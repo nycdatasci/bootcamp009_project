@@ -23,14 +23,18 @@ class GcorSpider(Spider):
 
 	def parse(self, response):
 		search_list=[
-		"National+Western+Life+Group",
-		"Nautilus+Inc",
-		"Navigators+Group",
-		"NetScout+Systems",
-		"NeuStar",
-		"New+Home+Co.",
-		"New+Relic",
-		"Newell+Brands",
+		"Mohawk+Industries",
+		"Monotype+Imaging",
+		"Motorcar+Parts+of+America",
+		"Movado+Group",
+		"Moxian",
+		"MSA+Safety",
+		"MuleSoft",
+		"NACCO+Industries",
+		"NantHealth",
+		"National+General",
+		"National+Instruments",
+		"National+Presto",
 		]
 		search_url = [('https://www.google.com/trends/correlate/search?e=' + x + '&t=weekly&p=us') for x in search_list]
 		for url in search_url:
@@ -310,22 +314,19 @@ class GcorSpider(Spider):
 		# "Mitek+Systems",
 		# "MobileIron",
 		# "Model+N",
-		# "Mohawk+Industries",
-		# "Monotype+Imaging",
-		# "Motorcar+Parts+of+America",
-		# "Movado+Group",
-		# "Moxian",
-		# "MSA+Safety",
-		# "MuleSoft",
-		# "NACCO+Industries",
-		# "NantHealth",
-		# "National+General",
-		# "National+Instruments",
-		# "National+Presto",
+
 
 
 
 		#DONE:
+		# "National+Western+Life+Group",
+		# "Nautilus+Inc",
+		# "Navigators+Group",
+		# "NetScout+Systems",
+		# "NeuStar",
+		# "New+Home+Co.",
+		# "New+Relic",
+		# "Newell+Brands",
 		# "NIC+Inc",
 		# "NIKE",
 		# "NMI+Holdings",
