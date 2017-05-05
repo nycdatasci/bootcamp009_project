@@ -23,20 +23,17 @@ class GcorSpider(Spider):
 
 	def parse(self, response):
 		search_list=[
-		"Pandora+Media",
-		"Park+City+Group",
-		"Paychex",
-		"Paycom",
-		"Paylocity",
-		"PayPal",
-		"PC+Connection",
-		"Pegasystems",
-		"Perry+Ellis",
-		"Polaris",
-		"Presidio",
-		"Primerica",
-		"Progress+Software",
-		"Progressive",
+		"Marine+Products",
+		"Match+Group",
+		"Mattel",
+		"Matthews+International",
+		"MCBC+Holdings",
+		"Medidata+Solutions",
+		"Meet+Group+Inc",
+		"Mercury+General",
+		"Meritage+Homes",
+		"MetLife",
+		"Microsoft",
 		]
 		search_url = [('https://www.google.com/trends/correlate/search?e=' + x + '&t=weekly&p=us') for x in search_list]
 		for url in search_url:
@@ -299,23 +296,33 @@ class GcorSpider(Spider):
 		# "Maiden+Holdings",
 		# "Malibu+Boats+Inc",
 		# "Manhattan+Associates",
-		# "Marine+Products",
-		# "Match+Group",
-		# "Mattel",
-		# "Matthews+International",
-		# "MCBC+Holdings",
-		# "Medidata+Solutions",
-		# "Meet+Group+Inc",
-		# "Mercury+General",
-		# "Meritage+Homes",
-		# "MetLife",
-		# "Microsoft",
 
 
 
 
 
-		#DONE:
+
+
+
+		# Factset Select Index Pulled:
+		# "MicroStrategy+Incorporated",
+		# "Mimecast",
+		# "MINDBODY",
+		# "Mitek+Systems",
+		# "MobileIron",
+		# "Model+N",
+		# "Mohawk+Industries",
+		# "Monotype+Imaging",
+		# "Motorcar+Parts+of+America",
+		# "Movado+Group",
+		# "Moxian",
+		# "MSA+Safety",
+		# "MuleSoft",
+		# "NACCO+Industries",
+		# "NantHealth",
+		# "National+General",
+		# "National+Instruments",
+		# "National+Presto",
 		# "National+Western+Life+Group",
 		# "Nautilus+Inc",
 		# "Navigators+Group",
@@ -338,34 +345,20 @@ class GcorSpider(Spider):
 		# "OneBeacon+Insurance",
 		# "Oracle+Corporation",
 		# "Oxford+Industries",
-		# "Mohawk+Industries",
-		# "Monotype+Imaging",
-		# "Motorcar+Parts+of+America",
-		# "Movado+Group",
-		# "Moxian",
-		# "MSA+Safety",
-		# "MuleSoft",
-		# "NACCO+Industries",
-		# "NantHealth",
-		# "National+General",
-		# "National+Instruments",
-		# "National+Presto",
-		# "MicroStrategy+Incorporated",
-		# "Mimecast",
-		# "MINDBODY",
-		# "Mitek+Systems",
-		# "MobileIron",
-		# "Model+N",
-
-
-
-
-
-
-
-
-
-		# Factset Select Index Pulled:
+		# "Pandora+Media",
+		# "Park+City+Group",
+		# "Paychex",
+		# "Paycom",
+		# "Paylocity",
+		# "PayPal",
+		# "PC+Connection",
+		# "Pegasystems",
+		# "Perry+Ellis",
+		# "Polaris",
+		# "Presidio",
+		# "Primerica",
+		# "Progress+Software",
+		# "Progressive",
 		# "Proofpoint",
 		# "PROS+Holdings",
 		# "PTC+Inc.",
