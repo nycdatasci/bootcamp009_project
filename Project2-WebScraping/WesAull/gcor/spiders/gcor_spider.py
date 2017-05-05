@@ -23,19 +23,17 @@ class GcorSpider(Spider):
 
 	def parse(self, response):
 		search_list=[
-		"DHI+Group",
-		"Digimarc",
-		"Donegal+Group+Inc.",
-		"Dorman+Products",
-		"DST+Systems",
-		"Duluth+Holdings",
-		"DXC+Technology",
-		"eHealth",
-		"Electronic+Arts",
-		"Elio+Motors",
-		"Ellie+Mae",
-		"EMC+Insurance",
-		"Employers+Holdings",
+		"CoreLogic",
+		"Cornerstone+Ondemand",
+		"CoStar+Group",
+		"Coupa+Software",
+		"CPI+Card",
+		"Crocs",
+		"CSG+Systems",
+		"CSRA",
+		"CyberArk",
+		"D.R.+Horton",
+		"Deckers+Outdoor",
 		]
 		search_url = [('https://www.google.com/trends/correlate/search?e=' + x + '&t=weekly&p=us') for x in search_list]
 		for url in search_url:
@@ -173,17 +171,7 @@ class GcorSpider(Spider):
 		# "Computer+Services",
 		# "Convergys",
 		# "Cooper+Tire",
-		# "CoreLogic",
-		# "Cornerstone+Ondemand",
-		# "CoStar+Group",
-		# "Coupa+Software",
-		# "CPI+Card+Group",
-		# "Crocs",
-		# "CSG+Systems",
-		# "CSRA",
-		# "CyberArk",
-		# "D.R.+Horton",
-		# "Deckers+Outdoor",
+
 
 
 
@@ -197,6 +185,19 @@ class GcorSpider(Spider):
 
 
 		# Factset Select Index Pulled:
+		# "DHI+Group",
+		# "Digimarc",
+		# "Donegal+Group",
+		# "Dorman+Products",
+		# "DST+Systems",
+		# "Duluth+Holdings",
+		# "DXC+Technology",
+		# "eHealth",
+		# "Electronic+Arts",
+		# "Elio+Motors",
+		# "Ellie+Mae",
+		# "EMC+Insurance",
+		# "Employers+Holdings",
 		# "Endurance+International",
 		# "EnerNOC",
 		# "EPAM+Systems",
