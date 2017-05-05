@@ -23,17 +23,17 @@ class GcorSpider(Spider):
 
 	def parse(self, response):
 		search_list=[
-		"HomeFed",
-		"Hooker+Furniture",
-		"Horizon+Global",
-		"Hortonworks",
-		"Hovnanian+Enterprises",
-		"HRG+Group",
-		"HubSpot",
-		"IAC/InterActive",
-		"Iconix+Brand+Group",
-		"Imperva",
-		"Independence+Holding",
+		"Guidance+Software",
+		"Guidewire",
+		"Hallmark+Financial",
+		"Hanesbrands",
+		"Hanover+Insurance",
+		"Harley-Davidson",
+		"Hasbro",
+		"HCI+Group",
+		"HealthStream",
+		"Helen+of+Troy+Limited",
+		"Heritage+Insurance",
 		]
 		search_url = [('https://www.google.com/trends/correlate/search?e=' + x + '&t=weekly&p=us') for x in search_list]
 		for url in search_url:
@@ -237,17 +237,7 @@ class GcorSpider(Spider):
 		# "Greenlight+Capital+Re",
 		# "GrubHub",
 		# "Guess",
-		# "Guidance+Software",
-		# "Guidewire",
-		# "Hallmark+Financial",
-		# "Hanesbrands",
-		# "Hanover+Insurance",
-		# "Harley-Davidson",
-		# "Hasbro",
-		# "HCI+Group",
-		# "HealthStream",
-		# "Helen+of+Troy+Limited",
-		# "Heritage+Insurance",
+
 
 
 
@@ -256,6 +246,17 @@ class GcorSpider(Spider):
 
 
 		# Factset Select Index Pulled:
+		# "HomeFed",
+		# "Hooker+Furniture",
+		# "Horizon+Global",
+		# "Hortonworks",
+		# "Hovnanian+Enterprises",
+		# "HRG+Group",
+		# "HubSpot",
+		# "IAC/InterActive",
+		# "Iconix+Brand+Group",
+		# "Imperva",
+		# "Independence+Holding",
 		# "Infinity+Property+and+Casualty",
 		# "Inovalon+Holdings",
 		# "Insight+Enterprises",
