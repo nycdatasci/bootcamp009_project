@@ -23,21 +23,17 @@ class GcorSpider(Spider):
 
 	def parse(self, response):
 		search_list=[
-		"Infinity+Property+and+Casualty",
-		"Inovalon+Holdings",
-		"Insight+Enterprises",
-		"Instructure",
-		"Internap",
-		"IBM",
-		"Interxion+Holding+N.V.",
-		"Intuit",
-		"iRobot",
-		"j2+Global",
-		"Jack+Henry+&+Associates",
-		"James+River",
-		"Jive+Software",
-		"Johnson+Outdoors",
-		"Kansas+City+Life+Insurance+Company",
+		"HomeFed",
+		"Hooker+Furniture",
+		"Horizon+Global",
+		"Hortonworks",
+		"Hovnanian+Enterprises",
+		"HRG+Group",
+		"HubSpot",
+		"IAC/InterActive",
+		"Iconix+Brand+Group",
+		"Imperva",
+		"Independence+Holding",
 		]
 		search_url = [('https://www.google.com/trends/correlate/search?e=' + x + '&t=weekly&p=us') for x in search_list]
 		for url in search_url:
@@ -252,17 +248,7 @@ class GcorSpider(Spider):
 		# "HealthStream",
 		# "Helen+of+Troy+Limited",
 		# "Heritage+Insurance",
-		# "HomeFed",
-		# "Hooker+Furniture",
-		# "Horizon+Global",
-		# "Hortonworks",
-		# "Hovnanian+Enterprises",
-		# "HRG+Group",
-		# "HubSpot",
-		# "IAC/InterActive",
-		# "Iconix+Brand+Group",
-		# "Imperva",
-		# "Independence+Holding",
+
 
 
 
@@ -270,7 +256,21 @@ class GcorSpider(Spider):
 
 
 		# Factset Select Index Pulled:
-
+		# "Infinity+Property+and+Casualty",
+		# "Inovalon+Holdings",
+		# "Insight+Enterprises",
+		# "Instructure",
+		# "Internap",
+		# "IBM",
+		# "Interxion+Holding+N.V.",
+		# "Intuit",
+		# "iRobot",
+		# "j2+Global",
+		# "Jack+Henry+&+Associates",
+		# "James+River",
+		# "Jive+Software",
+		# "Johnson+Outdoors",
+		# "Kansas+City+Life+Insurance+Company",
 		# "Kate+Spade",
 		# "KB+Home",
 		# "LaZBoy",
