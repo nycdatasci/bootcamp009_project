@@ -23,11 +23,11 @@ ui <- fluidPage(
                   ),
       selectInput(inputId = "xaxis", 
                   label = "x-axis",
-                  choices = c("precipitation","Date","temperature","humidity","pressure")
+                  choices = c("WeeklyAverages","precipitation","temperature","humidity","pressure","windSpeed")
                   ),
       selectInput(inputId = "yaxis", 
                   label = "y-axis",
-                  choices= c("precipitation","Date","temperature","humidity","pressure")
+                  choices= c("precipitation","temperature","humidity","pressure","windSpeed")
 
     )),
     mainPanel = mainPanel(plotOutput("Values")),
@@ -43,7 +43,6 @@ server <- function(input, output,session) {
               "COLORADO" = COLORADO,
               "NEWYORK" = NEWYORK,
               "CHICAGO" = CHICAGO)
-    dataset
   })
   output$Values <- renderPlot({
     ggplot(data=dataInput(), 

@@ -12,7 +12,10 @@ formatData = function(file){
   #time uses today's date and is stored as a unix object
   #we're only interested in the hour so we remove the rest from our table
   Table = select(Table, -time)
-  Table$Month = strftime(Table$Date, '%m-%b')
+  #this gets weekly averages as a string (daily is difficult to plot quickly)
+  Table$WeeklyAveragesString = strftime(Table$Date, '%Y-%U-%m-%b')
+  #this gets weekly averages as numeric so we can perform regression
+  Table$WeeklyAverages = as.numeric(as.POSIXct(Table$Date))
   Table$Year = strftime(Table$Date, '%Y')
   Table$precipitation[Table$precipitation == "N/A"] = "0"
   Table$windSpeed[Table$windSpeed == 'Calm'] = "0"
@@ -23,13 +26,16 @@ formatData = function(file){
   Table$humidity = as.numeric(Table$humidity)
   # a small percentage of rows are missing data
   Table = na.omit(Table)
-  Table = summarize(group_by(Table,Date),temperature =mean(temperature),
+  Table = summarize(group_by(Table,WeeklyAveragesString),
+                    WeeklyAverages=mean(WeeklyAverages),
+                    temperature =mean(temperature),
                     precipitation=sum(precipitation),
                     humidity=mean(humidity),
                     pressure=mean(pressure),
                     windSpeed=mean(windSpeed))
   return (Table)
 }
+
 ALASKA = formatData('./weatherThirtyYearsANC1986.csv')
 write.csv(ALASKA, file = "./ALASKA.csv")
 DC = formatData('./weatherThirtyYearsDCA1986.csv')
