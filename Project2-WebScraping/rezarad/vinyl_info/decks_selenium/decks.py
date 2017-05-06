@@ -10,7 +10,7 @@ from selenium import webdriver
 # create a csv file with data headers
 csv_file = open('decks.csv', 'wb')
 writer = csv.writer(csv_file)
-writer.writerow(['release', 'artist', 'track', 'label_cat', 'genre', 'price', 'release_date', 'available'])
+writer.writerow(['available', 'artist', 'track', 'label_cat', 'genre', 'price', 'release_date', 'release'])
 
 # choose a web driver
 driver = webdriver.Chrome()
@@ -33,14 +33,14 @@ while True:
 
             release_info = {}
 
-            releases = row.find_element_by_xpath('.//span[@class = "txt_titel"]').text
-            artists = row.find_element_by_xpath('.//a[@class = "txt_artist"]').text
-            tracks = row.find_element_by_xpath('.//span[@class = "soundtxt"]/a').text
-            label_cats = row.find_element_by_xpath('.//span[@class = "labeltxt"]').text
-            genres = row.find_element_by_xpath('.//a[@class = "txt_styles"]').text
-            prices = row.find_element_by_xpath('.//div[@class = "preisschild"]//*').text
-            release_dates = row.find_element_by_xpath('.//span[@class = "txt_date"][1]').text
-            availables = row.find_element_by_xpath('.//td/form/div/img[1]').get_attribute("src")
+            releases = row.find_elements_by_xpath('.//span[@class = "txt_titel"]').text
+            artists = row.find_elements_by_xpath('.//a[@class = "txt_artist"]').text
+            tracks = row.find_elements_by_xpath('.//span[@class = "soundtxt"]/a').text
+            label_cats = row.find_elements_by_xpath('.//span[@class = "labeltxt"]').text
+            genres = row.find_elements_by_xpath('.//a[@class = "txt_styles"]').text
+            prices = row.find_elements_by_xpath('.//div[@class = "preisschild"]//*').text
+            release_dates = row.find_elements_by_xpath('.//span[@class = "txt_date"][1]').text
+            availables = row.find_elements_by_xpath('.//td/form/div/img[1]').get_attribute("src")
 
             release_info['release'] = releases
             release_info['artist'] = artists
