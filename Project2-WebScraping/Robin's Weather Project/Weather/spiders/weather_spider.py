@@ -7,7 +7,7 @@ class WeatherSpider(scrapy.Spider):
 	name = 'weather_spider'
 	allowed_urls = ['https://www.wunderground.com/']
 	#start_urls = ['https://www.wunderground.com/history/?MR=1']
-	start_urls = ['https://www.wunderground.com/history/airport/ORD/1986/1/1/DailyHistory.html?']
+	start_urls = ['https://www.wunderground.com/history/airport/JFK/1986/1/1/DailyHistory.html?']
 	next_day_url = ''	
 	#we'll load a list of all the variables we want to load
 	def verify(self, content):
