@@ -7,11 +7,9 @@ class WeatherSpider(scrapy.Spider):
 	name = 'weather_spider'
 	allowed_urls = ['https://www.wunderground.com/']
 	#start_urls = ['https://www.wunderground.com/history/?MR=1']
-	start_urls = ['https://www.wunderground.com/history/airport/ORD/1986/1/1/DailyHistory.html?']
-	next_day_url = ''	
-	#we'll load a list of all the variables we want to load
+	#this changes between scrapes
+	start_urls = ['https://www.wunderground.com/history/airport/LAX/1986/1/1/DailyHistory.html?']
 	def verify(self, content):
-		#print "test"
 		if isinstance(content, list):
 			print "test verify\n"
 			if len(content) > 0:
@@ -23,26 +21,25 @@ class WeatherSpider(scrapy.Spider):
 		else:
 			# convert unicode to str
 			return content.encode('ascii','ignore')
-	#def parse(self,response):
 
-
-
+	#we have a class variable to count the iterations through the parse loop
 	i=0
 	def parse(self, response):
 		if self.i < 10957:
-		#this gives us all the rows of our table
+			#we extract the date for the weather observations
 			Date = response.xpath("//h2[@class='history-date']/text()").extract_first()
-		#print Date
+			#this gives us all the rows of our table
 			rows = response.xpath('//div[@id="observations_details"]/table/tbody/tr')
+			#this gives us the path to a link for the next day
 			next_day = response.xpath('//div[@class="next-link"]/a/@href').extract_first()			
 			next_day_url = "https://www.wunderground.com"  + next_day
 
 			for row in rows:
-			#this gives us all the elements of the row, many of them are empty
+				#this gives us all the elements of the row, many of them are empty
 				raw_data = row.xpath('.//text()').extract()
-			#all_data = row.xpath('.//text()').extract()
-			#the rows are of variable length because sometimes windchill and gustspeed are present
-			#sometimes windspeed takes two values (speed and 'mph') and sometimes it is just 'calm'
+				#the rows are of variable length because sometimes windchill and gustspeed are present
+				#sometimes windspeed takes two values (speed and 'mph') and sometimes it is just 'calm'
+				#so we get rid of all the unnecessary info
 				junkStrings = ['\n\t\t','\n  ',u'\xa0mph','\n',u'\n\t\xa0\n',u'\xa0\xb0F',u'\xa0mi']
 				parsed_Data = filter(lambda a: a not in junkStrings, raw_data)
 				time = parsed_Data[0]
