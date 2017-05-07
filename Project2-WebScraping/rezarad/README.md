@@ -1,4 +1,15 @@
-# Introduction
+# Introduction:
+* as electronic music continues to grow (discogs stats on increased releases), the popularity of the genre has led to inflated prices in resale markets.
+* I decided to explore trends to see if:
+    * do certain subgenre's have higher resale prices
+    * are certain markets cheaper for buying records?
+    * are there any trends in what's hot and what's not:
+        * by label
+        * by subgenre
+        * by how long a label has been around
+        * "unknown artist"
+        * by artist's name`
+        *
 
 ## Stores Scraped:
 * https://www.deejay.de
