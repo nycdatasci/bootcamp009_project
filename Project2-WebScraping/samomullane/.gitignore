@@ -1,4 +1,4 @@
-#ompiled source #
+#Compiled source #
 ###################
 *.com
 *.class
@@ -21,7 +21,8 @@
 *.zip
 *.jpg
 *.jpeg
-
+*.pptx
+*.ppt
 # Logs and databases #
 ######################
 *.log
