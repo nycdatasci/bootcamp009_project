@@ -1,0 +1,59 @@
+These are bash snippets to grab each url from each product sub page
+This could have been generalized but were not due to time constraint
+
+for i in `seq 1 3`;
+do 
+	phantomjs production.js "https://pcpartpicker.com/products/cpu/#X=100,376099&R=5,4,3,2&page="$i > pages/cpu/pages_$i.txt
+	result=$(python -c "import random;print(random.uniform(2.1, 3.4))")
+	sleep $result
+done
+
+for i in `seq 1 5`;
+do 
+	phantomjs production.js "https://pcpartpicker.com/products/motherboard/#X=100,94899&R=5,4,3,2,1&page="$i > pages/motherboard/pages_$i.txt
+	result=$(python -c "import random;print(random.uniform(2.1, 3.4))")
+	sleep $result
+done
+
+for i in `seq 1 10`;
+do
+	phantomjs production.js "https://pcpartpicker.com/products/memory/#X=100,149999&R=5,4,3,2&page="$i > pages/memory/pages_$i.txt
+	result=$(python -c "import random;print(random.uniform(2.1, 3.4))")
+	sleep $result
+done
+
+for i in `seq 1 4`;
+do
+	phantomjs production.js "https://pcpartpicker.com/products/video-card/#X=100,550687&R=5,4,3,2,1&page="$i > pages/gpu/pages_$i.txt
+	result=$(python -c "import random;print(random.uniform(2.1, 3.4))")
+	sleep $result
+done
+
+for i in `seq 1 3`;
+do
+	phantomjs production.js "https://pcpartpicker.com/products/cpu-cooler/#X=100,29999&R=5,4,3,2,1&page="$i > pages/cpu_c/pages_$i.txt
+	result=$(python -c "import random;print(random.uniform(2.1, 3.4))")
+	sleep $result
+done
+
+for i in `seq 1 5`;
+do
+	phantomjs production.js "https://pcpartpicker.com/products/power-supply/#X=100,101087&R=5,4,3,2,1&page="$i > pages/psu/pages_$i.txt
+	result=$(python -c "import random;print(random.uniform(2.1, 3.4))")
+	sleep $result
+done
+
+for i in `seq 1 7`;
+do
+	phantomjs production.js "https://pcpartpicker.com/products/case/#X=100,61658&R=5,4,3,2,1&page="$i > pages/case/pages_$i.txt
+	result=$(python -c "import random;print(random.uniform(2.1, 3.4))")
+	sleep $result
+done
+
+for i in `seq 1 6`;
+do
+	phantomjs production.js "https://pcpartpicker.com/products/internal-hard-drive/#X=100,886799&R=5,4,3,2,1&page="$i > pages/storage/pages_$i.txt
+	result=$(python -c "import random;print(random.uniform(2.1, 3.4))")
+	sleep $result
+done
+
