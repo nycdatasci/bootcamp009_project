@@ -30,7 +30,9 @@ ui <- fluidPage(
                   choices= c("precipitation","temperature","humidity","pressure","windSpeed")
 
     )),
-    mainPanel = mainPanel(plotOutput("Values")),
+    mainPanel = mainPanel(plotOutput("Values"),
+                          verbatimTextOutput("Regression"))
+    ,
 )
 )
 
@@ -44,12 +46,57 @@ server <- function(input, output,session) {
               "NEWYORK" = NEWYORK,
               "CHICAGO" = CHICAGO)
   })
+  xAxisLabel = reactive({
+    t = function(x){
+      print ("test")
+    ifelse(input$xaxis == 'WeeklyAverages',
+           return (as.Date(as.POSIXct(x,origin="1970-01-01"))),
+           return (x))
+    }
+  })
   output$Values <- renderPlot({
     ggplot(data=dataInput(), 
-           aes_string(x=input$xaxis,y=input$yaxis)) + geom_point() + geom_smooth(method='lm')
+           aes_string(x=input$xaxis,y=input$yaxis)) + 
+      geom_point() + geom_smooth(method='lm') +
+      scale_x_continuous(label= xAxisLabel() 
+                         )
 
     
     })
+  xValue = reactive({
+    switch(input$xaxis,
+           "WeeklyAverages" = dataInput()$WeeklyAverages,
+           "precipitation" = dataInput()$precipitation,
+           "temperature"=dataInput()$temperature,
+           "humidity"=dataInput()$humidity,
+           "pressure"=dataInput()$pressure,
+           "windSpeed" = dataInput()$windSpeed)
+  })
+  yValue = reactive({
+    switch(input$yaxis,
+           "precipitation" = dataInput()$precipitation,
+           "temperature"=dataInput()$temperature,
+           "humidity"=dataInput()$humidity,
+           "pressure"=dataInput()$pressure,
+           "windSpeed" = dataInput()$windSpeed)
+  })
+  
+  model = reactive({
+    model = lm(xValue() ~ yValue(), data=dataInput())
+    summary(model)
+    
+  })
+  output$Regression = renderPrint({
+    
+    #y = switch(input$axis,
+    #           "precipitation" = precipitation,
+    #           "temperature"=temperature,
+    #           "humidity"=humidity,
+    #           "pressure"=pressure,
+    #           "windSpeed" = windSpeed)
+    model()
+  })
+  
   
 }
 

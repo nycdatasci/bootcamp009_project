@@ -13,9 +13,9 @@ formatData = function(file){
   #we're only interested in the hour so we remove the rest from our table
   Table = select(Table, -time)
   #this gets weekly averages as a string (daily is difficult to plot quickly)
-  Table$WeeklyAveragesString = strftime(Table$Date, '%Y-%U-%m-%b')
+  Table$WeeklyAveragesString = strftime(Table$Date, '%Y-%U-%m')
   #this gets weekly averages as numeric so we can perform regression
-  Table$WeeklyAverages = as.numeric(as.POSIXct(Table$Date))
+  Table$WeeklyAverages = as.numeric(as.POSIXct(Table$Date), origin="1970-01-01")
   Table$Year = strftime(Table$Date, '%Y')
   Table$precipitation[Table$precipitation == "N/A"] = "0"
   Table$windSpeed[Table$windSpeed == 'Calm'] = "0"
