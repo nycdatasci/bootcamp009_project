@@ -19,7 +19,7 @@
 *.tar
 *.zip
 
-# Logs and databases #
+# Logs and Data #
 ######################
 *.log
 *.sql
@@ -43,5 +43,5 @@ Icon?
 
 # API Keys/Tokens  Configuration File   #
 ######################
-*configuration.py
+config.py
 *.ini
