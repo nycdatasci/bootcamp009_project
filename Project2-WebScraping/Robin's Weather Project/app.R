@@ -31,7 +31,8 @@ ui <- fluidPage(
 
     )),
     mainPanel = mainPanel(plotOutput("Values"),
-                          verbatimTextOutput("Regression"))
+                          verbatimTextOutput("Regression"),
+                          verbatimTextOutput("multiRegression"))
     ,
 )
 )
@@ -85,25 +86,31 @@ server <- function(input, output,session) {
   yValue = reactive({
     switch(input$yaxis,
            "precipitation" = dataInput()$precipitation,
-           "temperature"=dataInput()$temperature,
+         "temperature"=dataInput()$temperature,
            "humidity"=dataInput()$humidity,
            "pressure"=dataInput()$pressure,
            "windSpeed" = dataInput()$windSpeed)
+    #switch(input$yaxis,
+    #       "precipitation" = precipitation,
+    #       "temperature"=temperature,
+    #       "humidity"=humidity,
+    #       "pressure"=pressure,
+    #       "windSpeed" = windSpeed)
   })
   
   model = reactive({
+    model = lm(as.formula(paste(input$yaxis, "~. -WeeklyAveragesString")),data=dataInput())
+    summary(model)
+  })
+  output$Regression = renderPrint({
     model = lm(yValue() ~ xValue(), data=dataInput())
     summary(model)
     
+    #model()
   })
-  output$Regression = renderPrint({
-    
-    #y = switch(input$axis,
-    #           "precipitation" = precipitation,
-    #           "temperature"=temperature,
-    #           "humidity"=humidity,
-    #           "pressure"=pressure,
-    #           "windSpeed" = windSpeed)
+  output$multiRegression = renderPrint({
+    #model = lm(yValue() ~ . -WeeklyAveragesString -yValue(), data=dataInput())
+    #summary(model)
     model()
   })
   
