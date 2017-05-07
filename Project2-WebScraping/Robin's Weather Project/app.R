@@ -1,7 +1,7 @@
 library(dplyr)
 library(ggplot2)
 library(shiny)
-#source("./preProc.R")
+#run preProc.R to get the .csvs loaded below
 DC = read.csv("./DC.csv")
 ALASKA = read.csv("./ALASKA.csv")
 CHICAGO = read.csv("./CHICAGO.csv")
@@ -57,11 +57,21 @@ server <- function(input, output,session) {
   output$Values <- renderPlot({
     ggplot(data=dataInput(), 
            aes_string(x=input$xaxis,y=input$yaxis)) + 
-      geom_point() + geom_smooth(method='lm') +
-      scale_x_continuous(label= xAxisLabel() 
-                         )
-
-    
+      geom_point(aes(color=cut(dataInput()$temperature, c(-Inf,35,65,95,Inf))),
+                 size = 2) + 
+       
+      scale_color_manual(name="temperature",
+                         values = c("(-Inf,35]" = "blue",
+                                    "(35,65]" = "green",
+                                    "(65,95]" = "red",
+                                    "(95,Inf]" = "orange")) +
+                      
+      scale_x_continuous(label= xAxisLabel()) +
+      geom_smooth(method='lm') +
+      theme(axis.title.x = element_text(size=18),
+            axis.title.y = element_text(size=18),
+            legend.position = "none",
+            plot.title = element_text(hjust = 0.5, size=24))
     })
   xValue = reactive({
     switch(input$xaxis,
@@ -82,7 +92,7 @@ server <- function(input, output,session) {
   })
   
   model = reactive({
-    model = lm(xValue() ~ yValue(), data=dataInput())
+    model = lm(yValue() ~ xValue(), data=dataInput())
     summary(model)
     
   })

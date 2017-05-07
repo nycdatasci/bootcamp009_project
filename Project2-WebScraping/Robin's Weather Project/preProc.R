@@ -46,9 +46,54 @@ COLORADO = formatData('./weatherThirtyYearsCOS1986.csv')
 write.csv(COLORADO, file = "./COLORADO.csv")
 NEWYORK = formatData('./weatherThirtyYearsJFK1986.csv')
 write.csv(NEWYORK, file = "./NEWYORK.csv")
+LA = formatData("./weatherThirtyYearsLAX1986.csv")
 
+head(LA)
 head(ALASKA)
 head(DC)
 
 class(ALASKA$temperature)
 
+#for (location in c(ALASKA,DC,NEWYORK,CHICAGO)){
+#  print (head(location)) #(location[["humidity"]])
+for (measure1 in c(ALASKA$WeeklyAverages,ALASKA$precipitation,ALASKA$temperature,ALASKA$humidity,ALASKA$pressure,ALASKA$windSpeed)){
+    for (measure1 in c(ALASKA$WeeklyAverages,ALASKA$precipitation,ALASKA$temperature,ALASKA$humidity,ALASKA$pressure,ALASKA$windSpeed)){
+      if(measure1 != measure2)
+      {
+        if (summary(lm(measure1 ~ measure2, data=ALASKA))$r.squared > 0.25)
+            print (paste(ALASKA,measure1,measure2))
+
+      }
+    }
+      
+#  }
+}
+
+dat_y<-(ALASKA[,c(2:1130)])
+
+for(i in names(dat_y)){
+  y <- ALASKA[i]
+  model[[i]] = lm( y~humidity, data=dat_y )
+}
+
+for(i in names(ALASKA)){
+  print (lm(humidity ~ i, data=ALASKA))
+}
+lapply( ALASKA[,c(3,4)], function(x) summary(lm(ALASKA$temperataure ~ x)) )
+lapply( mtcars[,-1], function(x) summary(lm(mtcars$mpg ~ x)) )
+
+
+models <- lapply(names(ALASKA)[3:7], function(x) {
+  print (x)
+  print(summary(lm(substitute(WeeklyAverages ~ i, list(i = as.name(x))), data = ALASKA))$r.squared)
+})
+
+Rsquared = function(x) {
+  print (x)
+  print(summary(lm(substitute(temperature ~ i, list(i = as.name(x))), data = ALASKA))$r.squared)
+}
+
+x = lapply(names(DC)[5:7],Rsquared)
+for (location in c(ALASKA,DC,NEWYORK,CHICAGO)){
+  print(lapply(names(location)[3:7],Rsquared))
+}
