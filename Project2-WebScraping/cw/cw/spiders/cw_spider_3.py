@@ -18,16 +18,13 @@ class Cw3Spider(Spider):
 
     
     def parse(self, response):
-  #      args, url, method = fill_login_form(response.url, response.body, self.login_user, self.login_pass)
-        #print args
-        #print url
-        #print method
 
+        #log in to rachel's xword
         with open('login.txt') as f:
             cred = f.readlines()
             username = cred[0].strip()
             password = cred[1].strip()
-            
+
 
         yield scrapy.FormRequest.from_response(
             response,
@@ -37,9 +34,9 @@ class Cw3Spider(Spider):
 
     def after_login(self, response):
         
-        today = datetime.date.today()
+        today = datetime.date(2016, 3, 31)
         global begin
-        begin = datetime.date(2016, 12, 1)
+        begin = datetime.date(2015, 12, 1)
         delta = today - begin
         date_generator = (begin + datetime.timedelta(days=x) for x in range(0, delta.days))
         links = ['https://www.xwordinfo.com/Crossword?date=' + date.strftime('%-m/%-d/%Y') for date in date_generator]
