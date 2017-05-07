@@ -1,10 +1,10 @@
-from deejay.items import DeejayReleaseItem
 import scrapy
 import pandas as pd
+from deejay_release.items import DeejayReleaseItem
 
 
 class DeejayReleasesSpider(scrapy.Spider):
-    name = 'deejay_releases_spider'
+    name = 'deejay_release'
     # import label urls
     deejay_csv = pd.read_csv('deejay.csv')
     start_urls = ['https://www.deejay.de/content.php?filterChange=1&param=/{0}/page_1/media_vinyl'.format(label) for label in deejay_csv['label_urls']]
