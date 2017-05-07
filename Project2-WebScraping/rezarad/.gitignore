@@ -41,7 +41,7 @@ ehthumbs.db
 Thumbs.db
 Icon?
 
-# API Keys/Tokens  Configuration File   #
-######################
+# API Keys/Tokens  Configuration File #
+#####################
 config.py
 *.ini
