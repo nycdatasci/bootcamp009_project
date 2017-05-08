@@ -1,0 +1,43 @@
+# @author Scott Dobbins
+# @version 0.6
+# @date 2017-05-07 20:00
+
+	def __init__(self):
+		self.ASIN = ""
+		self.date_time = datetime.now()
+		self.title = ""
+		self.link = ""
+		self.group = ""
+		self.category = ""
+		self.manufacturer = ""
+		self.price_Amazon = 0.0
+		self.price_new = 0.0
+		self.price_used = 0.0
+		# self.price_history_Amazon = np.empty([8046], dtype = np.float16)
+		# self.price_history_new = np.empty([8046], dtype = np.float16)
+		# self.price_history_used = np.empty([8046], dtype = np.float16)
+		# self.salesRank_history = np.empty([8046], dtype = np.uint32)
+
+	def __init__(self, setup_now, ASIN, date_time, title, link, group, category, manufacturer, price_Amazon, price_new, price_used):
+		self.ASIN = ASIN
+		self.date_time = date_time
+		self.title = title
+		self.link = link
+		self.group = group
+		self.category = category
+		self.manufacturer = manufacturer
+		self.price_Amazon = price_Amazon
+		self.price_new = price_new
+		self.price_used = price_used
+		if(setup_now):
+			pass
+			# self.price_history_Amazon =
+			# self.price_history_new =
+			# self.price_history_used =
+			# self.salesRank_history =
+		else:
+			pass
+			# self.price_history_Amazon = np.empty([8046], dtype = np.float16)
+			# self.price_history_new = np.empty([8046], dtype = np.float16)
+			# self.price_history_used = np.empty([8046], dtype = np.float16)
+			# self.salesRank_history = np.empty([8046], dtype = np.uint32)
