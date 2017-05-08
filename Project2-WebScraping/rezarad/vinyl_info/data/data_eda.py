@@ -7,6 +7,8 @@ from datetime import date
 
 %matplotlib
 
+
+# >>>>>> Why not to use ipython notebook for data cleaning? <<<<<<
 deejay = pd.read_csv('./tidy/deejay_tidy.csv')
 decks = pd.read_csv('./tidy/decks_tidy.csv')
 redeye = pd.read_csv('./tidy/redeye_tidy.csv')

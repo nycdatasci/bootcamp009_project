@@ -25,15 +25,17 @@ class WeatherSpider(scrapy.Spider):
 	#we have a class variable to count the iterations through the parse loop
 	i=0
 	def parse(self, response):
+		# >>>>>>>> It is not a good practice to manually code the number. Is there any generic way to do it? <<<<<<<<
 		if self.i < 10957:
 			#we extract the date for the weather observations
 			Date = response.xpath("//h2[@class='history-date']/text()").extract_first()
 			#this gives us all the rows of our table
 			rows = response.xpath('//div[@id="observations_details"]/table/tbody/tr')
 			#this gives us the path to a link for the next day
-			next_day = response.xpath('//div[@class="next-link"]/a/@href').extract_first()			
+			next_day = response.xpath('//div[@class="next-link"]/a/@href').extract_first()
 			next_day_url = "https://www.wunderground.com"  + next_day
 
+			# >>>>>>> Nice comments. <<<<<<<<
 			for row in rows:
 				#this gives us all the elements of the row, many of them are empty
 				raw_data = row.xpath('.//text()').extract()
@@ -52,6 +54,7 @@ class WeatherSpider(scrapy.Spider):
 					else:
 						windChill = "'"
 						offset = -1
+					# >>>>>>> To shorten the code, you might do dewPoint = self.verify(parsed_Data[3 + offset]0 <<<<<<<<<
 					dewPoint = parsed_Data[3 + offset]
 					humidity = parsed_Data[4+ offset]
 					pressure = parsed_Data[5+ offset]
@@ -66,14 +69,14 @@ class WeatherSpider(scrapy.Spider):
 					temperature = self.verify(temperature)
 					windChill = self.verify(windChill)
 					dewPoint = self.verify(dewPoint)
-					humidity = self.verify(humidity)		
+					humidity = self.verify(humidity)
 					pressure = self.verify(pressure)
 					visibility = self.verify(visibility)
 					windDir = self.verify(windDir)
 					windSpeed = self.verify(windSpeed)
 					gustSpeed = self.verify(gustSpeed)
 					precipitation = self.verify(precipitation)
-					item['time'] = time	
+					item['time'] = time
 					item['windChill'] = windChill
 					item['temperature'] = temperature
 					item['dewPoint'] = 	dewPoint
@@ -90,4 +93,3 @@ class WeatherSpider(scrapy.Spider):
 					continue
 			self.i += 1
 			yield scrapy.Request(next_day_url,callback=self.parse)
-			

@@ -29,6 +29,7 @@ class deejay_spider(scrapy.Spider):
         # last_release = self.verify(last_release)
         # next_release = response.xpath('//td[@class="tab33"]/div/span/text()').extract()
         # next_release = self.verify(next_release)
+        # >>>>>>>>> How do you make sure each list has the same length? <<<<<<<<<<<
         article = response.xpath('//ul[@class="information"]/li[1]/text()').extract()
         vinyl = response.xpath('//ul[@class="information"]/li[3]/text()').extract()
         label_img_url = response.xpath('//td[@class="tab31"]/div/img/@src').extract()
