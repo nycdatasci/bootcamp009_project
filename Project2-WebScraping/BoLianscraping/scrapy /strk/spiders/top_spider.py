@@ -21,21 +21,22 @@ class TopSpider(scrapy.Spider):
 	# 			 return ""
 	# 	else:
 	# 		# convert unicode to str   if it is unicode directly
-	# 		return content.encode('ascii','ignore')      
+	# 		return content.encode('ascii','ignore')
 
 	def parse(self,response):       # first function has to parse, after that , any names are ok
-		
+
 		# links = response.xpath('//div[@class="cluster-heading"]/h2/a/@href').extract()
 		# links = response.xpath('//a[@class = "title-link id-track-click"]/@href').extract()
 		# links= response.xpath('//a[@class="title-link id-track-click/@href')
-
+		# >>>>>>>>> Why manually code 246 here? <<<<<<<<
+		# >>>>>>>>> You need to figure out a more generic way. <<<<<<
 		for i in range(1,246):
 
 			link = "http://www.startupranking.com/top/0/" + str(i)  # must str, not 'i' most of the link follow the same pattern
 
 			yield scrapy.Request(link, callback= self.parse_table)  # call back  list
 
-	
+
 
 # 	def parse_list(self,response):
 
@@ -43,10 +44,10 @@ class TopSpider(scrapy.Spider):
 # 		app_links = response.xpath('//a[@class ="card-click-target"]/@href').extract()     #each app link, no first
 
 # 		for link in app_links:
-# 			app_url = 'https://play.google.com' + link 
+# 			app_url = 'https://play.google.com' + link
 
 
-# 			yield scrapy.Request(app_url, callback= self.parse_app, meta ={'app_list':app_list})     # dictionary 
+# 			yield scrapy.Request(app_url, callback= self.parse_app, meta ={'app_list':app_list})     # dictionary
 
 
 # # click into each app
@@ -56,7 +57,7 @@ class TopSpider(scrapy.Spider):
 		rows=response.xpath('*//tbody[@class="ranks"]/tr')
 
 		for row in rows:
-		
+
 		# app_list=response.meta['app_list']
 		# app_list=self.verify(app_list)
 
@@ -65,21 +66,21 @@ class TopSpider(scrapy.Spider):
 		# name=self.verify(name)
 
 
-			company=row.xpath('./td[2]/div/a/text()').extract()#.encode('ascii','ignore')  
+			company=row.xpath('./td[2]/div/a/text()').extract()#.encode('ascii','ignore')
 		# company=self.verify(company)
 
-			SR_score = row.xpath('./td[3]/text()').extract()#.encode('ascii','ignore')  
+			SR_score = row.xpath('./td[3]/text()').extract()#.encode('ascii','ignore')
 
 			des =row.xpath('./td[4]/text()').extract()#.encode('ascii','ignore') 	#.encode('ascii','ignore')     ## click into again
 			des = ''.join([i.encode('ascii', 'ignore').strip() for i in des])
 			# change list to string element, then strip join by ""
 			country =row.xpath('./td[5]/a/img/@alt').extract()#.encode('ascii','ignore')     ## click into again
 			rankbyctr =row.xpath('./td[5]/a/div/text()').extract()
-		# type of review is  scrapy.selector.unified.SelectorList     
+		# type of review is  scrapy.selector.unified.SelectorList
 
 
 
-		
+
 
 		# for review in reviews:
 
@@ -97,9 +98,6 @@ class TopSpider(scrapy.Spider):
 			item['SR_score']= SR_score
 			item['des']= des
 			item['country']= country
-			item['rankbyctr']= rankbyctr 
+			item['rankbyctr']= rankbyctr
 
 			yield item  # each review is one item  , get 40 reviews for each app
-
-
-		
