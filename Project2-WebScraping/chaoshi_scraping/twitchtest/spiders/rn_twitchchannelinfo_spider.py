@@ -5,6 +5,7 @@ from twitchtest.items import TwitchChannelInfoItem
 # channel subfolder paths have been scraped from the twitchtest_spider, and saved in a csv file
 # here we read in the csv file, assemble the full urls, and loop over them
 
+# >>>>>>>> This class is a little bit redundant. I believe you can do it with list comprehension. <<<<<<<<<
 class TwitchChannelInfoUrlsPrep():
     def __init__(self):
         pass
@@ -45,7 +46,7 @@ class twitchchannelinfoSpider(scrapy.Spider):
 
 
 	def parse(self, response):
-
+        # >>>>>>>>> Nice format :) <<<<<<<<<
 		# extract upper info box (guaranteed to have info for every channel)
 		display_name         = response.xpath('//*[@id="main"]//ul/li[1]/span/text()').extract_first()
 		account_unique_id    = response.xpath('//*[@id="main"]//ul/li[2]/span/text()').extract_first()
@@ -112,5 +113,3 @@ class twitchchannelinfoSpider(scrapy.Spider):
 
 
 		yield item
-
-
