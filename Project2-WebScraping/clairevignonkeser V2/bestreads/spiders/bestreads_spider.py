@@ -60,7 +60,7 @@ class bestreads_spider(scrapy.Spider):
 		Title = response.xpath('//div[@class="last col"]/h1/text()').extract_first()
 		Title = Title.strip()
 		Title = self.verify(Title)
-		
+
 		Author = response.xpath('//div[@class="last col"]/div/span/a/span/text()').extract_first()
 		Author = self.verify(Author)
 
@@ -86,6 +86,7 @@ class bestreads_spider(scrapy.Spider):
 		AllGenres = []
 		# i=0
 		for genre in allgenres:
+			# >>>>>>>>> It should be relative path here. Start with a "." <<<<<<<<<
 			genre_path = Selector(text = genre).xpath('//a[@class="actionLinkLite bookPageGenreLink"]/text()').extract()
 			AllGenres.append(genre_path)
 			# i+=1
@@ -117,6 +118,7 @@ class bestreads_spider(scrapy.Spider):
 		Reviews = []
 		# i=0
 		for review in reviews:
+			# >>>>>>>> Same here. It should be relative path. <<<<<<<<<<<,
 			review_path = Selector(text = review).xpath('//span[@class="readable"]/span[@style="display:none"]/text()').extract()
 			if review_path == []:
 				review_path = Selector(text = review).xpath('//span[@class="readable"]/span/text()').extract()
