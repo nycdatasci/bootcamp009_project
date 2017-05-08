@@ -4,12 +4,13 @@ import scrapy
 
 class SpydySpider(scrapy.Spider):
     name = "spydy"
-    
+
     start_urls = ['http://www.ctlottery.org/Modules/Winners/',
     ]
-	
+
     def parse(self, response):
 		for rows in response.xpath('//div[@id="ctl00_MainContent_ContentPanel"]/div[1]/table/tr'):
+            # >>>>>>>>> So each value here is a list. Why not extract the unicode from the list? <<<<<<< 
 			item = {
 
 				'date': rows.xpath('./td[1]/text()').extract(),
@@ -22,9 +23,7 @@ class SpydySpider(scrapy.Spider):
 		   	yield item
 
 		next_page_url = response.css('div.sg_pagination a::attr(href)').extract()[-2]
-		
-		if next_page_url is not None:        
+
+		if next_page_url is not None:
 			next_page_url = response.urljoin(next_page_url)
 			yield scrapy.Request(next_page_url, callback=self.parse)
-
-
