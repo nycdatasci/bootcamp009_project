@@ -93,8 +93,12 @@ filename<-gsub(".shp", "", filename)
 # ----- this is a fairly big shapefile and takes 1 minute to read
 dat = readOGR(downloaddir, "cb_2014_us_zcta510_500k") 
 
+# Getting only the zipcodes that match my data set
+dat2 = dat[dat$GEOID10 %in% unique(merged_rent_value$Zipcode),]
+
 # Saving the Zipcode Spatial Data for easy loading
-save(dat, file = "MHD_Proj1_ShinyApp/zipcode_shape_data.rda")
+# save(dat, file = "MHD_Proj1_ShinyApp/zipcode_shape_data.rda") # Larger file with more zipcodes than I need 
+save(dat2, file = "MHD_Proj1_ShinyApp/zipcode_shape_data2.rda") # Smaller file with just the zipcodes that match my data set
 
 
 

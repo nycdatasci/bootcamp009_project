@@ -1,19 +1,55 @@
-meteor_classes,meteor_blurb,meteor_img
-MBA,blurb1,
-OMB,blurb2,
-MCA,blurb3,
-APO,blurb4,./img/Apollo.png
-AMO,blurb5,./img/Amor.png
-IMB,blurb6,
-ATE,blurb7,./img/Aten.png
-TNO,blurb8,
-CEN,blurb9,
-TJN,blurb10,
-IEO,blurb11,./img/Atira.png
-AST,blurb12,
-COM,blurb13,
-HTC,blurb14,
-JFc,blurb15,
-JFC,blurb16,
-CTc,blurb17,
-ETc,blurb18,
+meteor_classes,meteor_blurb
+OMB,"<b>Outer belt asteroid</b> <br/> Lie within Zone III of the Kirkwood schema.
+                        Semi-major axes lie beyond 2.82 AU."
+MCA,"<b>Mars crossing asteroid: </b> <br/> Asteroids whose orbit crosses that of Mars. 
+                        Many databases, only list asteroids with a perihelion greater than
+                        1.3 AU as Mars-crossers. An asteroid with a perihelion less than this
+                        is classed as a near-Earth object even though it is crossing the orbit
+                        of Mars as well as crossing (or coming near to) that of Earth."
+APO,"<b>Apollo asteroids: </b> <br/> A group of near-Earth asteroids named after 1862 Apollo,
+                        discovered by German astronomer Karl Reinmuth in the 1930s. They are Earth crossing 
+                        asteroids that have an orbital semi-major axis greater than that of the Earth (> 1 AU)
+                        but perihelion distances less than the Earth's aphelion distance (q < 1.017 AU)."
+AMO,"<b>Amor type object: </b> <br/> A group of near-Earth asteroids named after the asteroid
+                        1221 Amor. They approach the orbit of Earth from beyond, but do not cross it. 
+                        Most Amors cross the orbit of Mars. <br/> a > 1.0 AU and 1.017 AU < q < 1.3 AU"
+IMB,"<b>Inner belt asteroid: </b> <br/> Lie within Zone I of the Kirkwood schema.
+                        Semi-major axes lie between from 2.06 to 2.5 AU"
+ATE,"<b>Aten type object: </b> <br/> A group of near-Earth asteroid with a semi-major axis of less than one astronomical unit (AU). 
+                        They have an aphelion (furthest distance from the Sun) greater than 0.983 AU. 
+                        An Aten orbit need not be entirely contained within Earth's orbit; nearly all known Aten 
+                        asteroids have aphelion greater than 1 AU and semi-major axis less than 1 AU."
+TNO,"<b>Trans-Neptunian objects: </b> <br/> Any minor planet in the Solar System that orbits the Sun at a greater average distance (semi-major axis)
+                        than Neptune, 30 astronomical units (AU). Twelve minor planets with a semi-major axis greater than 150 AU
+                        and perihelion greater than 30 AU are known, which are called extreme trans-Neptunian objects (ETNOs)."
+CEN,"<b>Centaur type object: </b> <br/> Small bodies with size similar to asteroids but 
+                        composition similar to comets, that revolve around
+                        the Sun in the outer solar system, 
+                        mainly between the orbits of Jupiter and Neptune."
+TJN,"<b>Jupiter Trojan object: </b> <br/> Large group of asteroids that share the orbit of the planet Jupiter around the Sun.
+                        Relative to Jupiter, each Trojan librates around one of Jupiter's two stable Lagrangian
+                        points, L4, lying 60 degrees ahead of the planet in its orbit, and L5, 60 degrees behind.
+                        Jupiter trojans are distributed in two elongated, curved regions around these Lagrangian
+                        points with an average semi-major axis of about 5.2 AU."
+IEO,"<b>Atira type object: </b> <br/> Also known as Interior-Earth Objects (IEOs), asteroids whose orbits are entirely
+                        confined within Earth's orbit, that is, their orbit has an aphelion (farthest point
+                        from the Sun) smaller than Earth's perihelion (nearest point to the Sun),
+                        which is 0.983 astronomical units (AU). "
+AST,"<b>Undefined asteroid: </b> <br/> Characteristics unknown, yet to be determined due to lack of observations."
+COM,"<b>Undefined comet: </b> <br/> Characteristics unknown, yet to be determined due to lack of observations."
+HTC,"<b>Halley-type comet: </b> <br/> Have orbital periods between 20 and 200 years, and orbits which can be highly
+                        inclined to the ecliptic. Both of these observations suggest that Halley-type
+                        comets have a different origin to the other class of short-period comet, the
+                        Jupiter-family comets, which have shorter periods and lower inclinations."
+JFc,"<b>Jupiter family comet (old): </b> <br/> Named as such since their current orbits are primarily determined by the
+                        gravitational influence of Jupiter. Although the orbits of Jupiter-family
+                        comets are contained within or do not extend much beyond the orbit of Jupiter,
+                        it is thought that they originate in the Kuiper Belt, a collection of rock-ice
+                        bodies located just beyond the orbit of Neptune. Orbital period < 20y"
+JFC,"<b>Jupiter family comet (new): </b> <br/> Named as such since their current orbits are primarily determined by the
+                        gravitational influence of Jupiter. Although the orbits of Jupiter-family
+                        comets are contained within or do not extend much beyond the orbit of Jupiter,
+                        it is thought that they originate in the Kuiper Belt, a collection of rock-ice
+                        bodies located just beyond the orbit of Neptune. 2 < T_jup < 3"
+CTc,<b>Chiron type comet: </b> <br/> T_j > 3 and a > a_j
+ETc,<b>Enke type comet: </b> <br/> T_j > 3 and a < a_j

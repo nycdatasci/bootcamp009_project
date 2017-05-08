@@ -16,6 +16,8 @@ library(rgdal)
 require(shiny)
 # For the map
 require(leaflet)
+# For time series data
+require(xts)
 #library(mapdata)
 #library(mapproj)
 #library(rgeos)
@@ -39,11 +41,12 @@ states$NAME = as.character(states$NAME)
 pops = read.csv("data/us_populations.csv", stringsAsFactors = F)
 
 ## Create choices for selection input
-complaint_vars = names(complaints %>% select(-c(Date.received, latitude, longitude)))
+complaint_base = names(complaints %>% select(-c(Date.received, latitude, longitude,
+                                                Consumer.complaint.narrative)))
 ## Add blank choice to selection input
-complaint_vars = c(complaint_vars,"All")
+complaint_vars = c(complaint_base,"All")
 
 ## Read in Rda of the consumer text input for each complaint grouped by each company
-narratives = readRDS('data/narratives.Rda')
+#narratives = readRDS('data/narratives.Rda')
 ## Create a character vector of all the companies for the word bubble (the blank ones have been filtered)
-companies = sort(unique(narratives$Company))
+#companies = sort(unique(narratives$Company))

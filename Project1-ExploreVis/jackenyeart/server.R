@@ -18,6 +18,10 @@ shinyServer(function(input, output){
     ))
   }, deleteFile = FALSE)
   
+  output$mainpage2 <- renderText(
+    "https://www.stats.com/sportvu-basketball-media/"
+  )
+  
   output$subItemOne <- renderImage({
     if (is.null(input$selected1))
       return(NULL)
@@ -143,13 +147,28 @@ shinyServer(function(input, output){
     }
     
   }, deleteFile = FALSE)
+
+  # inter1 <- reactive({
+  #   input$selected6a
+  # })
+  # inter2 <- reactive({
+  #   input$selected6b
+  # })
   
-#   inter1 <- reactive({
-#    input$selected6a
-#   })
-#   inter2 <- reactive({
-#     input$selected6b
-#   })
+  output$comparative <- renderPlot({
+      trimmed1 %>%
+      group_by_(input$selected6a) %>%
+      summarise_(avg = paste0("mean(",input$selected6b,")")) %>%
+      ggplot(.,aes_string(x= input$selected6a, y = "avg" )) + geom_point() + ylab(paste0("Average ",input$selected6b))
+    
+  })
+  
+  # output$comparative <- renderPlot(
+  #   finaltrimmed() %>% 
+  #     ggplot(aes(x = inter1, y = inter2)) +
+  #     geom_point()
+  
+
 #   
 # fdata <- reactive({
 #   trimmed1[,c(inter1(),inter2())]

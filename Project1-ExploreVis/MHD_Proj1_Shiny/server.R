@@ -3,6 +3,8 @@ library(ggplot2)
 library(plotly)
 library(tidyr)
 library(zoo)
+library(rgdal)
+library(rgeos)
 library(leaflet)
 library(shiny)
 
@@ -160,7 +162,7 @@ function(input, output, session) {
         data_set_map = reactive({
                 if (nrow(data_set()) > 0) {
                         # ----- Create a subset of New York counties
-                        subdat = dat[dat$GEOID10 %in% data_set()$Zipcode,]
+                        subdat = dat2[dat2$GEOID10 %in% data_set()$Zipcode,]
                         # ----- Transform to EPSG 4326 - WGS84 (required)
                         subdat = spTransform(subdat, CRS("+init=epsg:4326"))
                         # ----- save the data slot

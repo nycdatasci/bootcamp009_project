@@ -1,6 +1,6 @@
 @author Scott Dobbins
-@version 0.8.1
-# @date 2017-04-23 18:45
+@version 0.9.3
+# @date 2017-05-01 03:00
 
 
 ## Version history ###
@@ -78,8 +78,25 @@ Major changes: full sidebar; tabs for each war
 	Made sampling occur after date restriction changes
 	Opacity now updates with sample size as well
 
+0.9
+Version for class lecture
+Major changes: Sandbox added; labeling added
+Notes: sidebar and other parts reduced to what works
+
+0.9.1	Fixed civilian tab
+	Moved "which wars?" selectizeInput to the sidebar
+	Made "which wars?" update civilian tab
+	Increased speed of sandbox and removed one typo-bug
+
+0.9.2	Added explanatory text box to overview tab for spacing
+	Put comma delimiters in infoBoxes
+	Increased maximum sample size
+	Filtered out (0,0) GPS locations
+
+0.9.3	Properly formatted tooltips for all conflicts
+	Included all sandboxes for all conflicts
+
 **Future version plans:
-*Tabs for exploring each separate conflict on its own in detail
 *Lots of ggplots, maybe a self-playing gif of bombs droppedover time for each conflict
 *Fix some buggy tooltips (number agreement, NAs, capitalization, etc.)
 	Korea cities and such are mostly invisible
@@ -88,6 +105,11 @@ Major changes: full sidebar; tabs for each war
 *Maybe match (or fail to match) the data with the historical record.
 *Could also allow users to link (using html) to relevant Wikipedia articles on
   certain aspects of the conflicts (airframes, campaigns, etc.)
+*Edit civilian map to have not just number of bombing missions but also
+  number of bombs and weight of bombs to get a better sense of danger/intensity
+*Change heatmap parameters so it's not as odd-looking, especially changing so much
+  between zoom levels
+	Change blur and radius (and maybe even max) parameters?
 
 ### notes on data sources ###
 
@@ -107,34 +129,4 @@ Vietnam
 data source: data.mil
 data origin URL: https://insight.livestories.com/s/v2/vietnam/48973b96-8add-4898-9b33-af2a676b10bb/
 
-
-### Thomas recommendations ###
-# maybe do SQLite
-# maybe add pictures to pop up
-# maybe add hyperlinks to various Wikipedia pages
-# definitely add plots and summary stats
-
-### end ###
-
-
-
-***** PRIORITIES *****
-
-1. make histograms more editable: slicing data by aircraft and/or city etc.
-	measure intensity by number of bombs or total weight of bombs
-2. further flesh out tabs for individual conflicts
-3. fix tooltips by adding extra columns and doing a saved data refresh
-4. ensure that all data tables are in third normal form and coordinate with glossary tables
-5. get rid of all lapply statements in data cleaning section
-
-
-*** eventually ***
-- use branching to develop new features on local repository
-- remove debug features from a branched final dev version
-
-
-*** num missions should account for sortie duplicates
-*** num bombs should use totals across different types and better quality control on data
-*** weight bombs should use num aircraft * bombload in separate (new) column
-*** weight should all be converted into pounds or tons
-
+### END ###

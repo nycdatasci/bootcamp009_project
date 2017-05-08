@@ -1,7 +1,7 @@
 # convert matrix to dataframe
 library(ggvis)
 
-data <- readRDS("~/Student_Loans/data.Rds")
+data <- readRDS("data.Rds")
 
 # remove row names
 
@@ -30,4 +30,7 @@ data$nurses <- grepl(pattern='Nurs', x=data$INSTNM)
 data$tech <- grepl(pattern='Tech', x=data$INSTNM)
 data$women <- ifelse(data$WOMENONLY==1, TRUE, FALSE)
 data$women <- ifelse(is.na(data$women), FALSE, data$women)
+
+#
+data$FAMINC <- round(x = data$FAMINC)
 
