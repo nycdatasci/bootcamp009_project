@@ -1,6 +1,6 @@
 library(dplyr)
 library(stringr)
-
+#this function reduces the size of the data and cleans it up
 formatData = function(file){
   Table = read.csv(file, stringsAsFactors = FALSE)
   #this might be necessary for earlier tables
@@ -42,13 +42,14 @@ DC = formatData('./weatherThirtyYearsDCA1986.csv')
 write.csv(DC, file = "./DC.csv")
 CHICAGO = formatData('./weatherThirtyYearsORD1986.csv')
 write.csv(CHICAGO, file = "./CHICAGO.csv")
-COLORADO = formatData('./weatherThirtyYearsCOS1986.csv')
-write.csv(COLORADO, file = "./COLORADO.csv")
 NEWYORK = formatData('./weatherThirtyYearsJFK1986.csv')
 write.csv(NEWYORK, file = "./NEWYORK.csv")
+LA = formatData("./weatherThirtyYearsKLAX1986.csv")
+write.csv(LA, file = "./LA.csv")
+MIAMI = formatData("./weatherThirtyYearsKMIA1986.csv")
+write.csv(MIAMI, file = "./MIAMI.csv")
+SANFRANCISCO = formatData("./weatherThirtyYearsSFO1986.csv")
+write.csv(SANFRANCISCO, file = "./SANFRANCISCO.csv")
 
-head(ALASKA)
-head(DC)
 
-class(ALASKA$temperature)
 

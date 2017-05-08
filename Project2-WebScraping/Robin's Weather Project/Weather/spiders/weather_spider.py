@@ -8,7 +8,7 @@ class WeatherSpider(scrapy.Spider):
 	allowed_urls = ['https://www.wunderground.com/']
 	#start_urls = ['https://www.wunderground.com/history/?MR=1']
 	#this changes between scrapes
-	start_urls = ['https://www.wunderground.com/history/airport/SFO/1986/1/1/DailyHistory.html?']
+	start_urls = ['https://www.wunderground.com/history/airport/KLAX/1986/1/1/DailyHistory.html?']
 	def verify(self, content):
 		if isinstance(content, list):
 			print "test verify\n"
