@@ -3,7 +3,7 @@ import time
 import re
 from baseball.items import BaseballItem
 
-
+# >>>>>>> Similar problems in this spider, refer to the comments in the other one. <<<<<<<<<
 class SpiderDodger(scrapy.Spider):
 	name = "spider_pitchers"
 	allowed_urls = ['http://www.baseball-reference.com/']
@@ -20,7 +20,7 @@ class SpiderDodger(scrapy.Spider):
 				return ""
 		else:
 			# convert unicode to str
-			return content.encode('ascii','ignore') 
+			return content.encode('ascii','ignore')
 
 
 
@@ -61,25 +61,25 @@ class SpiderDodger(scrapy.Spider):
 			print "No position"
 
 		if re.search('^pitcher +', position.lower()) == None:
-			pass	
+			pass
 
 		# Player name
 		if not response.xpath('//*[@id="meta"]/div[2]/h1/text()').extract_first():
 			name = response.xpath('//*[@id="meta"]/div/h1/text()').extract_first()
 		else:
 			name = response.xpath('//*[@id="meta"]/div[2]/h1/text()').extract_first()
-		
+
 		try:
 			name = self.verify(name)
 		except AttributeError:
 			print "Could not find name"
-		
-		# Defensive Position 
 
-		
-		rows = response.xpath('//*[@id="content"]//table/tbody/tr')	
+		# Defensive Position
+
+
+		rows = response.xpath('//*[@id="content"]//table/tbody/tr')
 		for i in range(1, len(rows)):
-			
+
 			# Year
 			year = str(rows[i].xpath('./th//text()').extract_first())
 			# Team
@@ -129,7 +129,7 @@ class SpiderDodger(scrapy.Spider):
 			# Walks and hits per innings pitched
 			whip = str(rows[i].xpath('./td[28]//text()').extract_first())
 			# Hits per 9 innings
-			h9 = str(rows[i].xpath('./td[29]//text()').extract_first())			
+			h9 = str(rows[i].xpath('./td[29]//text()').extract_first())
 			# Homerun per 9 innings
 			hr9 = str(rows[i].xpath('./td[30]//text()').extract_first())
 			# Walks per 9 innings
@@ -138,11 +138,11 @@ class SpiderDodger(scrapy.Spider):
 			k9 = str(rows[i].xpath('./td[32]//text()').extract_first())
 
 		# create another variable like rows for the player value -- batting table. we only want to extract WAR.
-		# pv_rows = 
+		# pv_rows =
 		# for i in range(1, len(pvrows)):
 		# 	war = blahblahblah
 
-			
+
 			# verify
 			try:
 				year = self.verify(year)
@@ -176,7 +176,7 @@ class SpiderDodger(scrapy.Spider):
 
 			except AttributeError:
 				print "None Type"
-				
+
 			item = BaseballItem()
 			item['name'] = name
 			item['position'] = position
@@ -209,9 +209,5 @@ class SpiderDodger(scrapy.Spider):
 			item['bb9'] = bb9
 			item['k9'] = k9
 
-			
+
 			yield item
-
-
-
-
