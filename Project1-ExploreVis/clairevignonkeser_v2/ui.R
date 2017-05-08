@@ -121,7 +121,7 @@ shinyUI(dashboardPage(
                 column(6,
                   plotOutput('medianage')),
                 column(6,
-                    h2("Median Age per Departure"),
+                    h2("Median Age per Departure Station"),
                     br(),
                     p("Looking at the median age of the riders for each station departure, we see the youngest riders 
                       in East Village, while older riders start their commute from Lower Manhattan. The age trends disappear 
@@ -136,7 +136,7 @@ shinyUI(dashboardPage(
                   h2("Rides by Hour of the Day"),
                   br(),
                   p("Finally, when analyzing how the days of the week impact biking behaviours, I was surprised to see that Citi Bike users 
-                    didn’t ride for a longer period of time during the weekend. However, there is a difference in peak hours; 
+                    didn’t ride for a longer period of time during the weekend - the median trip duration is 19 minutes during the weekdays and weekends. However, there is a difference in peak hours; 
                     during the weekend, riders hop on a bike later during the day, with most of the rides happening midday while the peak 
                     hours during the weekdays are around 8-9am and 5-7pm when riders commute to and from work.",
                     style= "font-size: 18px")),
@@ -156,7 +156,7 @@ shinyUI(dashboardPage(
                     style= "font-size: 18px"),
                     tags$div(tags$ul(
                     tags$li(tags$span("The day of the week and the hour of the day are meaningful variables which we need to take into account in the app. ")), 
-                    tags$li(tags$span("Most of the users are between 30 and 45 years. This means that the age groups 25-34 and 35-44 
+                    tags$li(tags$span("Most of the users are between 30 and 45 years old. This means that the age groups 25-34 and 35-44 
                                       won’t be granular enough when app users need to filter their search. We will let them filter by age instead."))), 
                     style= "font-size: 18px"),  
                     br(),

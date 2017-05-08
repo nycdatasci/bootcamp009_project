@@ -1,30 +1,50 @@
 ## server.R ##
-fares_by_date = getFaresData()
-
-function(input, output) {
+function(input, output, session) {
+  require(dbplyr)
+  require(dplyr)
   
-  # Filter by MTA line from user input 
+# Filter by MTA line from user input 
   line_reactive = reactive({
     getBaseMap() %>% mapLineData(
-                      filteredLineData(input$do, stations_data),
-                      color = mta_lines[input$do][[1]]
+                      filteredLineData(input$line, stations_data),
+                      color = mta_lines[input$line][[1]]
                       )
   })
+  
   output$mtamap = renderLeaflet(line_reactive())
   
-  # Display additional station details
-  observeEvent(input$mtamap_marker_click, {
-    output$station_stats = renderPrint(stations_data %>% 
-                                          filter(`GTFS Latitude` == input$mtamap_marker_click$lat & 
-                                                  `GTFS Longitude` ==  input$mtamap_marker_click$lng) %>% 
-                                          select(`Stop Name`))
-  })
+  observeEvent(input$mtamap_marker_click,{
+    
+      station_nm = (stations_data %>%
+                      filter(`GTFS Latitude` == input$mtamap_marker_click$lat &
+                               `GTFS Longitude` ==  input$mtamap_marker_click$lng) %>%
+                      transmute(`Stop Name`))[[1]]
+  
+      internal_station_name = stations_data %>%
+        filter(`Stop Name` == station_nm) %>% 
+        select(`Turnstile Station Name`)
+      
+      internal_station_name = toupper(internal_station_name[[1]])
+    
+      totals = station_details %>% 
+        filter(STATION %in% internal_station_name)
+      
+      output$entries_year = renderText(totals$Total_Entries[1])
+      output$exits_year = renderText(totals$Total_Exits[1])
 
-  # output$ts_per_station = DT::renderDataTable(collect(turnstile_db %>%
-  #   filter(STATION == input$station_stats) %>% 
-  #   distinct(SCP)))
-  # 
-  output$fares_data = DT::renderDataTable(fares_by_date)
+      
+      output$station_name = renderUI(station_nm)
+      
+      output$ts_per_station = renderText((ts_data %>%
+                                             filter(Stop.Name == station_nm) %>%
+                                             select(Number.of.Turnstiles))[1,1])
+      
+      
+     }
+     )
+  output$stations_compare = DT::renderDataTable(station_details)
+  
+}
+    
 
-  }
 

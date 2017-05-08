@@ -1,0 +1,11 @@
+name: BoLianShiny
+title: BoLianShiny
+account: talentlian
+server: shinyapps.io
+appId: 175241
+bundleId: 803303
+url: https://talentlian.shinyapps.io/BoLianShiny/
+when: 1493135683.16092
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: .RData

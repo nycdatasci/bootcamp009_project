@@ -1,0 +1,5 @@
+#This bash script calls the product scraping script for each url text file
+
+for file in ./pages/*.txt; do
+	./attribute_scraper $file
+done

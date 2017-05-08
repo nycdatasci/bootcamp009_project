@@ -1,0 +1,104 @@
+
+#long lat of the restaurants
+
+response.xpath('//body/div[@class="poi_view restaurant_view"]')[0].root.get('data-fetch_summary')
+
+## url for nyc restaurant
+
+
+
+
+scrapy shell 'https://www.viamichelin.com/web/Restaurants?geoboundaries=40.6157768,-74.1996002:40.8104312,-73.8150787'
+
+
+response.xpath('')
+response.xpath('//*[@id="content"]')
+
+//*[@id="content"]/div[1]/div[4]/section/div/div[2]/div[2]/ul/li[1]/div[2]/div[1]/a
+
+//*[@id="content"]/div[1]/div[4]/section/div/div[2]/div[2]/ul/li[1]/div[2]/div[1]
+
+
+response.xpath('//*[@class="poi-item-name truncate"]/text()').extract()
+
+
+#name of retaurant - first page
+
+
+
+
+response.xpath('//div[@class="poi-item-name truncate"]/a/text()').extract()
+
+# range of price 
+
+
+
+
+price= response.xpath('//div[@class="poi-item-price"]//text()').extract()
+
+
+# getting rid of the unneccary code
+
+
+
+
+
+price[0].encode('ascii','ignore')
+re.sub("\\n?\\t+"," ",price[0].encode('ascii','ignore'))
+
+
+In [59]: re.sub("\\n?\\t+","",price[0].encode('ascii','ignore'))
+Out[59]: 'From '
+
+In [60]: re.sub("\\n?\\t+","",price[1].encode('ascii','ignore'))
+Out[60]: '$25'
+
+In [61]: re.sub("\\n?\\t+","",price[2].encode('ascii','ignore'))
+Out[61]: 'to '
+
+In [62]: re.sub("\\n?\\t+","",price[3].encode('ascii','ignore'))
+
+
+# address of restaurant
+
+
+
+
+
+
+
+response.xpath('//div[@class="poi-item-address truncate"]//text()').extract()
+
+
+## clean address
+re.sub("\\n?\\t+","",response.xpath('//div[@class="poi-item-address truncate"]//text()').extract_first().encode('ascii','ignore'))
+
+
+#address
+response.xpath('//section[@class="datasheet"]/div[3]/text()').extract()
+
+
+
+
+
+
+# comments 
+
+response.xpath('//div[@class="datasheet-description"]/blockquote/text()').extract()
+
+
+
+## ranking of different retaurant in their pages
+
+
+response.xpath('//div[@class="datasheet-quotation-item clearfx"]/div[2]/strong/text()').extract()
+
+
+### cooking type
+
+response.xpath('//div[@class="datasheet-cooking-type"]/text()').extract()
+
+
+//*[@id="content"]/div[1]/div[4]/section/div/div[2]/div[2]/ul/li[1]/div[2]/div[1]/a
+
+//*[@id="content"]/div[1]/div[4]/section/div/div[2]/div[2]

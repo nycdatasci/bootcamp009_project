@@ -1,0 +1,38 @@
+Screen Name:  Untitled
+Screen Description:  None
+Creation Date:  None
+Last Modified:  None
+
+#     Col Heading                # Passed   # Avail   Report/Screening Parameter                                                                           Comments
+
+Total Identifiers Passing the Screen:  401
+
+Universe Limitations
+  Index:
+       Include   'FactSet Market Indices / Consumer Durables'  (L1)
+       Include   'FactSet Market Indices / Apparel/Footwear'  (L2)
+       Include   'FactSet Market Indices / Life/Health Insurance'  (L3)
+       Include   'FactSet Market Indices / Property/Casualty Insurance'  (L4)
+       Include   'FactSet Market Indices / Technology Services'  (L5)
+
+  Default Logic: ( L1 OR L2 OR L3 OR L4 OR L5 )
+
+  Inactive Securities are not excluded
+  Secondary Listings are not excluded
+  Non Equity Securities are not excluded
+
+  Total identifiers in the universe:  401
+
+Report Format
+  Global Date Substitution #D = 0
+  Global Date Substitution #M = 0
+  Global Date Substitution #Q = 0
+  Global Date Substitution #Y = 0
+  Global Variable Substitution #S = 0
+  Grouping:  None
+  Sorting:
+       First by Identifier Name in ascending order
+  Report Title:  FactSet Universal Screen
+  Column Totals will be shown at the bottom of the report output.
+  Statistics:  None
+  Columns To Be Suppressed: None

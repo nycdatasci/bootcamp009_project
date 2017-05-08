@@ -1,6 +1,6 @@
 library(data.table)
 library(geojsonio)
-nyparking_data <- fread("~/NYC Data Science Academy/NY Parking Dashboard/nyparking_data.csv")
+nyparking_data <- fread("nyparking_data.csv")
 colnames(nyparking_data)
 nyparking_data$`Fine Amount`<-as.factor(nyparking_data$`Fine Amount`)
 nyparking_data$Precinct<-as.factor(nyparking_data$Precinct)

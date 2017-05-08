@@ -1,0 +1,19 @@
+#This bash script calls the phantomjs script to save each product page to a text file
+
+while IFS='' read -r line || [[ -n "$line" ]]; do
+	url="https://pcpartpicker.com$line"
+	name=html_output
+	if [[ -e ./pages/scraped_html/$name-0.txt ]] ; then
+		i=1
+		while [[ -e ./pages/scraped_html/$name-$i.txt ]] ; do
+			let i++
+		done
+		name=$name-$i
+	fi
+
+	phantomjs production.js "${url}" > ./pages/scraped_html/"$name".txt
+	result=$(python -c "import random;print(random.uniform(1.5,3.0))")
+	sleep $result
+	echo "$result"
+done < "$1"
+
