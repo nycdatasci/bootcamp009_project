@@ -5,21 +5,19 @@ library(shiny)
 DC = read.csv("./DC.csv")
 ALASKA = read.csv("./ALASKA.csv")
 CHICAGO = read.csv("./CHICAGO.csv")
-COLORADO = read.csv("./COLORADO.csv")
 NEWYORK = read.csv("./NEWYORK.csv")
-
-#things to analyze, winddir vs wind speed
-#'cold fronts', see if cold weather moves locations
-#weather changes over time
-#wind patterns
+LA = read.csv("./LA.csv")
+SANFRANCISCO = read.csv("./SANFRANCISCO.csv")
+MIAMI = read.csv("./MIAMI.csv")
 
 ui <- fluidPage(
   titlePanel("Weather Patterns"),
   sidebarLayout(
+    #the user selects a location and two observations to compare
     sidebarPanel = sidebarPanel(
       selectInput(inputId = "location",
                   label= "location",
-                  choices=c("ALASKA","DC","COLORADO","NEWYORK","CHICAGO")
+                  choices=c("ALASKA","DC","LA","NEWYORK","CHICAGO","MIAMI","SANFRANCISCO")
                   ),
       selectInput(inputId = "xaxis", 
                   label = "x-axis",
@@ -27,9 +25,11 @@ ui <- fluidPage(
                   ),
       selectInput(inputId = "yaxis", 
                   label = "y-axis",
-                  choices= c("precipitation","temperature","humidity","pressure","windSpeed")
+                  choices= c("temperature","precipitation","humidity","pressure","windSpeed")
 
     )),
+    #they see a plot of the observations, information about linear regression of the plot
+    #and information about multi-regression of all variables against the y-value
     mainPanel = mainPanel(plotOutput("Values"),
                           verbatimTextOutput("Regression"),
                           verbatimTextOutput("multiRegression"))
@@ -45,8 +45,13 @@ server <- function(input, output,session) {
               "DC" = DC,
               "COLORADO" = COLORADO,
               "NEWYORK" = NEWYORK,
-              "CHICAGO" = CHICAGO)
+              "CHICAGO" = CHICAGO,
+              "SANFRANCISCO" = SANFRANCISCO,
+              "LA" = LA,
+              "MIAMI" = MIAMI)
   })
+  #the date is stored as a POSIX numeric value so we can perform regression on it
+  #but is converted back to a date when it's on the x-axis
   xAxisLabel = reactive({
     t = function(x){
       print ("test")
@@ -57,14 +62,15 @@ server <- function(input, output,session) {
   })
   output$Values <- renderPlot({
     ggplot(data=dataInput(), 
-           aes_string(x=input$xaxis,y=input$yaxis)) + 
-      geom_point(aes(color=cut(dataInput()$temperature, c(-Inf,35,65,95,Inf))),
+           aes_string(x=input$xaxis,y=input$yaxis)) +
+      #we color code our temperatures, blue = cold, green = normal, red = hot
+      geom_point(aes(color=cut(dataInput()$temperature, c(-Inf,45,60,95,Inf))),
                  size = 2) + 
        
       scale_color_manual(name="temperature",
-                         values = c("(-Inf,35]" = "blue",
-                                    "(35,65]" = "green",
-                                    "(65,95]" = "red",
+                         values = c("(-Inf,45]" = "blue",
+                                    "(45,60]" = "green",
+                                    "(60,95]" = "red",
                                     "(95,Inf]" = "orange")) +
                       
       scale_x_continuous(label= xAxisLabel()) +
@@ -98,20 +104,17 @@ server <- function(input, output,session) {
     #       "windSpeed" = windSpeed)
   })
   
-  model = reactive({
-    model = lm(as.formula(paste(input$yaxis, "~. -WeeklyAveragesString")),data=dataInput())
-    summary(model)
-  })
+
   output$Regression = renderPrint({
     model = lm(yValue() ~ xValue(), data=dataInput())
     summary(model)
-    
-    #model()
+
   })
   output$multiRegression = renderPrint({
-    #model = lm(yValue() ~ . -WeeklyAveragesString -yValue(), data=dataInput())
-    #summary(model)
-    model()
+    #we have to do as.formula here so that our y-value is interpreted literally
+    #and excluded from the multi-regression
+    model = lm(as.formula(paste(input$yaxis, "~. -WeeklyAveragesString")),data=dataInput())
+    summary(model)
   })
   
   
