@@ -1,0 +1,20 @@
+body
+{
+background-image:url('0.png');
+background-repeat:repeat;
+}
+
+input, textarea
+{
+width: 400px;
+}
+
+.row-fluid .span4
+{
+width: 500px;
+}
+
+.span8
+{
+width: 100%;
+}

@@ -1,0 +1,93 @@
+library(dplyr)
+library(ggplot2)
+library(RColorBrewer)
+library(wordcloud)
+library(shiny)
+library(shinydashboard)
+library(graphics)
+library(tm)
+library(NLP)
+
+
+header <- dashboardHeader(title="NYT vs NR")
+
+sidebar <- dashboardSidebar(
+  sidebarUserPanel("Chris' Shiny",
+                   subtitle = a(href = "#", icon("circle", class = "text-success"), "Online"),
+                   # Image file should be in www/ subdir
+                   image = "userimage.png"),
+  # sidebarSearchForm(label = "Enter a Word", textId = "searchText1", "searchButton"),
+  sidebarMenu(
+    # Setting id makes input$tabs give the tabName of currently-selected tab
+    id = "tabs",
+    menuItem("Word_Charts", icon = icon("bookmark"), 
+             selectizeInput(label = "Enter a Word", inputId = "searchText1", c("Obama", "Clinton")),
+             # actionButton("update", "Change"),
+             sliderInput("rmax",
+                         h4("Maximum Number of Words:"),
+                         min = 1, max = 200,  value = 150)),
+    # be able to select title or summary, and filter by author
+    menuItem("Bar Chart", icon = icon("bar-chart"),
+      menuSubItem("NYT", tabName = 'NYT Bar Chart'),
+      menuSubItem('NR', tabName = 'NR Bar Chart')),
+    # bar chart will be filtered by words, author, date range
+    menuItem("Histogram", icon = icon("bar-chart-o"),
+      menuSubItem("NYT", tabName = "NYT Histogram"),
+      menuSubItem("NR", tabName = "NR Histogram")),
+    # this will feature words and author 
+    menuItem("Widgets", icon = icon("th"), tabName = "widgets", badgeLabel = "new",
+             badgeColor = "green")
+  )
+)
+
+body <- dashboardBody(
+  tabItems(
+    tabItem("dashboard",
+            div(p("Dashboard tab content"))
+    ),
+    tabItem("Word_Charts",plotOutput('word')),
+    tabItem("widgets",
+            "Widgets tab content"
+    ),
+    tabItem("subitem1",
+            "Sub-item 1 tab content"
+    ),
+    tabItem("subitem2",
+            "Sub-item 2 tab content"
+    )
+  )
+)
+server = function(input, output,session) { 
+  output$word <- renderPlot({
+    NR$summary <- tolower(NR$summary)
+    NYT$summary <- tolower(NYT$summary)
+    NR$title <- strsplit(NR$title,split=" ")
+    NYT$title <- strsplit(NYT$title,split=" ")
+    test = function(col) sapply(col, function(x){ input$textSearch1 %in% x})
+    a <- NR %>% mutate(ex = test(title))
+    b <- NYT %>% mutate(ex = test(title))
+    a <- a %>% filter(ex)
+    b <- b %>% filter(ex)
+    
+    summary_NR <- paste(a$summary, collapse = " ")
+    summary_NYT <- paste(b$summary, collapse = " ")
+    
+    summary <- c(summary_NR, summary_NYT)
+    summary <- removeWords(summary,c(stopwords("SMART"), stopwords("en"), "thursday", "wednesday", "monday", 
+                                     "tuesday", "friday", "not", "doesnt", "dont", "week", "season", "sunday", 'saturday'))
+    
+    corpus.sum <- Corpus(VectorSource(summary))
+    tdm.sum <- TermDocumentMatrix(corpus.sum)
+    tdm.sum <- as.matrix(tdm.sum)
+    
+    colnames(tdm.sum) <- c("NR","NYT")
+    
+    comparison.cloud(tdm.sum,random.order = F, max.words=input$rmax, 
+                     title.size = 1.5, colors=brewer.pal(n = 10, "Dark2"))
+  })
+  }
+shinyApp(
+  ui = dashboardPage(header, sidebar, body),
+  server = server
+)
+
