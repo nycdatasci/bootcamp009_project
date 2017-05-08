@@ -1,0 +1,11 @@
+name: Twitch_Graph_R_Shiny
+title: Twitch_Graph_R_Shiny
+account: chaoshi
+server: shinyapps.io
+appId: 178671
+bundleId: 818700
+url: https://chaoshi.shinyapps.io/Twitch_Graph_R_Shiny/
+when: 1494213090.19777
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: data_safe/twitchtools_channels.csv|data_safe/twitchtools_channelsinfo.csv|data_safe/twitchtools_teams.csv|data_safe/twitchtools_teamsinfo.csv

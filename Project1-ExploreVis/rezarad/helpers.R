@@ -132,10 +132,3 @@ getFaresData = function(table) {
     arrange(`Full Fare`)
   
 }
-
-getTurnstileData = function(table) {
-  require(dplyr)
-  require(dbplyr)
-  
-  tbl(conn, table)
-}

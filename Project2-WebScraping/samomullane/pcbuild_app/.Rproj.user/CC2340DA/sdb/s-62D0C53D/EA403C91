@@ -1,0 +1,21 @@
+{
+    "collab_server" : "",
+    "contents" : "library(data.table)\nlibrary(dplyr)\nlibrary(plotly)\nlibrary(shinydashboard)\nlibrary(ggplot2)\nlibrary(shiny)\nlibrary(shinydashboard)\n\ndbname = \"./pcpart.db\"\n\n\ndbConnector <- function(session, dbname) {\n  require(RSQLite)\n  ## setup connection to database\n  conn <- dbConnect(drv = SQLite(), \n                    dbname = dbname)\n  ## disconnect database when session ends\n  session$onSessionEnded(function() {\n    dbDisconnect(conn)\n  })\n  ## return connection\n  conn\n}\n\ndbGetData <- function(conn, tblname, spec_vec, filter_str = \"prod_price > 0\", limit = \"\", orderby = \"\") {\n  query <- paste(\"SELECT\",\n                 toString(spec_vec),\n                 \"FROM\",\n                 tblname,\n                 \"WHERE\",\n                 filter_str,\n                 toString(orderby),\n                 limit)\n  as.data.table(dbGetQuery(conn = conn,\n                           statement = query))\n}\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+    "created" : 1494012393948.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2235662360",
+    "id" : "EA403C91",
+    "lastKnownWriteTime" : 1494120722,
+    "last_content_update" : 1494120722796,
+    "path" : "~/Desktop/pcparts/pcbuild_app/global.R",
+    "project_path" : "global.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
