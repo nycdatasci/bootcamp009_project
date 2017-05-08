@@ -34,9 +34,9 @@ class Cw3Spider(Spider):
 
     def after_login(self, response):
         
-        today = datetime.date(2016, 3, 31)
+        today = datetime.date(2017, 5, 7)
         global begin
-        begin = datetime.date(2015, 12, 1)
+        begin = datetime.date(2016, 12, 1)
         delta = today - begin
         date_generator = (begin + datetime.timedelta(days=x) for x in range(0, delta.days))
         links = ['https://www.xwordinfo.com/Crossword?date=' + date.strftime('%-m/%-d/%Y') for date in date_generator]
@@ -73,9 +73,12 @@ class Cw3Spider(Spider):
         across_clues = re.split('[0-9]+\.|: <', across_text)[1::2]
         down_clues = re.split('[0-9]+\.|: <', down_text)[1::2]
 
-        unique_words = []
-        unique_words += across.xpath('.//span[@class="unique"]/text()').extract()
-        unique_words += down.xpath('.//span[@class="unique"]/text()').extract()
+        debut_words = []
+        debut_words += across.xpath('.//span[@class="unique"]/text()').extract()
+        debut_words += down.xpath('.//span[@class="unique"]/text()').extract()
+
+        debut_words += across.xpath('.//span[@class="debut"]/text()').extract()
+        debut_words += down.xpath('.//span[@class="debut"]/text()').extract()
 
         assert len(across_answers) == len(across_clues)
         assert len(down_answers) == len(down_clues)
@@ -100,7 +103,7 @@ class Cw3Spider(Spider):
             item['day'] = day
             item['date'] = date
 
-            if answer in unique_words:
+            if answer in debut_words:
                 item['unique'] = 'True'
             else:
                 item['unique'] = 'False'
@@ -127,7 +130,7 @@ class Cw3Spider(Spider):
             item['day'] = day
             item['date'] = date
 
-            if answer in unique_words:
+            if answer in debut_words:
                 item['unique'] = 'True'
             else:
                 item['unique'] = 'False'
