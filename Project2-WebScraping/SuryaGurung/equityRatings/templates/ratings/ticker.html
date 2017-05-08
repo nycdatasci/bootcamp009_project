@@ -1,0 +1,13 @@
+<div style="position:absolute; z-index:1; background-color:white; 
+            width:100%;opacity:0.7;">
+
+<ul style="list-style-type:None">
+
+    {% for s in stocks %}
+        <li>
+            <a href="{% url 'summary' s.ticker %}" style="color:rgb(0,77,77);">{{s.ticker}} : {{s.company}}</a>
+        </li>
+    {% endfor %}
+
+<ul>
+</div>
