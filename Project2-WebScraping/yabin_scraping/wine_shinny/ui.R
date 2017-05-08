@@ -74,18 +74,6 @@ shinyUI(navbarPage(
                  )
                  
              ))),
-    tabPanel(
-        "Top Wine List",
-        fluidRow(column(3,
-                        sliderInput(
-                            "dn",
-                            h4("Top n List"),
-                            min = 80,
-                            max = 100,
-                            value = (1)
-                        )
-        ),
-        column(6, DT::dataTableOutput("tbl")))),
     
     tabPanel("The Words of Wine",   
              
@@ -127,6 +115,19 @@ shinyUI(navbarPage(
                  ),
                  column(5, showOutput('Plot', 'nvd3'), verbatimTextOutput('words'))
              )),
+    
+    tabPanel(
+        "Top Wine List",
+        fluidRow(column(3,
+                        sliderInput(
+                            "dn",
+                            h4("Top n List"),
+                            min = 80,
+                            max = 100,
+                            value = (1)
+                        )
+        ),
+        column(6, DT::dataTableOutput("tbl")))),
     
     tabPanel("Author & source code",
              fluidPage(fluidRow(
