@@ -40,8 +40,8 @@ include_legend = False
 time_period = "1 year"
 page_index_max = 100
 initial_delay = 10
-product_category = "Camera"
-start_page = 67
+product_category = "Electronics"
+start_page = 1
 data_rewrite = False
 
 # helper terms
@@ -60,7 +60,7 @@ img_name_suffix_salesRank = "_salesRank.png"
 products_root = "https://camelcamelcamel.com/products"
 products_infix = "?pc="
 if(start_page != 1):
-	products_page_suffix = "&p=" + str(start_page)
+		products_page_suffix = "&p=" + str(start_page)
 else:
 	products_page_suffix = ""
 
@@ -111,7 +111,7 @@ time.sleep(initial_delay)
 page_index = start_page
 product_index = 0
 
-while(page_index < page_index_max):
+while(page_index <= page_index_max):
 
 	print("Scraping " + product_category + " page: " + str(page_index))
 
