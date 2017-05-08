@@ -4,6 +4,7 @@
 import random
 from scrapy.contrib.downloadermiddleware.useragent import UserAgentMiddleware
 
+# >>>>>>>>> You can put this class in the middlewares.py file. <<<<<<<<<
 class RotateUserAgentMiddleware(UserAgentMiddleware):
     def __init__(self, user_agent=''):
         self.user_agent = user_agent

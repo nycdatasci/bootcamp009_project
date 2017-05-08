@@ -20,7 +20,7 @@ class GcorSpider(Spider):
 				return ""
 		else:                           # convert unicode to str
 			return content.encode('ascii','ignore')
-
+	# >>>>>>>>> It is better if you could save the list in a local file and load it in the parse function. <<<<<<<<<
 	def parse(self, response):
 		search_list=[
 		"2U",
@@ -435,7 +435,7 @@ class GcorSpider(Spider):
 		#Scraping initial search term to note as the mother search that all search terms are correlated to.
 		search_terms = response.xpath('//li[@class="result selected"]/span/text()').extract()
 		#Scraping name of selected highest correlated search term to assoc_search.
-		search_terms.extend(response.xpath('//li[@class="result"]/a/text()').extract())	
+		search_terms.extend(response.xpath('//li[@class="result"]/a/text()').extract())
 		#Scraping and concating remaining correlated search terms to assoc_search.
 		corr_search_url = [('https://www.google.com/trends/correlate/search?e=' + x  +'&t=weekly&p=us') for x in search_terms][0:14]
 		#Creating list of correlated search terms to scrape for their search activity time series. Only scraping top 15 to lighten
@@ -474,6 +474,7 @@ class GcorSpider(Spider):
 	def parse_cor_all(self, response):
 		item = response.meta['item']
 		item['search_term'] = response.xpath('//div[@class="left results"]/h2/strong/text()').extract()[0]
+		# >>>>>>>>> Why do we need exec here? <<<<<<<<<<<<<
 		#Scraping search term, whcih is the assoc_search term itself.
 		exec('hist_search_activity = ' + response.xpath('/html/head/script[8]/text()').extract()[0].replace(']','[').split('[')[2])
 		#Scraping data set of search activity time series nested in html head for javascript graph generation.
@@ -1094,4 +1095,3 @@ class GcorSpider(Spider):
 # "XO+Group",
 # "Xperi+Corp",
 # "Zumiez+Inc",
-
