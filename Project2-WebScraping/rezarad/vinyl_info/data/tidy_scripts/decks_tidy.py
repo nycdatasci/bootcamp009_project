@@ -2,8 +2,8 @@ import pandas as pd
 import numpy as np
 
 # import scraped data into panda dataframes
-decks_house = pd.read_csv('decks_house.csv')
-decks_techno = pd.read_csv('decks_techno.csv')
+decks_house = pd.read_csv('./untidy/decks_house.csv')
+decks_techno = pd.read_csv('./untidy/decks_techno.csv')
 
 # create a dictionary for the different currency's of each website
 price_currency = {"redeye": "GBP", "decks": "EUR", "deejay": "EUR", "discogs": "USD"}
@@ -51,12 +51,18 @@ decks_tidy.head(10)
 decks_tidy.shape
 pd.isnull(decks_tidy).sum()
 
+np.unique(decks_tidy.in_stock)
+
+decks_tidy['in_stock'] = decks_tidy.in_stock.div(15)
+
+np.unique(decks_tidy.in_stock)
+
 decks_tidy[pd.isnull(decks_tidy['catalog_num'])]
 
 decks_tidy.loc[pd.isnull(decks_tidy['catalog_num']), 'catalog_num'] = decks_tidy['label']
 
-pd.isnull(decks_tidy)
+decks_tidy['boolean_in_stock'] = True
 
-decks_tidy.head(10)
+decks_tidy.sample(10)
 
 decks_tidy.to_csv("./tidy/decks_tidy.csv")

@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 # import scraped data into panda dataframes
-deejay = pd.read_csv('deejay_releases.csv')
+deejay = pd.read_csv('./untidy/deejay_releases.csv')
 
 deejay.describe()
 
@@ -39,5 +39,14 @@ deejay_tidy = pd.DataFrame({'release_date': release_date,
                                                     'price': deejay.price,
                                                     'currency': currency,
                                                     'in_stock': availability})
+
+deejay_tidy.sample(10)
+
+deejay_tidy['boolean_in_stock'] = [False if stock == 0 else True for stock in deejay_tidy.in_stock]
+
+deejay_tidy['in_stock'] = deejay_tidy.in_stock.div(10)
+
+deejay_tidy.sample(10)
+
 
 deejay_tidy.to_csv('./tidy/deejay_tidy.csv')
