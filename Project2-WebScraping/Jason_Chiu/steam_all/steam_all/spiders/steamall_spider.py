@@ -53,6 +53,7 @@ class steamall_spider(scrapy.Spider):
         else:
             mother_node = response.xpath('//div[@class = "blockbg"]/a/span/text()').extract_first(default='not_found')
         mother_node = self.verify(mother_node)
+        # >>>>>>>> type is not a good variable name in Python since it is a function at the same time. <<<<<<<<<<
         if no_links > 3:
             type = response.xpath('//div[@class = "blockbg"]/a[4]/text()').extract_first(default='not_found')
         else:
@@ -85,5 +86,3 @@ class steamall_spider(scrapy.Spider):
         # self.page_number += 1
         # yield Request(URL % self.page_number,
         #               cookies = {'birthtime':'0','mature_content':'1','path': '/','domain': 'store.steampowered.com'})
-
-

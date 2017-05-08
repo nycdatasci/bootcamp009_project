@@ -1,3 +1,13 @@
+"""
+Yvonne's Code Review:
+Your code in general is very well commented 
+- Good use of list comprehensions: -- they are more efficient and concise than for loops
+
+Try to: 
+- delete lines of code that you don't wind up using
+- include your EDA/analysis file(s). 
+    This is a data science bootcamp, your data munging skills are important
+"""
 from scrapy import Spider, Request
 from madMoney.items import Pick, Problem
 import pandas as pd
