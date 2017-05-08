@@ -19,11 +19,12 @@ class SpiderDodger(scrapy.Spider):
 				return ""
 		else:
 			# convert unicode to str
-			return content.encode('ascii','ignore') 
+			return content.encode('ascii','ignore')
 
 
 
 	def parse(self, response):
+		# >>>>>>>> Good comments. <<<<<<<<<<
 		'''
 		Let's get list of links to crawl first
 		'''
@@ -31,6 +32,7 @@ class SpiderDodger(scrapy.Spider):
 
 		for link in links:
 			new_url = 'http://www.baseball-reference.com' + link
+			# >>>>>>>> remove all the print statements once your are done. <<<<<<<<<
 			print new_url
 			yield scrapy.Request(new_url, callback = self.parse_player)
 
@@ -47,14 +49,14 @@ class SpiderDodger(scrapy.Spider):
 		'''
 		scrape the player pages
 		'''
-
 		# Find the positions, and pass any that are equal to pitchers
 		try:
 			position = str(response.xpath('//*[@id="meta"]/div[2]/p[1]/text()').extract()[1].strip())
 		except IndexError:
 			print "Out of range"
-			
-		
+
+		# >>>>>>>> First of all, you can combine these two by rewriting the verify function. <<<<<<<<
+		# >>>>>>>> Second, I am not sure when the verify function will throw an error. <<<<<<<<<<<<<<<
 		try:
 			position = self.verify(position)
 		except AttributeError:
@@ -68,18 +70,19 @@ class SpiderDodger(scrapy.Spider):
 			name = response.xpath('//*[@id="meta"]/div/h1/text()').extract_first()
 		else:
 			name = response.xpath('//*[@id="meta"]/div[2]/h1/text()').extract_first()
-		
+
 		try:
 			name = self.verify(name)
 		except AttributeError:
 			print "Could not find name"
-		
-		# Defensive Position 
 
-		
-		rows = response.xpath('//*[@id="content"]//table/tbody/tr')	
+		# Defensive Position
+
+
+		rows = response.xpath('//*[@id="content"]//table/tbody/tr')
+		# >>>>>> for row in rows might be more efficient here. <<<<<<<<<<<
 		for i in range(1, len(rows)):
-			
+
 			# Year
 			year = str(rows[i].xpath('./th//text()').extract_first())
 			# Team
@@ -122,11 +125,11 @@ class SpiderDodger(scrapy.Spider):
 			ibb = str(rows[i].xpath('./td[27]//text()').extract_first())
 
 		# create another variable like rows for the player value -- batting table. we only want to extract WAR.
-		# pv_rows = 
+		# pv_rows =
 		# for i in range(1, len(pvrows)):
 		# 	war = blahblahblah
 
-			
+			# >>>>>>> This is not a good practice to use try statements because you don't know which one break your code. <<<<<<<<<<
 			# verify
 			try:
 				year = self.verify(year)
@@ -152,7 +155,7 @@ class SpiderDodger(scrapy.Spider):
 				ibb = self.verify(ibb)
 			except AttributeError:
 				print "None Type"
-				
+
 			item = BaseballItem()
 			item['name'] = name
 			item['year'] = year
@@ -178,9 +181,5 @@ class SpiderDodger(scrapy.Spider):
 			item['tb'] = tb
 			item['ibb'] = ibb
 
-			
+
 			yield item
-
-
-
-
