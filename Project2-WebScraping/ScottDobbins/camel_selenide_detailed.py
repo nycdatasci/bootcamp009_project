@@ -2,6 +2,8 @@
 # @version 0.0
 # @date 2017-05-03 15:30
 
+########### CURRENTLY NOT IN USE ####################
+
 ### import packages ###
 
 # selenium

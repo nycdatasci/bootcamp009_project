@@ -49,7 +49,9 @@ while True:
 		# Find all the reviews.
 
 		reviews = []
+		# >>>>>> Why i = 0 here? <<<<<
 		i=0
+		# >>>>>> List comprehension might be more efficient than a for loop with append here. <<<<<<<
 		for link in driver.find_elements_by_xpath('//a[@class="review-listing"]'):
 			url  = link.get_attribute("href")
 			reviews.append(url)
@@ -73,7 +75,7 @@ while True:
 
 			#appellation = driver.find_element_by_xpath('//*[@id="review"]/div[2]/div[2]/div[2]/div[1]/ul[1]/li[4]/div[2]/span').text
 
-			#appellation get all the data 
+			#appellation get all the data
 			# winery get the data , dont want buy now
 			appellation = driver.find_elements_by_xpath('//div[@class="info medium-9 columns"]/span/a')[-1]
 			appellation = appellation.text
@@ -81,7 +83,7 @@ while True:
 			variety  = driver.find_element_by_xpath('//div[@class="info medium-9 columns"]/span/a').text
 			variety = verify(variety)
 
-
+			# >>>>>>> This xpath is UGLY. <<<<<<<<<<
 			winery = driver.find_elements_by_xpath('//*[@id="review"]/div[2]/div[2]/div[2]/div[1]/ul[1]/li/div[2]/span/span/a')[-1]
 			#winery = driver.find_elements_by_xpath('//ul[@class="primary-info"]/li')[-1]
 			#winery = winery.find_element_by_xpath('.//a').text
@@ -114,9 +116,9 @@ while True:
 			review_dict['bottle_size'] = bottle_size
 			review_dict['category'] = category
 			review_dict['description'] = description
-	
+
 			writer.writerow(review_dict.values())
-	
+
 		driver.execute_script('window.history.go(-30)')
 		button = driver.find_element_by_id("next-page")
 		button.click()
@@ -129,21 +131,21 @@ while True:
 		csv_file.close()
 		driver.close()
 		break
-		
+
 
 
 	# Better solution using Explicit Waits in selenium: http://selenium-python.readthedocs.io/waits.html?highlight=element_to_be_selected#explicit-waits
 
 	# try:
 	# 	wait_review = WebDriverWait(driver, 10)
-	# 	reviews = wait_review.until(EC.presence_of_all_elements_located((By.XPATH, 
+	# 	reviews = wait_review.until(EC.presence_of_all_elements_located((By.XPATH,
 	# 								'//ol[@class="bv-content-list bv-content-list-Reviews bv-focusable"]/li')))
 	# 	print index
 	# 	print 'review ok'
 	# 	# reviews = driver.find_elements_by_xpath('//ol[@class="bv-content-list bv-content-list-Reviews bv-focusable"]/li')
 
 	# 	wait_button = WebDriverWait(driver, 10)
-	# 	button = wait_button.until(EC.element_to_be_clickable((By.XPATH, 
+	# 	button = wait_button.until(EC.element_to_be_clickable((By.XPATH,
 	# 								'//div[@class="bv-content-list-container"]//span[@class="bv-content-btn-pages-next"]')))
 	# 	print 'button ok'
 	# 	# button = driver.find_element_by_xpath('//span[@class="bv-content-btn-pages-next"]')
@@ -152,5 +154,3 @@ while True:
 	# 	print e
 	# 	driver.close()
 	# 	break
-
-

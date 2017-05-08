@@ -51,10 +51,11 @@ class goodreads_spider(scrapy.Spider):
 		MainGenre = response.meta['main_genre']
 		MainGenre = self.verify(MainGenre)
 
+		# >>>>>> I think you might want to verify the variable first and then strip. <<<<<<<<<
 		Title = response.xpath('//div[@class="last col"]/h1/text()').extract_first()
 		Title = Title.strip()
 		Title = self.verify(Title)
-		
+
 		Author = response.xpath('//div[@class="last col"]/div/span/a/span/text()').extract_first()
 		Author = self.verify(Author)
 
@@ -126,6 +127,8 @@ class goodreads_spider(scrapy.Spider):
 		Reviews = self.verify(Reviews)
 
 		# i=0
+		# >>>>>>> MainGenre is a string. Why iterate through a string? <<<<<<<<
+		# >>>>>>> books is never called later so you can do `for _ in MainGenre:` <<<<<<<<
 		for books in MainGenre:
 			item = GoodreadsItem()
 			item['Title'] = Title

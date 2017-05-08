@@ -30,7 +30,7 @@ while True:
         rows = driver.find_elements_by_xpath('//body/table')
         for row in rows:
             release_info = {}
-
+            # >>>>> Same problem here. Wrap them in a function. <<<<<
             if len(row.find_elements_by_xpath('.//span[@class = "txt_titel"]')) != 0:
                 release = row.find_element_by_xpath('.//span[@class = "txt_titel"]').text
             else:
