@@ -37,7 +37,7 @@ while page_num<=200:
             pass;
 
         # append each class link to class_list
-        # each page has 16 class links
+        # each page has 15 class links
         for class_list in range(1,16):
             
             classPath = ('//*[@id="filter-results"]/div/div[{0}]/div[2]/div/div[1]/div[1]/h4[@class="title"]/a').format(class_list)
