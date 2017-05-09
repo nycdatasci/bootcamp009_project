@@ -1,0 +1,232 @@
+
+    
+  
+  Two of tech's biggest venture capital funds,Andreessen
+  Horowitz and Union Square Ventures, are investing $1 million into
+  OpenBazaar, a wildly ambitious bitcoin startup that aims to
+  create a decentralised, police-proof online marketplace where
+  users can sell literally anything using bitcoin.
+
+  However, the company is at pains to make clear that it isn't
+  trying to create a "Silk Road 3.0." Lead developer Brian Hoffman
+  spoke emphatically against "misuse" of the platform when I talked
+  to him, instead arguing it has the potential to revolutionise
+  online commerce  a next-generation Etsy with no transaction fees
+  whatsoever. Early press focused on its potential criminal
+  implications, but Hoffman says he is determined to "change the
+  conversation," and hopes the high-profile investment will help to
+  "legitimise development of the protocol."
+
+  But with an uncensorable structure, Hoffman concedes, comes the
+  risk that it could also be used to
+
+  To understand how OpenBazaar works and where it came from, you
+  need to understand a little about digital currency bitcoin.
+  Unlike other currencies, it has no central authority regulating
+  or controlling it  it is totally decentralised. Users of bitcoin
+  instead contribute their processing power to the upkeep of the
+  network, and a public ledger (required to avoid double-spending)
+  of all transactions is shared between users on the network.
+
+    
+  
+  Bitcoin transactions can't be blocked by any authority, offering
+  users a way to buy absolutely anything  provided they can find a
+  seller. In the early days, the digital currency rose to
+  prominence in part because it helped facilitate an unprecedented
+  online drug trade, principally through online contraband market
+  Silk Road.
+
+  But while bitcoin is decentralised, and impossible to stop
+  without shutting down every computer on the network, Silk Road
+  the marketplace. Although it obscured its
+  location from authorities through use of anonymising software
+  Tor, it was ultimately tracked down, shut down, and its creator 
+  .
+
+  OpenBazaar takes bitcoin's decentralisation to its logical
+  conclusion  by decentralising the market itself. The project has
+  no central server to be seized; instead, it is distributed
+  between every member of the network, all jointly responsible for
+  its upkeep.
+
+  On eBay, there's a central authority that moderates the network,
+  monitors for illicit items on sale, arbitrates disputes, and
+  holds funds in escrow. On OpenBazaar, however, there is none of
+  this. Instead it makes use of "multi-sig" bitcoin transactions
+  that require a third-party (it could be anyone the other two
+  parties agree on) to sign off on transactions, to prevent fraud.
+  And it offers a rating system through which users can gauge the
+  trustworthiness of others, in lieu of any official stamp of
+  approval.
+
+  As for removing illicit or illegal items on sale? It's very
+  simple. They can't be removed.
+
+  In short: It can't be shut down, and it can't be censored.
+
+    
+  
+  Created by bitcoin developer Amir Taaki in 2014, the project was
+  initially called DarkMarket, and explicitly positioned itself as
+  a successor to Silk Road.  "in an arms race to equip the people with the tools
+  needed for the next generation of digital black markets."
+
+  It subsequently rebranded as OpenBazaar, and Taaki stepped aside
+  to pursue other projects  principally Dark Wallet, a bitcoin
+  money-laundering app.
+
+  Then, Brian Hoffman  who had previously worked at the management
+  consultancy Booz Allen Hamilton  took over, precipitating a
+  change in rhetoric. "We're not the 'Super Silk
+  Road,'"."We're
+  trying to replace eBay in a better form ...We recognise
+  that people may choose to use that technology in a way we see as
+  distasteful, immoral, and illegal, but were giving them the
+  option to engage in a kind of human interaction that doesnt
+  exist right now."
+
+  More than 100 developers have contributed to the project since
+  its inception, and there's now a core team of five full-time
+  employees and one contractor, who have  up until this point 
+  been supported by donations from the bitcoin community.
+
+    
+  
+  OpenBazaar is currently still in a beta stage, and solicits
+  contributions from the community as both funds and code  the
+  project is open source, after all. Hoffman told me that we should
+  expect to see a more polished version released in a timeframe of
+  "months."
+
+  Speaking over the phone from his home in Fairfax, Virginia,
+  Hoffman frames OpenBazaar as more like Etsy than anything else.
+  After all, it's an online marketplace where anyone can list
+  items, with a review system  but without any burdensome
+  transaction fees.
+
+  "I use Etsy is because thats what is primarily considered a
+  market leader in what we know as peer to peer commerce online at
+  the moment," he told me in a follow-up email. "I think the
+  decentralised model where 'take rates' (the percentage cut the
+  marketplace takes) are eliminated will force the incumbents to
+  have to rethink their strategy for capturing profit from
+  consumers. It will force them to have to think about new ways to
+  provide value-added services rather than just raising fees on
+  customers to make more money."
+
+    
+  
+    
+  
+    
+  
+  Though still in its infancy, goods are already being sold through
+  OpenBazaar. Hoffman brings up the honey he has bought, as well as
+  a pen made from a bullet  one of his first purchases on the
+  platform.
+
+  He says there has, as yet, been no problem with illegal goods
+  being traded on the platform. But the 32-year-old computer
+  science major is also realistic about the fact that there almost
+  certainly will be, given time.
+
+  For now, OpenBazaar is trying to "curb blatant misuse," namely by
+  not yet directly integrating support for anonymising software
+  Tor. That's not to say users couldn't mask their identity before
+  booting up the platform, however.
+
+  Hoffman is also careful to define OpenBazaar as a protocol,
+  rather than a product  a distinction essential for keeping his
+  hands clean of any potentially illegal activity carried out using
+  the software. While the owner of a file-sharing site is
+  responsible for any illegal content on it, the creator of the
+  decentralised BitTorrent file-sharing protocol isn't criminally
+  liable if it is used for illegal activity. They have no control
+  over it  it's just a piece of code  and the same is true of
+  OpenBazaar.
+
+  One wonders, however, if this distinction will be lost on the
+  authorities. , despite the urgings of security experts
+  and tech companies, claiming that secure messaging aids
+  terrorists and paedophiles. An online market that has the
+  capacity to be used by drug dealers, criminals, and even
+  terrorists to evade capture is guaranteed to come under very
+  heavy scrutiny.
+
+  Andreessen Horowitz and Union Square Ventures are two of tech's
+  most-respected venture capital firms, and they're getting into
+  bed with a project whose lead developer readily acknowledges may
+  be used to distribute possibly illegal material.
+
+    
+  
+  Hoffman says he wasn't actively seeking venture capital
+  investment, and their investment came almost "by accident," after
+  being introduced by a mutual connection.
+
+  Chris Dixon leads the investment for Andreessen Horowitz, and
+  managing partner Brad Burnham does the same for Union Square
+  Ventures. Both are investing $500,000 in this seed round, and are
+  joined by angel investor and board member William Mougaywar, who
+  is investing $10,000. Neither Burnham nor Dixon are joining the
+  board, which Hoffman concedes is likely because of the
+  controversy the project has the potential to ignite. But he hopes
+  the investment from two such high-profile firms will help to
+  "legitimise development of the protocol."
+
+  While OpenBazaar is a non-profit project, the funds are being
+  used to create OB1, a for-profit company that will build
+  revenue-generating value-added services  such as shopfronts or
+  escrow services  on top of the OpenBazaar protocol layer.
+
+  Burnham told me in an emailed statement that "OB1 will, of
+  course, never knowingly offer its value added services to anyone
+  using the OpenBazaar protocol to engage in illegal or morally
+  questionable activities."
+
+    
+  
+  But, he goes on, "the harder question is how to support the
+  development of an open protocol, one that OB1 does not control,
+  without encouraging, or endorsing, or even facilitating the
+  misuse of that protocol. This calculus is further complicated by
+  the fact that many contributors to the open source project are
+  likely motivated by a mistrust of political or economic power. We
+  do not have an easy answer. It would be disingenuous for us to
+  say the OB1 team has no influence over the open source project.
+  They are respected code contributors and are likely to encourage
+  the development of the protocol through their own work and will
+  now be in a position to offer bounties to encourage the
+  development of specific features. But there is no design
+  principle that we can encourage, that would eliminate the
+  possibility of misuse, without undermining the value inherent in
+  a free and open marketplace, so the best we can do is
+  aggressively advocate for the responsible use of the OpenBazaar
+  protocol, be open and transparent ourselves, and be an example
+  for others. "
+
+  Chris Dixon did not respond to a request for comment.
+
+  OpenBazaar, if it proves successful, is an obvious competitor to
+  the likes of Etsy and eBay. But Hoffman suggests that rather than
+  disrupting established businesses, companies could potentially
+  implement the OpenBazaar protocol into their own services. "Our
+  hope is [other businesses]dont view it as a competitor but
+  as a technology to embrace and integrate within their existing
+  platforms how they see fit. As OB1 we will attempt to work with
+  those interested to discuss how thats feasible as well."
+
+  But it's an open question whether public companies worth billions
+  of dollars would want to be associated with a technology like
+  OpenBazaar. And similarly, it's up for debate whether normal
+  consumers will want to use the network  knowing that, by doing
+  so, they are helping keep online a market that could sell immoral
+  contraband. Hoffman suggests that potentially objectionable
+  content could be hidden from users unless they actively hunt for
+  it. But whether "out of sight, out of mind" is enough remains to
+  be seen.
+, Hoffman suggested
+  that if OpenBazaar became overrun with illicit or immoral
+  materials, he would "be willing to walk away from it." I asked
+  him if he still held by that. "Yes, absolutely."
