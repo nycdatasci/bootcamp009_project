@@ -1,63 +1,53 @@
-require(syuzhet)
-require(dplyr)
+library(syuzhet)
 
-news = read.csv('data/bitcoin_news_99bitcoins.csv', stringsAsFactors = F)
+### I want to calculate the normalized interpretations for sentences and words for all 4 models
+### That means I'll end up with 8 values
+
+#news = read.csv('../data/bitcoin_news_99bitcoins.csv', stringsAsFactors = F)
 # strip dollar signs from val and val_after_10_days
 news$val = as.numeric(sapply(news$val, function(x) gsub('\\$','',x)))
 news$val_after_10days = as.numeric(sapply(news$val_after_10days, function(x) gsub('\\$','',x)))
+
+# Calculate 10 day price difference from column
 news$val_diff = news$val_after_10days - news$val
-news
-stories = news$story
-titles = news$title
 
-# Check out syuzhet
-# do by words instead of sentences (syuzhet can do both)
-
-create_sentiment_plot = function(meth) {
-
-  title_sentiments = rep(0, length(stories))
-  story_sentiments = rep(0, length(stories))
-
-  for (i in seq(1:length(stories))) {
-    title_by_word <- get_tokens(titles[i], pattern = "\\W")
-    story_by_word <- get_tokens(stories[i], pattern = "\\W")
-    title_sentiments[i] <- sum(get_sentiment(title_by_word, method="syuzhet"))
-    story_sentiments[i] <- sum(get_sentiment(story_by_word, method="syuzhet"))
+# Define the token function
+get_tokes = function(x, meth) {
+  a = get_sentiment(get_tokens(x, pattern = "\\W"),method=meth)
+  if (is.null(a)) {
+    return(0)
   }
-
-  news = cbind(news, title_sentiments)
-  news = cbind(news, story_sentiments)
-
-  # strip dollar signs from val and val_after_10_days
-  news$val = as.numeric(sapply(news$val, function(x) gsub('\\$','',x)))
-  news$val_after_10days = as.numeric(sapply(news$val_after_10days, function(x) gsub('\\$','',x)))
-  news$val_diff = news$val_after_10days - news$val
-  news$total_sentiment = news$title_sentiments + news$story_sentiments
-
-  plot(news$total_sentiment, news$val_diff, main='syuzhet')
-  
+  else { 
+    return(mean(a))
+  }
 }
 
-create_sentiment_plot = function(meth) {
+# First I'll do the word vectors
+syuz_word = sapply(news$long_story, get_tokes, meth = 'syuzhet')
+bing_word = sapply(news$long_story, get_tokes, meth = 'bing')
+afinn_word = sapply(news$long_story, get_tokes, meth = 'afinn')
+nrc_word = sapply(news$long_story, get_tokes, meth = 'nrc')
 
-  total_sentiments = rep(0, length(stories))
-  
-  for (i in seq(1:length(stories))) {
-    title_by_word <- get_tokens(titles[i], pattern = "\\W")
-    story_by_word <- get_tokens(stories[i], pattern = "\\W")
-    total_sentiments[i] <- sum(get_sentiment(title_by_word, method = meth)) + 
-                           sum(get_sentiment(story_by_word, method = meth))
-  }
+svg(paste0('words','.svg'))
+plot(jitter(syuz_word), news$val_diff, main = 'by the word')
+points(jitter(bing_word), news$val_diff, col= 'red')
+points(jitter(afinn_word), news$val_diff, col= 'blue')
+points(jitter(nrc_word), news$val_diff, col= 'green')
+dev.off()
 
-  #news = cbind(news, title_sentiments)
-  #news = cbind(news, story_sentiments)
-
-  svg(paste0(meth,'.svg'))
-  plot(total_sentiments, news$val_diff, main = meth, panel.first = grid())
-  dev.off()
-  
+# Now I'll do the sentences
+get_vecs = function(x, meth) {
+  mean(sign(get_sentiment(get_sentences(x),method=meth)))
 }
 
-# syuzhet, bing, afinn, nrc, and stanford* (requires coreNLP package)
-types = c('syuzhet','bing','afinn','nrc')
-lapply(types, create_sentiment_plot)
+syuz_vec = sapply(news$long_story, get_vecs, meth = 'syuzhet')
+bing_vec = sapply(news$long_story, get_vecs, meth = 'bing')
+afinn_vec = sapply(news$long_story, get_vecs, meth = 'afinn')
+nrc_vec = sapply(news$long_story, get_vecs, meth = 'nrc')
+
+svg(paste0('sentences','.svg'))
+plot(jitter(syuz_vec), news$val_diff, main = 'by the sentence')
+points(jitter(bing_vec), news$val_diff, col= 'red')
+points(jitter(afinn_vec), news$val_diff, col= 'blue')
+points(jitter(nrc_vec), news$val_diff, col= 'green')
+dev.off()

@@ -204,6 +204,7 @@ class Product(object):
 
 	def parse_image(self, directory, image_type, data_type):
 		# make sure directory and type are reasonable and that ASIN exists
+		#>>>>>>>>>>>>>> Could you make a more detailed multiline comment of what parse_image() is going to do?
 
 		### read image and threshold ###
 
@@ -232,7 +233,7 @@ class Product(object):
 			is_graph_line = (img[:,:,0] >= red_min_red) & (img[:,:,1] <= red_max_green) & (img[:,:,2] <= red_max_blue)
 			starting_price = self.price_used
 		else:
-			pass # raise error
+			pass # raise error #>>>>>>>>>>>>>>>>>> ?
 
 		img_height = img.shape[0]
 		img_width = img.shape[1]

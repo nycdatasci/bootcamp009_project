@@ -6,7 +6,7 @@ library(shiny)
 library(shinydashboard)
 library(graphics)
 library(tm)
-library(NLP)
+library(NLP) #>>>>>>>>>>>>>>>>>> In general try to only include the packages you used in the end
 
 
 header <- dashboardHeader(title="NYT vs NR")
@@ -64,7 +64,7 @@ server = function(input, output,session) {
     NR$title <- strsplit(NR$title,split=" ")
     NYT$title <- strsplit(NYT$title,split=" ")
     test = function(col) sapply(col, function(x){ input$textSearch1 %in% x})
-    a <- NR %>% mutate(ex = test(title))
+    a <- NR %>% mutate(ex = test(title)) #>>>>>>>>>>> You can chain these dplyr commands together for easier understanding
     b <- NYT %>% mutate(ex = test(title))
     a <- a %>% filter(ex)
     b <- b %>% filter(ex)

@@ -1,6 +1,6 @@
 import scrapy
 import time
-from baseball.items import BaseballItem
+from baseball.items import HittersItem
 
 
 class SpiderDodger(scrapy.Spider):
@@ -156,7 +156,7 @@ class SpiderDodger(scrapy.Spider):
 			except AttributeError:
 				print "None Type"
 
-			item = BaseballItem()
+			item = HittersItem()
 			item['name'] = name
 			item['year'] = year
 			# item['age'] = age
