@@ -211,7 +211,7 @@ bbLog1 = glm(hof ~ ., data = train, family = binomial)
 summary(bbLog1)
 
 #2
-bbLog2 = glm(hof ~ hits_p_season + career_ba  +
+bbLog2 = glm(hof ~ hits_p_season + career_ba +
                 rbi_p_season + sb_p_season + total_ops +
                 ov_bb_rate + ov_so_rate, data=train, family=binomial)
 summary(bbLog2)

@@ -26,14 +26,15 @@ import pandas as pd
 
 ###############################################
 #############    Trying Selenium  #############
-###############################################    
-ticker='AAPL' 
+###############################################
+ticker='AAPL'
+# >>>>>>>> Why do you name all the variables the same? <<<<<<<<
 df = pd.read_csv('Dow.csv', index_col=False, header=0)
 df = pd.read_csv('SP500.csv', index_col=False, header=0)
 df = pd.read_csv('Ticker.csv', index_col=False, header=0)
 
 ticker_list = df['Ticker']
-# print ticker_list   
+# print ticker_list
 ticker_list[:3]
 ticker_list = ['AAPL']
 
@@ -43,12 +44,13 @@ writer = csv.writer(csv_file)
 
 for ticker in ticker_list:
     try:
+        # >>>>>>> You only need to initialize chromedriver once. Put it outside the for loop. <<<<<<<<<<<
         driver = webdriver.Chrome('C:\Users\chaiho\Documents\NYC Data Science Academy\Selenium\chromedriver')
         # driver = webdriver.PhantomJS('C:\Users\chaiho\Documents\NYC Data Science Academy\Selenium\chromedriver')
 
         driver.get("http://apps.cnbc.com/view.asp?country=US&uid=stocks/earnings&symbol="+ticker)
 
-        # driver.find_elements_by_tag_name('polygon')[0].click() 
+        # driver.find_elements_by_tag_name('polygon')[0].click()
         # time.sleep(5)
 
         # Actions action = new Actions(driver);
@@ -75,13 +77,13 @@ for ticker in ticker_list:
 
         # element = wd.find_element_by_link_text(self.locator)
         print "Attempting to Hover...."
-        
+
         element = driver.find_element_by_xpath('//*[@id="chartMap"]/map/area[1]')
-        
+
         print element
         # element = driver.find_element_by_xpath('//*[@id="chartMap"]/map/area[1]')
         # print element
-        
+
         # element_list = driver.find_element_by_tag_name('map')
         # print element_list
         # element = driver.find_element_by_id('chartMap')
@@ -90,13 +92,14 @@ for ticker in ticker_list:
         # print area_list
         hov = ActionChains(driver).move_to_element(element)
         hov.perform()
-        
+
         print "#"*50
-        
+
 
         # Getting Legend Data
         result = ''
         i = 0
+        # >>>>>>> Though you have a while loop here, but I believe it will only run once. <<<<<<<<<
         while len(result)==0:
             if i==100:
                 break
