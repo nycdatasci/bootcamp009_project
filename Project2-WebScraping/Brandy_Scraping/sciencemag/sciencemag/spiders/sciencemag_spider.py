@@ -9,6 +9,7 @@ class ScienceMagSpider(scrapy.Spider):
 	#start_urls = ['http://science.sciencemag.org/content/by/volume/283',
 	#]
 
+	#>>>>>>>>>>>>>>>>> I assume you didn't make these programmatically because you copied/pasted...
 	start_urls = ['http://science.sciencemag.org/content/by/volume/283',
 				'http://science.sciencemag.org/content/by/volume/284',
 				'http://science.sciencemag.org/content/by/volume/285',
