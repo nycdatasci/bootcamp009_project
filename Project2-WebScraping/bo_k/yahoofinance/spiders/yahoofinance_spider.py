@@ -23,7 +23,8 @@ class yahoofinance_spider(scrapy.Spider):
         optiontype = 'call'
         rows = response.xpath('//table[@class="calls table-bordered W(100%) Pos(r) Bd(0) Pt(0) list-options"]//tr')
 
-
+        # >>>>>>> It is better to iterate through the rows list like `for row in rows` instead of using index. <<<<<<<<
+        # >>>>>>> Then you can use relative path and not to worry about the index anymore. <<<<<<<<<<<<
         for i in range(1, len(rows)):
 
             strike =       rows[i].xpath('//*[@id="quote-leaf-comp"]/section/section[1]/div[2]/table/tbody/tr[' + str(i) + ']/td[1]//text()').extract_first()
@@ -37,8 +38,8 @@ class yahoofinance_spider(scrapy.Spider):
             openinterest = rows[i].xpath('//*[@id="quote-leaf-comp"]/section/section[1]/div[2]/table/tbody/tr[' + str(i) + ']/td[9]//text()').extract_first()
             impliedvolatility = rows[i].xpath('//*[@id="quote-leaf-comp"]/section/section[1]/div[2]/table/tbody/tr[' + str(i) + ']/td[10]//text()').extract_first()
 
-            
-            item = YahooFinanceItem() 
+
+            item = YahooFinanceItem()
             item['optiontype'] = optiontype
             item['strike'] = self.verify(strike)
             item['contractname'] = self.verify(contractname)
@@ -57,7 +58,7 @@ class yahoofinance_spider(scrapy.Spider):
         optiontype = 'put'
         rows = response.xpath('//table[@class="puts table-bordered W(100%) Pos(r) list-options"]//tr')
 
-
+        # >>>>>>>>>>> Why repeat the same code again? <<<<<<<<<<
         for i in range(1, len(rows)):
 
 
@@ -72,8 +73,8 @@ class yahoofinance_spider(scrapy.Spider):
             openinterest = rows[i].xpath('//*[@id="quote-leaf-comp"]/section/section[2]/div[2]/table/tbody/tr[' + str(i) + ']/td[9]//text()').extract_first()
             impliedvolatility = rows[i].xpath('//*[@id="quote-leaf-comp"]/section/section[2]/div[2]/table/tbody/tr[' + str(i) + ']/td[10]//text()').extract_first()
 
-            
-            item = YahooFinanceItem() 
+
+            item = YahooFinanceItem()
             item['optiontype'] = optiontype
             item['strike'] = self.verify(strike)
             item['contractname'] = self.verify(contractname)
@@ -88,4 +89,3 @@ class yahoofinance_spider(scrapy.Spider):
 
 
             yield item
-

@@ -2,6 +2,7 @@ from selenium import webdriver
 import time
 #import csv
 import unicodecsv
+# >>>>>>>> I nevered used unicodecsv before but you can always manually convert unicode to ascii. <<<<<<<<<
 browser = webdriver.Chrome()
 #browser = webdriver.Firefox()
 
@@ -15,7 +16,7 @@ for category, value in category_dict.items():
 	url = 'https://www.kickstarter.com/discover/advanced?state=successful&woe_id=23424977&sort=magic&category_id='+value
 	browser.get(url)
 	time.sleep(2)
-	
+
 	# number = browser.find_element_by_xpath('//b[@class="count green"]').text #encode('ascii', 'ignore')
 	# number = int(''.join(number.split()[0].split(',')))
 	# number = (number/20)
@@ -23,7 +24,7 @@ for category, value in category_dict.items():
 	# for page in range(1,  number + 1):
 
 	# To scrape 100 top projects in each category; each page lists 20 projects (20 * 5 pages = 100)
-	for page in range(1, 6): 
+	for page in range(1, 6):
 		new_url = url + '&page=' + str(page)
 		browser.get(new_url)
 		projects = browser.find_elements_by_xpath('//div[@class="row"]/li//div[@class="project-profile-title text-truncate-xs"]/a')
@@ -56,7 +57,8 @@ for category, value in category_dict.items():
 			item['funding_start_date'] = funding_start_date
 			item['funding_end_date'] = funding_end_date
 
-
+            # >>>>>>>> What is the purpose of the following line of code? <<<<<<<
+            # >>>>>>>> Would item.values() do the same thing? <<<<<<<<<<<
 			result = map(lambda x: item[x], colnames)
 			writer.writerow(result)
 
