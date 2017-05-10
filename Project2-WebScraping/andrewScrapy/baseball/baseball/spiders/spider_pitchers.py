@@ -35,6 +35,12 @@ class SpiderDodger(scrapy.Spider):
 			print new_url
 			yield scrapy.Request(new_url, callback = self.parse_player)
 
+		# for testing
+		# new_url = "http://www.baseball-reference.com/players/p/piazzmi01.shtml"
+		# yield scrapy.Request(new_url, callback = self.parse_player)
+		# new_url = "http://www.baseball-reference.com/players/r/ruthba01.shtml"
+		# yield scrapy.Request(new_url, callback = self.parse_player)
+
 
 
 
@@ -44,13 +50,18 @@ class SpiderDodger(scrapy.Spider):
 		'''
 
 		# Find the positions, and pass any that are equal to pitchers
-		if response.xpath('//*[@id="meta"]/div[2]/p[1]/text()').extract() == []:
-			position = ""
-		else:
+		try:
 			position = str(response.xpath('//*[@id="meta"]/div[2]/p[1]/text()').extract()[1].strip())
+		except IndexError:
+			print "Out of range"
 
-		position = self.verify(position)
+		try:
+			position = self.verify(position)
+		except AttributeError:
+			print "No position"
 
+		if re.search('^pitcher +', position.lower()) == None:
+			pass
 
 		# Player name
 		if not response.xpath('//*[@id="meta"]/div[2]/h1/text()').extract_first():
@@ -58,13 +69,17 @@ class SpiderDodger(scrapy.Spider):
 		else:
 			name = response.xpath('//*[@id="meta"]/div[2]/h1/text()').extract_first()
 
-		name = self.verify(name)
+		try:
+			name = self.verify(name)
+		except AttributeError:
+			print "Could not find name"
 
 		# Defensive Position
 
 
 		rows = response.xpath('//*[@id="content"]//table/tbody/tr')
-		for row in rows:
+		for i in range(1, len(rows)):
+
 			# Year
 			year = str(rows[i].xpath('./th//text()').extract_first())
 			# Team
@@ -122,37 +137,45 @@ class SpiderDodger(scrapy.Spider):
 			# Strikeout per 9 innings
 			k9 = str(rows[i].xpath('./td[32]//text()').extract_first())
 
+		# create another variable like rows for the player value -- batting table. we only want to extract WAR.
+		# pv_rows =
+		# for i in range(1, len(pvrows)):
+		# 	war = blahblahblah
+
 
 			# verify
-			year = self.verify(year)
-			team = self.verify(team)
-			wins = self.verify(wins)
-			losses = self.verify(losses)
-			era = self.verify(era)
-			games = self.verify(games)
-			cg = self.verify(cg)
-			sho = self.verify(sho)
-			saves = self.verify(saves)
-			ip = self.verify(ip)
-			h = self.verify(h)
-			r = self.verify(r)
-			er = self.verify(er)
-			hr = self.verify(hr)
-			bb = self.verify(bb)
-			ibb = self.verify(ibb)
-			k = self.verify(k)
-			hbp = self.verify(hbp)
-			bk = self.verify(bk)
-			wp = self.verify(wp)
-			bf = self.verify(bf)
-			era_plus = self.verify(era_plus)
-			fip = self.verify(fip)
-			whip = self.verify(whip)
-			h9 = self.verify(h9)
-			hr9 = self.verify(hr9)
-			bb9 = self.verify(bb9)
-			k9 = self.verify(whip)
+			try:
+				year = self.verify(year)
+				team = self.verify(team)
+				wins = self.verify(wins)
+				losses = self.verify(losses)
+				era = self.verify(era)
+				games = self.verify(games)
+				cg = self.verify(cg)
+				sho = self.verify(sho)
+				saves = self.verify(saves)
+				ip = self.verify(ip)
+				h = self.verify(h)
+				r = self.verify(r)
+				er = self.verify(er)
+				hr = self.verify(hr)
+				bb = self.verify(bb)
+				ibb = self.verify(ibb)
+				k = self.verify(k)
+				hbp = self.verify(hbp)
+				bk = self.verify(bk)
+				wp = self.verify(wp)
+				bf = self.verify(bf)
+				era_plus = self.verify(era_plus)
+				fip = self.verify(fip)
+				whip = self.verify(whip)
+				h9 = self.verify(h9)
+				hr9 = self.verify(hr9)
+				bb9 = self.verify(bb9)
+				k9 = self.verify(whip)
 
+			except AttributeError:
+				print "None Type"
 
 			item = PitchersItem()
 			item['name'] = name
