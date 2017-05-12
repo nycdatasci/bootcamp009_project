@@ -1,3 +1,10 @@
+"""
+Yvonne's code review: 
+Overall, i liked how your code was strcutured. Your ipython notebook is very organized, it is
+good to break down a major file of code into sections
+"""
+# Yvonne's code review: nice comment in the beginning to explain contents
+
 #This python script interprets all scraped product pages and saves in a consistent format
 #The raggedness of the data made it very difficult to generalize, a template spec list was required
 
@@ -121,6 +128,7 @@ for i in range(1,2297):
     rating_n = b.find("span", attrs={"itemprop":"ratingCount"}).text.encode('ascii', 'ignore')
     spec_finder = b.find("div", attrs={"class":"specs block"}).findAll("h4")
 
+# Yvonne's Code Review: for spec_text -- use list comprehension instead
     spec_text = []
     for spec_name in spec_finder:
         spec_text.append(spec_name.text.encode('ascii','ignore').strip().lower())

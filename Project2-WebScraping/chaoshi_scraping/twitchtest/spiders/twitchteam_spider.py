@@ -30,9 +30,9 @@ class twitchteamSpider(scrapy.Spider):
 
 	def parse(self, response):
 
-		
-		url1 = 'https://www.twitchtools.com/teams'
 
+		url1 = 'https://www.twitchtools.com/teams'
+		# >>>>>>>>> Then it is better to use try except. <<<<<<<<<<
 		for i in range(1,100): # 72 pages of teams on 4/29/2017, this list keeps growing
 		                       # the scraping will stop once it reaches a non existing page
 
@@ -60,4 +60,3 @@ class twitchteamSpider(scrapy.Spider):
 			item['subfolder']  = subfolder
 
 			yield item
-

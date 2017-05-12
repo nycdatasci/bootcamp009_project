@@ -1,0 +1,8 @@
+The bitcoin folder contains the NLP analysis that done with the syuzhet package as well as some data exploration in Juptyer notebooks. There is a basic
+FFT, as well as a notebook that does linear regression on specific time frames following news events. 
+
+The commodities and currencies folder contains the time series portion of the analysis. There are some custom python functions which I wrote to plot various subplots and do some basic calculations.
+    1. QQRR.py 	creates the quantile-quantile plot for the daily return rate
+    2. drr_autocorrelation.py creates the autocorrelation plots.
+    3. bitcoin_lagged.py creates multiple return rates at various lagged times.
+    4. EDA_all.py and EDA_commodities_and_currencies.py read-in some data, and		does some EDA, and visualization on these datasets. 

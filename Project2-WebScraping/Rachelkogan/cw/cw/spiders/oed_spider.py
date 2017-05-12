@@ -16,7 +16,8 @@ class OEDSpider(Spider):
 
     start_urls = ['http://public.oed.com/the-oed-today/recent-updates-to-the-oed/previous-updates/%s-%s-update/new-words-list-%s-%s/' % (month, 
         year, month, year) for month in months for year in years]
-    
+
+    start_urls += ['http://public.oed.com/the-oed-today/recent-updates-to-the-oed/march-2017-update/new-words-list-march-2017/']    
 
     #years = [str(x) for x in range(2010, 2011)]
 

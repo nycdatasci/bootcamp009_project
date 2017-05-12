@@ -11,6 +11,7 @@ allowed_spider_list = ['cbs', 'cnn', 'abc', 'fox', 'nypost'] #list of spider nam
 json_filepath = r'C:\Users\Pradeep Krishnan\Desktop\NewsFlows\data_output'
 json_files= listdir(json_filepath)
 
+# >>>>>> id is not a good variable name in Python because it is a built-in function. <<<<<<<
 id, spider, sentiment, magnitude, article_length = [],[],[],[],[]
 
 for file in json_files:
@@ -22,7 +23,7 @@ for file in json_files:
 	sentiment.append(data['googleAPIsentiment'][0])
 	magnitude.append(data['googleAPIsentiment'][1])
 	article_length.append(len(data['article']))
-	
+
 data_items = {'spider': spider,
 			  'id': id,
 			  'sentiment':sentiment,

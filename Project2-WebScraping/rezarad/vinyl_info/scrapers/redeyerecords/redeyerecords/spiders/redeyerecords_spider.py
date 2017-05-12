@@ -2,6 +2,8 @@ from redeyerecords.items import RedeyeItem
 import scrapy
 import re
 
+# >>>>>>>>> You can have multiple spider files in the same project. <<<<<<<<<
+# >>>>>>>>> No need to create a brand new project for each spider. <<<<<<<<<<
 class redeyerecords_spider(scrapy.Spider):
     name = 'redeyerecords'
     start_urls = []

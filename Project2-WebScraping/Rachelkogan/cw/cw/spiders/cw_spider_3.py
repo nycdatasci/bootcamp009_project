@@ -34,7 +34,7 @@ class Cw3Spider(Spider):
 
     def after_login(self, response):
         
-        today = datetime.date(2017, 5, 7)
+        today = datetime.date(2017, 5, 8)
         global begin
         begin = datetime.date(2016, 12, 1)
         delta = today - begin

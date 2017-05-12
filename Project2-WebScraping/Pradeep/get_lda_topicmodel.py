@@ -19,7 +19,8 @@ import random
 from os import listdir
 
 
-
+# >>>>>>> why is image_filepath using / instead of \ <<<<<<<<<
+# >>>>>>> I would use relative path to make the project reproducible <<<<<<<<<
 json_filepath = r'C:\Users\Pradeep Krishnan\Desktop\NewsFlows\data_output'
 json_files= listdir(json_filepath)
 image_filepath = r'C:/Users/Pradeep Krishnan/Desktop/NewsFlows/image_files'
@@ -32,16 +33,16 @@ for file in json_files:
 	text = text + data['article']
 	doc_complete.append(data['article'])
 
-	
-	
+
+
 # clean files for LDA
 
 n_features = 1000
 n_topics = 5
 lda_top_words = 50
 
-stopword = set(stopwords.words('english')) 
-punctuations = set(string.punctuation) 
+stopword = set(stopwords.words('english'))
+punctuations = set(string.punctuation)
 get_lemmatized= WordNetLemmatizer()
 
 def lemmatized_file(doc):
@@ -49,16 +50,16 @@ def lemmatized_file(doc):
 	removed_punctuations = "".join(word for word in removed_stopwords if word not in punctuations)
 	lemmatized_text = " ".join(get_lemmatized.lemmatize(word) for word in removed_punctuations.split())
 	return lemmatized_text
-    
-	
 
-lemmatized_doc = [lemmatized_file(doc) for doc in doc_complete]        
+
+
+lemmatized_doc = [lemmatized_file(doc) for doc in doc_complete]
 
 
 tf_vectorizer = TfidfVectorizer(max_df=0.90, min_df=2,
                                    max_features=n_features,
                                    stop_words='english')
-								   
+
 
 tf = tf_vectorizer.fit_transform(lemmatized_doc)
 
@@ -81,7 +82,7 @@ def get_top_words(model, feature_names, n_top_words):
 		topic_top_words = t_top_words.append([topic_idx, aggregate_of_top_words])
 
 	return t_top_words
-		  
+
 
 #print_top_words(lda, tf_feature_names, lda_top_words)
 topic_top_words = get_top_words(lda, tf_feature_names, lda_top_words)
@@ -92,14 +93,15 @@ topic_top_words = get_top_words(lda, tf_feature_names, lda_top_words)
 stopwords = STOPWORDS.copy()
 
 addtnl_words = ["Mr", "President", "shot", "replied", "saying", "including", "bring", "bringing", "using", "said", "added", "like", "mr", "planned", "told",
-"going", "say", "want", "ask", "used", "feel", "including"] 
+"going", "say", "want", "ask", "used", "feel", "including"]
 
 allstop_words = list(ENGLISH_STOP_WORDS) + list(stopwords) + list(STOPWORDS) + addtnl_words
 
+# >>>>>>>>> This can be done using list comprehension. <<<<<<
 def encode_utf8(x):
 	for i in x:
 		i.encode('UTF8')
-	return x	
+	return x
 
 allstop_words = encode_utf8(allstop_words)
 
@@ -108,27 +110,3 @@ for i in range(len(topic_top_words)):
 	wc = WordCloud(background_color="white", mask=u, stopwords=allstop_words, random_state=1)
 	wc.generate(topic_top_words[i][1])
 	wc.to_file('wordclouds'+ str(i) +'.jpg')
-	
-
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-			

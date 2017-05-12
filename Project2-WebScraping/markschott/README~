@@ -1,0 +1,4 @@
+The bitcoin folder contains the NLP analysis that done with the syuzhet package as well as some data exploration in Juptyer notebooks. There is a basic
+FFT, as well as a notebook that does linear regression on specific time frames following news events. 
+
+The commodities and currencies folder contains the time series portion of the analysis. There are some custom python functions which I wrote to plot various subplots and do some basic calculations. 
