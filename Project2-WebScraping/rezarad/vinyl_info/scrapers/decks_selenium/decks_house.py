@@ -2,10 +2,6 @@ import time
 import random
 import csv
 from selenium import webdriver
-# from selenium.webdriver.common.keys import Keys
-# from selenium.webdriver.common.by import By
-# from selenium.webdriver.support.ui import WebDriverWait
-# from selenium.webdriver.support import expected_conditions as EC
 
 # create a csv file with data headers
 csv_file = open('decks_house.csv', 'wb')
@@ -18,8 +14,8 @@ driver.get("https://www.decks.de/decks-sess/workfloor/lists/list.php?wo=hon&nows
 
 time.sleep(random.random() * 4)
 
+# find iframe containing table
 driver.switch_to.frame(driver.find_element_by_name("workflooframe"))
-# wait = WebDriverWait(driver,  10)
 
 page_num = 1
 while True:

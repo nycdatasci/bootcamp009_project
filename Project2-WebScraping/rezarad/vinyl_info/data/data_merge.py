@@ -118,5 +118,15 @@ merged_df.sort_values('release_date', ascending = False)
 merged_df.loc[merged_df.USD_price.isnull(), 'USD_price'] = 0
 
 
+df = df.drop(['Unnamed: 0'], axis =1)
+
+c = CurrencyConverter()
+df.loc[df.store == "redeye", 'USD_price'] = df.price.apply(lambda x: c.convert(x, 'GBP', 'USD'))
+df.loc[df.store != "redeye", 'USD_price'] = df.price.apply(lambda x: c.convert(x, 'EUR', 'USD'))
+
+df = df.rename(columns = {'in_stock' : 'percent_left',
+                                                'boolean_in_stock' : 'in_stock'})
+
+df.to_csv("./store_status.csv", index = False)
+
 merged_df.isnull().describe()
-merged_df.to_csv('./data/tidy/merged_tidy.csv')
