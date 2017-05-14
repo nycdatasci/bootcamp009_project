@@ -6,7 +6,7 @@ import datetime
 class UDSpider(Spider):
     name = "ud_spider"
     allowed_urls  = ['http://www.urbandictionary.com/?page=']
-    start_urls = ['http://www.urbandictionary.com/?page=' + str(i) for i in range(1, 615)]
+    start_urls = ['http://www.urbandictionary.com/?page=' + str(i) for i in range(1, 616)]
 
     def parse(self, response):
         result = response.xpath('//div[@class="def-panel"]')

@@ -1,6 +1,7 @@
 import scrapy
 from indeed.items import IndeedProfile
 
+# >>>>>>>>> Structured project with good comments. Well done! <<<<<<<<<<
 class IndeedSpider(scrapy.Spider):
 	name = 'indeed_profile'
 	allowed_urls = ['https://www.indeed.com/']
@@ -42,27 +43,27 @@ class IndeedSpider(scrapy.Spider):
 		company = self.verify(company)
 
 		# get employer overall score
-		overall = response.xpath('//div[@id="cmp-reviews-overall-view"]/div/span[1]/text()').extract() 
-		overall = self.verify(overall) 
+		overall = response.xpath('//div[@id="cmp-reviews-overall-view"]/div/span[1]/text()').extract()
+		overall = self.verify(overall)
 
 		# get employer work/life balance sub-score
 		worklife = response.xpath('//dl[@id="cmp-reviews-attributes"]/dd/span/text()')[0].extract()
-		worklife = self.verify(worklife) 
+		worklife = self.verify(worklife)
 
 		# get employer compensation/benefits sub-score
-		compensation = response.xpath('//dl[@id="cmp-reviews-attributes"]/dd/span/text()')[1].extract() 
+		compensation = response.xpath('//dl[@id="cmp-reviews-attributes"]/dd/span/text()')[1].extract()
 		compensation = self.verify(compensation)
 
 		# get employer job security/advancement sub-score
-		security = response.xpath('//dl[@id="cmp-reviews-attributes"]/dd/span/text()')[2].extract() 
+		security = response.xpath('//dl[@id="cmp-reviews-attributes"]/dd/span/text()')[2].extract()
 		security = self.verify(security)
 
 		# get employer management sub-score
-		management = response.xpath('//dl[@id="cmp-reviews-attributes"]/dd/span/text()')[3].extract() 
+		management = response.xpath('//dl[@id="cmp-reviews-attributes"]/dd/span/text()')[3].extract()
 		management = self.verify(management)
 
 		# get employer culture sub-score
-		culture = response.xpath('//dl[@id="cmp-reviews-attributes"]/dd/span/text()')[4].extract() 
+		culture = response.xpath('//dl[@id="cmp-reviews-attributes"]/dd/span/text()')[4].extract()
 		culture = self.verify(culture)
 
 		# get employer industry
@@ -86,4 +87,3 @@ class IndeedSpider(scrapy.Spider):
 		item['industry'] = industry
 
 		yield item
-
