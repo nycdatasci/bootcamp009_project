@@ -1,81 +1,147 @@
 from os.path import dirname, join
-from fuzzywuzzy import  fuzz, process
-import pandas as pd
-from bokeh.layouts import row, widgetbox, column
-from bokeh.charts import BoxPlot, Bar
-from bokeh.models import ColumnDataSource
-from bokeh.models.widgets import Slider, DataTable, TableColumn, NumberFormatter, TextInput, CheckboxButtonGroup
-from bokeh.io import curdoc
+from ConfigParser import SafeConfigParser
 
-df = pd.read_csv(join(dirname(__file__), 'store_status2.csv'))
+import discogs_client
+import pandas as pd
+from bokeh.io import curdoc
+from bokeh.layouts import row, widgetbox, column
+from bokeh.charts import  defaults
+from bokeh.models import ColumnDataSource, Legend, Circle, Jitter, HoverTool, Range1d, NumeralTickFormatter, BoxZoomTool, ResetTool
+from bokeh.plotting import figure, Figure, show, output_file
+from bokeh.palettes import Spectral9
+from bokeh.models.widgets import Slider, DataTable, TableColumn, NumberFormatter
+from bokeh.models.widgets import TextInput, CheckboxButtonGroup, Panel, Tabs, Select
+
+# import discogs API key
+config = SafeConfigParser()
+config.read('./config.ini')
+user_token = config.get('discogs', 'user_token')
+user_agent = "MusicTrendsVisualization/0.1"
+
+# Authorize access to discogs database
+d = discogs_client.Client(user_agent, user_token = user_token)
+df = pd.read_csv(join(dirname(__file__), 'decks_genre_filtered.csv'))
 
 source = ColumnDataSource(data=dict())
 
-def update():
-    # search = lambda x: fuzz.partial_ratio(text_input.value.lower(), x)
-    current = df[(df['USD_price'] >= slider_min.value)
-                        & (df['USD_price'] <= slider_max.value)
-                        & ((df['artist'].str.lower().str.contains(search_text.value.strip().lower()))
-                        | (df['label'].str.lower().str.contains(search_text.value.strip().lower()))
-                        | (df['release'].str.lower().str.contains(search_text.value.strip().lower())))].sort_values(by = "USD_price")
-
-    # of records
-    totals = len(current)
-
-    source.data = {
-        'release': current.release,
-        'artist' : current.artist,
-        'label' : current.label,
-        'catalog_num' : current.catalog_num,
-        'USD_price' : current.USD_price,
-        'store' : current.store,
-        'percent_left': current.percent_left
-    }
-
-checkbox_button_store = CheckboxButtonGroup(labels=["decks.de", "deejay.de", "redeye"], active=[0, 1, 2])
-checkbox_button_store.on_change('active', lambda attr, old, new: update())
-
+# Input Buttons
+genre_filter = ['All', 'Acid', 'Ambient', 'Breaks',
+                        'Chicago', 'Deep House',
+                        'Detroit', 'Dub Techno',
+                        'House', 'Minimal', 'Techhouse', 'Techno']
+genre = Select(title="genre", value="All", options= genre_filter)
 slider_min = Slider(title="Minimum Price", start = 0, end = 25, value = 0, step = 1)
 slider_max = Slider(title="Maximum Price", start = 0, end = 150, value = 20, step = 1)
-slider_min.on_change('value', lambda attr, old, new: update())
-slider_max.on_change('value', lambda attr, old, new: update())
-
 search_text = TextInput(title="Search")
-search_text.on_change('value', lambda attr, old, new: update())
 
 columns = [
+    TableColumn(field="release_date", title="Release Date"),
     TableColumn(field="release", title="Release Name"),
     TableColumn(field="artist", title="Artist"),
     TableColumn(field="label", title="Label"),
+    TableColumn(field="genre", title="Genre"),
     TableColumn(field="catalog_num", title="Catalog Number"),
-    TableColumn(field="USD_price", title="Price (in USD)", formatter= NumberFormatter(format = "$0.00")),
-    TableColumn(field="percent_left", title="Percent Available", formatter= NumberFormatter(format = "‘0.00%")),
-    TableColumn(field="store", title="Store Name")
+    TableColumn(field="price", title="Price (in USD)", formatter= NumberFormatter(format = "$0.00")),
+    TableColumn(field="in_stock", title="Percent Available", formatter= NumberFormatter(format = "‘0.00%"))
     ]
 
 data_table = DataTable(source=source,
                                         columns=columns,
-                                        width=850,
-                                        height=400,
-                                        scroll_to_selection=True,
-                                        fit_columns=True,
-                                        row_headers=True)
+                                        width=900,
+                                        height=200,
+                                        scroll_to_selection=True)
 
-# columns, css_classes, disabled, editable, fit_columns, height, js_event_callbacks, js_property_callbacks,
-# name, row_headers, scroll_to_selection, selectable, sizing_mode, sortable, source, subscribed_events, tags or width
 
-# Bar chart for available_records per store
-# available_bar = Bar(df, label = 'store', title="# of Available Records", legend='top_right', color = 'mediumturquoise')
-#
-# # Box plot of price distribution per store
-# price_box = BoxPlot(df, label = 'store', values = 'USD_price', outliers=False, ygrid = True,
-#                                                                     title ="Price Distribution Per Store", legend='top_right',
-#                                                                     color = 'store', whisker_color = 'grey')
+COLORS = Spectral9
 
-controls = widgetbox(checkbox_button_store, slider_min, slider_max, search_text)
-table = widgetbox(data_table)
+hover = HoverTool(tooltips=[
+    ('Label', '@label'),
+    ('Artist', '@artist'),
+    ('Genre', '@genre'),
+    ('Catalog Number', '@catalog_num'),
+    ('Price', '@price')
+])
+
+p = figure(plot_width=900, plot_height=400,
+                tools=[hover, BoxZoomTool(), ResetTool()], toolbar_location="below",
+                toolbar_sticky=False)
+p.background_fill_color = 'beige'
+p.background_fill_alpha = 0.1
+p.select(name='release_click')
+# p.x_axis_label = "Percent Remaining"
+# p.y_axis_label = "Price (in US Dollars)"
+p.y_range = Range1d(0,30)
+p.x_range = Range1d(0,1)
+p.xaxis.axis_label = "Percent Available"
+p.yaxis.axis_label = "Price (in US Dollars)"
+p.xaxis[0].formatter = NumeralTickFormatter(format="0.00%")
+p.yaxis[0].formatter = NumeralTickFormatter(format="$0.00")
+p.yaxis.major_label_orientation = "vertical"
+p.xgrid.grid_line_color = None
+p.ygrid.grid_line_color = None
+p.xaxis.axis_label_standoff = 10
+p.yaxis.axis_label_standoff = 10
+
+
+
+
+initial_circle = Circle(x= "in_stock", y='price', size = 10, name='release_click',
+                                    fill_color = 'salmon', fill_alpha = 0.6)
+unselected_circle = Circle(size = 10, name='unselected_click',
+                                            fill_color = 'snow', fill_alpha = 0.3)
+selected_circle = Circle(size = 14, name='selected_click',
+                                        fill_color = 'salmon', fill_alpha = 1)
+
+p.add_glyph(source, initial_circle,
+            selection_glyph=selected_circle,
+            nonselection_glyph=unselected_circle)
+
+p.legend.click_policy="hide"
+p.legend.orientation = "horizontal"
+p.legend.label_text_font_size = '0.4em'
+
+def select_releases():
+    selected = df[(df['price'] >= slider_min.value)
+                        & (df['price'] <= slider_max.value)
+                        & ((df['artist'].str.lower().str.contains(search_text.value.strip().lower()))
+                        | (df['label'].str.lower().str.contains(search_text.value.strip().lower()))
+                        | (df['release'].str.lower().str.contains(search_text.value.strip().lower())))].sort_values(by = "price")
+    genre_val = genre.value
+    if (genre_val != "All"):
+        selected = selected[selected.genre.str.contains(genre_val)==True]
+    return selected
+
+def update():
+    # results = d.search(release_button.value, type='release', genre='Electronic', format='Vinyl')
+    current = select_releases()
+    p.title.text = "%d Records Selected" % len(current)
+    source.data = {
+        'release_date': current.release_date,
+        'release': current.release,
+        'artist' : current.artist,
+        'label' : current.label,
+        'genre' : current.genre,
+        'catalog_num' : current.catalog_num,
+        'price' : current.price,
+        'in_stock': current.in_stock
+    }
+
+input_controls = [genre, slider_min, slider_max, search_text]
+for control in input_controls:
+    control.on_change('value', lambda attr, old, new: update())
+
+controls = widgetbox(genre, search_text)
+controls2 = widgetbox(slider_min, slider_max)
 
 update()
 
-curdoc().add_root(row(controls, table))
-# curdoc().add_root(column(available_bar, price_box))
+curdoc().add_root(row(controls, p))
+curdoc().add_root(row(controls2, data_table))
+
+
+# scatter_plot = Scatter(df, x= 'in_stock',
+#                                         y='price', color='genre',
+#                                         xlabel='Percent Remaning',
+#                                         ylabel="Price (in USD)",
+#                                         tooltips=tooltips, height=500, width=700,
+#                                         toolbar_location ='below', legend='top_right')
