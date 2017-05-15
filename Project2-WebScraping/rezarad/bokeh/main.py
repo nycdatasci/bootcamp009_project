@@ -3,10 +3,11 @@ from ConfigParser import SafeConfigParser
 
 import discogs_client
 import pandas as pd
+from datetime import datetime
 from bokeh.io import curdoc
 from bokeh.layouts import row, widgetbox, column
 from bokeh.charts import  defaults
-from bokeh.models import ColumnDataSource, Legend, Circle, Jitter, HoverTool, Range1d, NumeralTickFormatter, BoxZoomTool, ResetTool
+from bokeh.models import ColumnDataSource, Legend, Circle, Jitter, HoverTool, Range1d, NumeralTickFormatter, BoxZoomTool, ResetTool, DatetimeTickFormatter
 from bokeh.plotting import figure, Figure, show, output_file
 from bokeh.palettes import Spectral9
 from bokeh.models.widgets import Slider, DataTable, TableColumn, NumberFormatter
@@ -21,7 +22,7 @@ user_agent = "MusicTrendsVisualization/0.1"
 # Authorize access to discogs database
 d = discogs_client.Client(user_agent, user_token = user_token)
 df = pd.read_csv(join(dirname(__file__), 'decks_genre_filtered.csv'))
-
+# df.release_date.apply(lambda x: datetime.strptime(x, "%Y-%m-%d"))
 source = ColumnDataSource(data=dict())
 
 # Input Buttons
@@ -64,17 +65,22 @@ hover = HoverTool(tooltips=[
 
 p = figure(plot_width=900, plot_height=400,
                 tools=[hover, BoxZoomTool(), ResetTool()], toolbar_location="below",
-                toolbar_sticky=False)
+                toolbar_sticky=False, x_axis_type='datetime')
 p.background_fill_color = 'beige'
 p.background_fill_alpha = 0.1
 p.select(name='release_click')
 # p.x_axis_label = "Percent Remaining"
 # p.y_axis_label = "Price (in US Dollars)"
 p.y_range = Range1d(0,30)
-p.x_range = Range1d(0,1)
-p.xaxis.axis_label = "Percent Available"
+p.x_range = Range1d(1273941411000,1494866236000)
+p.xaxis.axis_label = "Release Date"
 p.yaxis.axis_label = "Price (in US Dollars)"
-p.xaxis[0].formatter = NumeralTickFormatter(format="0.00%")
+p.xaxis[0].formatter = DatetimeTickFormatter(
+        hours=["%d %B %Y"],
+        days=["%d %B %Y"],
+        months=["%d %B %Y"],
+        years=["%d %B %Y"],
+        )
 p.yaxis[0].formatter = NumeralTickFormatter(format="$0.00")
 p.yaxis.major_label_orientation = "vertical"
 p.xgrid.grid_line_color = None
@@ -83,9 +89,11 @@ p.xaxis.axis_label_standoff = 10
 p.yaxis.axis_label_standoff = 10
 
 
+df.release_date[10]
 
 
-initial_circle = Circle(x= "in_stock", y='price', size = 10, name='release_click',
+
+initial_circle = Circle(x= "release_date", y='price', size = 10, name='release_click',
                                     fill_color = 'salmon', fill_alpha = 0.6)
 unselected_circle = Circle(size = 10, name='unselected_click',
                                             fill_color = 'snow', fill_alpha = 0.3)
