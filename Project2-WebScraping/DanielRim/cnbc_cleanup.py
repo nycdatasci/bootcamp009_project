@@ -1,6 +1,7 @@
 import pandas as pd
 import re
 
+# >>>>>>>> Why not to use ipython notebook for the cleanup. <<<<<<<<<
 df_estimates = pd.read_csv('estimates.csv', index_col=False, header=0)
 # print df_estimates
 df_estimates = df_estimates[df_estimates.Ticker != "Ticker"]
@@ -50,8 +51,8 @@ for raw_estimate in df_estimates['Estimates']:
         df_estimates['Hurdle'].loc[df_estimates['Estimates']==raw_estimate]= m.groups()[4]
         df_estimates['Estimate EPS'].loc[df_estimates['Estimates']==raw_estimate]= m.groups()[5].replace("$","")
         df_estimates['Num Analyst'].loc[df_estimates['Estimates']==raw_estimate]= m.groups()[6].replace("analysts","")
-      
-        
+
+
     except:
         continue
 

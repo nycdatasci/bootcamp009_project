@@ -110,4 +110,4 @@ class SdealSpider(scrapy.Spider):
 		
 		
 
-	
+#>>>>>>>>>>>>>> Looks good! -Thomas	

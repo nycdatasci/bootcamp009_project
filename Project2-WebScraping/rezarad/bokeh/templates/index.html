@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>{{ title if title else "Bokeh Plot" }}</title>
+    {{ bokeh_css }}
+    {{ bokeh_js }}
+    <style>
+      h1 {
+          margin: 2em 0 0 0;
+          color: #2e484c;
+          font-family: 'Julius Sans One', sans-serif;
+          font-size: 1.6em;
+          text-transform: uppercase;
+      }
+      p {
+          font: "Libre Baskerville", sans-serif;
+          text-align: justify;
+          text-justify: inter-word;
+    </style>
+  </head>
+  <body>
+    <div>
+        <h1>Available Records</h1>
+        <p>Filter by store, price range, or search by keyword. Click on a to find more records by a specific artist or label. Columns can be arranged by dragging the header left or right.</p>
+    </div>
+    {{ plot_div|indent(8) }}
+    {{ plot_script|indent(8) }}
+  </body>
+</html>

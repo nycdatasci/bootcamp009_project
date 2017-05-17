@@ -39,3 +39,7 @@
 * integrate discogs API to import collection and wantlist
 * integrate residentadvisor information on upcoming artist events.
 * scrape artist data from RA.
+
+# Findings
+* Total # of records scraped that are in stock: 31,036.
+*

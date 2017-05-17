@@ -5,6 +5,7 @@ from chewy.items import ChewyItem
 class DogFoodSpider(scrapy.Spider):
     name = "chewyall"
     allowed_urls = ['https://www.chewy.com/']
+    # >>>>>>>>> Is there anyway to save the list to a local file and load it back? <<<<<<<
     start_urls = ['https://www.chewy.com/b/vitamins-supplements-417', 'https://www.chewy.com/s?rh=c%3A288%2Cc%3A374&page=1', 'https://www.chewy.com/s?rh=c%3A288%2Cc%3A335&page=1', 'https://www.chewy.com/s?rh=c%3A325%2Cc%3A391&page=1', 'https://www.chewy.com/s?rh=c%3A288%2Cc%3A332&page=1', 'https://www.chewy.com/s?rh=c%3A325%2Cc%3A387&page=1', 'https://www.chewy.com/s?rh=c%3A885%2Cc%3A886&page=1', 'https://www.chewy.com/s?rh=c%3A941%2Cc%3A942&page=1', 'https://www.chewy.com/s?rh=c%3A977%2Cc%3A978&page=1', 'https://www.chewy.com/s?rh=c%3A1025%2Cc%3A1026&page=1','https://www.chewy.com/s?rh=c%3A325%2Cc%3A326&page=1', 'https://www.chewy.com/s?rh=c%3A288%2Cc%3A315&page=1', 'https://www.chewy.com/b/perches-toys-967', 'https://www.chewy.com/s?rh=c%3A977%2Cc%3A1005&page=1','https://www.chewy.com/b/dental-healthcare-372','https://www.chewy.com/b/vitamins-supplements-374','https://www.chewy.com/b/cleaning-potty-351','https://www.chewy.com/b/crates-pens-gates-364','https://www.chewy.com/b/beds-mats-365','https://www.chewy.com/b/carriers-travel-371','https://www.chewy.com/b/bowls-feeders-338','https://www.chewy.com/b/grooming-355','https://www.chewy.com/b/flea-tick-381','https://www.chewy.com/b/leashes-collars-344','https://www.chewy.com/b/training-behavior-1449','https://www.chewy.com/b/apparel-accessories-1470','https://www.chewy.com/b/gifts-books-1758','https://www.chewy.com/b/technology-1897','https://www.chewy.com/b/litter-accessories-410','https://www.chewy.com/b/dental-healthcare-415','https://www.chewy.com/b/vitamins-supplements-417','https://www.chewy.com/b/flea-tick-404','https://www.chewy.com/b/training-cleaning-428','https://www.chewy.com/b/crates-pens-gates-424','https://www.chewy.com/b/beds-mats-425','https://www.chewy.com/b/trees-condos-scratchers-456','https://www.chewy.com/b/carriers-travel-454','https://www.chewy.com/b/grooming-432','https://www.chewy.com/b/bowls-feeders-394','https://www.chewy.com/b/leashes-collars-400','https://www.chewy.com/b/gifts-books-1924',
 'https://www.chewy.com/s?rh=c%3A885&page=1', 'https://www.chewy.com/s?rh=c%3A941&page=1', 'https://www.chewy.com/s?rh=c%3A977&page=1', 'https://www.chewy.com/s?rh=c%3A1025&page=1', 'https://www.chewy.com/s?rh=c%3A1663&page=1']
 
@@ -12,7 +13,7 @@ class DogFoodSpider(scrapy.Spider):
     def verify(self, content):     #content is whatever you extracted
         if content is None:
             return ""
-        elif isinstance(content, list):     #when would it give a list????
+        elif isinstance(content, list):     #when would it give a list???? When you do extract instead of extract_first
              if len(content) > 0:
                  content = content[0]     #first element
                  # convert unicode to str
@@ -26,7 +27,7 @@ class DogFoodSpider(scrapy.Spider):
 
 
     def parse(self, response):    # parse for init page in start_urls
-        
+
         page = response.xpath('//p[@class="results-count"]/text()').extract_first().split(' ')[0].split('(')[1]
         page = int(page)
         page = (page + 35)/36
@@ -60,6 +61,8 @@ class DogFoodSpider(scrapy.Spider):
 
 
         # verify
+        # >>>>>>> The functionality of the verify function is to convert a unicode to string.<<<<<<
+        # >>>>>>> So actually you don't need the previous part. <<<<<<<
         category = self.verify(category)
         page = self.verify(page)
         product_name = self.verify(product_name)
@@ -76,6 +79,7 @@ class DogFoodSpider(scrapy.Spider):
         k = [item.strip() for item in k]
         k = [x.encode('ascii', 'ignore').decode('ascii') for x in k]
         k = [str(x) for x in k]
+        # >>>>>> The following two can be combined using regular expression. <<<<<<<
         k = [x.lower().replace(' ', '_') for x in k]
         k = [x.lower().replace('&', 'and') for x in k]
         ll = zip(k[::2], k[1::2])

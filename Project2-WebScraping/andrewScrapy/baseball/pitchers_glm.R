@@ -128,7 +128,7 @@ table(test$hof, predTest1 > 0.5)
 accuracy1 = (231+25)/(231+25) #99.4
 accuracy1
 #baseline is where nothof happens more than hof, so
-baseline = 72/(72+660)
+baseline = (660-72)/(72+660)
 baseline
 # preTest1 is way more accurate
 
