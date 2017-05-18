@@ -10,7 +10,8 @@ import numpy as np
 import pandas as pd
 import os
 
-DIR_PATH = '/data/data/kaggle/sberbank_housing/'
+#DIR_PATH = '/data/data/kaggle/sberbank_housing/'
+DIR_PATH = '../data/'
 
 train = pd.read_csv(os.path.join(DIR_PATH, 'train.csv'), 
                         header='infer', 
@@ -77,11 +78,11 @@ rows = (test['kitch_sq'] > test['full_sq']) & (test['kitch_sq'] > 100)
 test.loc[rows, 'kitch_sq'] = np.nan
 
 ## property square meters
-train.loc[:, 'sq_metr'] = train.loc[:, ['full_sq','life_sq']].max(axis=1)
-train.loc[train['sq_metr'] < 6, 'sq_metr'] = np.nan
+#train.loc[:, 'sq_metr'] = train.loc[:, ['full_sq','life_sq']].max(axis=1)
+#train.loc[train['sq_metr'] < 6, 'sq_metr'] = np.nan
 
 ## Adding log transformation of price
-train.loc[:, 'log_price_doc'] = np.log(train['price_doc'] + 1)
+#train.loc[:, 'log_price_doc'] = np.log(train['price_doc'] + 1)
 
 train.to_csv('train_mod.csv')
 test.to_csv('test_mod.csv')
