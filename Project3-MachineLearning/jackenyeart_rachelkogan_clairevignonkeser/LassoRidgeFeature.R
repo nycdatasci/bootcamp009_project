@@ -1,0 +1,212 @@
+######### Kaggle Project, Identifying Important Variables ###############
+
+library(dplyr)
+library(glmnet)
+library(data.table)
+
+
+
+#NOTE THAT THE DATA SET I AM IMPORTING IS THE COMPLETE CASES DATA SET AND IS NAMED DIFFERENTLY
+#YOU COULD IMPORT THE DATA SET AND USE COMPLETE.CASES IN R TO GET THE SAME RESULT.
+#Read in the data
+sberCC = read.csv('trainCC.csv', stringsAsFactors = FALSE)
+
+#basic investigation of the data frame
+str(sberCC)
+names(sberCC)
+dim(sberCC)
+
+#Look at all columns to see what additional changes need to be made:
+
+#all variables, with class type and index
+for (i in c(1:length(names(sberCC)))){
+  print(c(names(sberCC)[i],class(sberCC[,i]),i))
+}
+
+#Helpful to actually look at the data too:
+View(trainCC)
+View(trainCC[,100:200])
+View(trainCC[,200:292])
+
+#Drop ID
+# timestamp (2) to numeric ? (there should be a closeness btw. dates)
+#state (11) numeric --> factor (????)
+#subarea (13): length(unique(sub_area)) = 80
+#culture_objects_top_25 (binary: 30) (factor)
+#normalize all the Gender/Age count groupings? (index 42-68)
+#same for build-count-type (70-78)
+#same for build-date (79-84)
+#metro ID number remove (85)
+#ID railroad station walk? (100)
+#ID Bigroad(1/2)  (114/117)
+#ID railroad terminal (121)
+#ID railroad (123)
+#ecology (153)
+#Rest seems pretty good
+#These IDs should be factors, not numeric?
+
+# First step of lasso/ridge: x = model.matrix(price_doc ~ ., sberCC)[, -1]
+# returns the error: contrasts can be applied only to factors with 2 or more levels
+
+#Which variable is of type "character" that has only one class?
+for (i in c(1:length(names(sberCC)))){
+  if ((length(unique(sberCC[,i]))) == 1) {
+  print(names(sberCC)[i])
+  }
+}
+
+# "incineration_raion" is the bad column (~28500 'no', ~2500 'yes' in the original)
+# in the complete cases: incineration_raion contains all 'no', so remove it.
+
+sberCC = select(sberCC, -incineration_raion)
+
+#Drop id#, it's meaningless:
+sberCC = select(sberCC, -id)
+
+#Fix the date column:
+
+#Convert timestamp colummn to the appropriate format:
+sberCC$timestamp = as.Date(sberCC$timestamp)
+
+#Define a function that we can sapply
+dateconversion <- function(x){
+  return(as.numeric(julian(x,origin = sberCC$timestamp[1])))
+}
+
+#Apply to the timestamp column, and refine column
+sberCC$timestamp = sapply(sberCC$timestamp,dateconversion)
+
+#Creating the data matrices for the glmnet() function.
+x = model.matrix(price_doc ~ ., sberCC)[, -1]
+y = sberCC$price_doc
+
+#Creating training and test sets with an 80-20 split, respectively.
+set.seed(0)
+train = sample(1:nrow(x), 8*nrow(x)/10)
+test = (-train)
+y.test = y[test]
+length(train)/nrow(x)
+length(y.test)/nrow(x)
+
+#Values of lambda over which to check.
+grid = 10^seq(10, 2, length = 100)
+
+#Fitting the ridge regression. Alpha = 0 for ridge regression.
+ridge.models = glmnet(x[train, ], y[train], alpha = 0, lambda = grid)
+
+#3
+plot(ridge.models, xvar = "lambda", label = TRUE, main = "Ridge Regression")
+
+#4
+set.seed(0)
+cv.ridge.out = cv.glmnet(x[train, ], y[train], alpha = 0, nfolds = 10, lambda = grid)
+
+#5 & 6
+plot(cv.ridge.out, main = "Ridge Regression\n")
+bestlambda.ridge = cv.ridge.out$lambda.min
+bestlambda.ridge
+log(bestlambda.ridge)
+
+#7
+ridge.bestlambdatrain = predict(ridge.models, s = bestlambda.ridge, newx = x[test, ])
+mean((ridge.bestlambdatrain - y.test)^2)
+
+#8
+ridge.out = glmnet(x, y, alpha = 0)
+predict(ridge.out, type = "coefficients", s = bestlambda.ridge)
+
+#9
+ridge.bestlambda = predict(ridge.out, s = bestlambda.ridge, newx = x)
+mean((ridge.bestlambda - y)^2)
+
+#MSE = 1.33* 10^13
+
+#All coefficients quite large, not helpful for eliminating unhelpful variables, move on to Lasso:
+
+############################ LASSO ###################################
+
+#Fitting the lasso regression. Alpha = 1 for lasso regression.
+lasso.models = glmnet(x[train, ], y[train], alpha = 1, lambda = grid)
+plot(lasso.models, xvar = "lambda", label = TRUE, main = "Lasso Regression")
+
+set.seed(0)
+cv.lasso.out = cv.glmnet(x[train, ], y[train], alpha = 1, nfolds = 10, lambda = grid)
+plot(cv.lasso.out, main = "Lasso Regression\n")
+bestlambda.lasso = cv.lasso.out$lambda.min
+bestlambda.lasso
+log(bestlambda.lasso)
+
+#MSE is locally minimized when log(lambda) ~= 9.81
+
+lasso.out = glmnet(x, y, alpha = 1)
+predict(lasso.out, type = "coefficients", s = bestlambda.lasso)
+#125 coefficients used (some from the same variable)
+
+lasso.bestlambda = predict(lasso.out, s = bestlambda.lasso, newx = x)
+mean((lasso.bestlambda - y)^2)
+MSE = 1.31 * 10^13
+
+#Exploratory:
+nonzeroCoef(predict(lasso.out, type = "coefficients", s = 268337))
+#RETURNS INDICES (NOT SO HELPFUL CAUSE OF INTRODUCED DUMMY VARIABLES)
+
+#or
+
+#Define a function that returns nonzero coeffcients of a lasso model for a given lambda (MSE not included):
+nonzeroCs <- function(lambda) {
+  P = predict(lasso.out, type = "coefficients", s = lambda)
+  P = as.matrix(P)
+  P = as.data.frame(P)
+  P$varname = rownames(P)
+  rownames(P) <- 1:nrow(P)
+  return(P[P[1] != 0,]$varname)
+}
+
+#Print the important coefficients for models with less than 20 non-zero coefficients
+for (ele in grid){
+  if (length(nonzeroCs(ele)) < 25) {
+    print(nonzeroCs(ele))
+    print('')
+  }
+}
+
+#Compare with Troys:                   TOP20:    OVERALL:
+## full_sq                      100.00  T         T
+## life_sq                       86.79  T         T
+## num_room                      86.77  F         T
+## kitch_sq                      74.05  T         T
+## build_year                    67.96  F         F
+## max_floor                     54.31  F         T
+## product_typeOwnerOccupier     51.06  F         T
+## state                         40.94  T         T
+## theater_km                    38.91  F         T
+## metro_km_avto                 38.63  F         F
+## railroad_km                   37.97  F         T
+## workplaces_km                 37.92  F         T
+## stadium_km                    37.87  F         F
+## metro_min_avto                37.80  F         T
+## cafe_sum_3000_min_price_avg   37.75  F         T
+## cemetery_km                   37.62  F         T
+## hospice_morgue_km             37.59  F         F
+## sport_count_2000              37.57  F         F
+## ice_rink_km                   37.53  F         T
+## railroad_station_avto_km      37.42  F         T
+
+#Nonzero coefficients for the "bestlambda"
+nonzeroCs(bestlambda.lasso) #There are 146, many are dummys from the same variable name
+
+nonzeroCs(exp(12))
+
+# [1] "(Intercept)"                 "timestamp"                   "full_sq"                    
+# [4] "num_room"                    "kitch_sq"                    "state"                      
+# [7] "sub_areaHamovniki"           "sub_areaLomonosovskoe"       "sub_areaPresnenskoe"        
+# [10] "sub_areaSokol'niki"          "indust_part"                 "culture_objects_top_25yes"  
+# [13] "build_count_frame"           "ID_metro"                    "green_zone_km"              
+# [16] "sadovoe_km"                  "railroad_km"                 "office_km"                  
+# [19] "theater_km"                  "catering_km"                 "ecologysatisfactory"        
+# [22] "trc_sqm_500"                 "church_count_500"            "leisure_count_500"          
+# [25] "trc_sqm_1000"                "cafe_count_1000_price_high"  "mosque_count_1500"          
+# [28] "prom_part_2000"              "cafe_sum_2000_min_price_avg" "prom_part_3000"             
+# [31] "office_sqm_5000"             "cafe_sum_5000_min_price_avg" "cafe_count_5000_price_high" 
+# [34] "mosque_count_5000"           "sport_count_5000"  
+

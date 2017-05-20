@@ -1,0 +1,10 @@
+timestamp
+full_sq
+life_sq
+floor
+max_floor
+material
+num_room
+kitch_sq
+state
+price_doc

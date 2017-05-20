@@ -1,0 +1,9 @@
+# Jupyter Notebook
+.ipynb_checkpoints
+
+*.csv
+*.rds
+*.rda
+*.RData
+*.html
+*.png
