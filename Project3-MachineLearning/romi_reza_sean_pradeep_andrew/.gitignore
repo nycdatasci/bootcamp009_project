@@ -1,12 +1,14 @@
-# Compiled source #
-###################
-*.com
-*.class
-*.dll
-*.exe
-*.o
-*.so
-*.pyc
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# virtualenv
+.venv
+venv/
+ENV/
+
+# pyenv
+.python-version
+.pyc
 
 # Packages #
 ############
@@ -26,11 +28,11 @@
 *.sqlite
 *.sqlite3
 *.db
-*.csv
+/.csv
 
 # Folders #
 ######################
-*./data
+/data
 
 # OS generated files #
 ######################
