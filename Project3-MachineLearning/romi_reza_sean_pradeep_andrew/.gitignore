@@ -28,7 +28,7 @@ ENV/
 *.sqlite
 *.sqlite3
 *.db
-*.csv
+
 
 # Folders #
 ######################
