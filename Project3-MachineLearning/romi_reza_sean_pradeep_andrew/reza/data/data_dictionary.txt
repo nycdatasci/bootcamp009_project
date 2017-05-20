@@ -1,4 +1,4 @@
-# train.csv and test.csv
+Data Set Info:
 
 price_doc: sale price (this is the target variable)
 id: transaction id
@@ -7,7 +7,7 @@ full_sq: total area in square meters, including loggias, balconies and other non
 life_sq: living area in square meters, excluding loggias, balconies and other non-residential areas
 floor: for apartments, floor of the building
 max_floor: number of floors in the building
-material: wall material
+material: wall material (1 - panel, 2 - brick, 3 - wood, 4 - mass concrete, 5 - breezeblock, 6 - mass concrete plus brick)
 build_year: year built
 num_room: number of living rooms
 kitch_sq: kitchen area
@@ -15,7 +15,10 @@ state: apartment condition
 product_type: owner-occupier purchase or investment
 sub_area: name of the district
 
-The dataset also includes a collection of features about each property's surrounding neighbourhood, and some features that are constant across each sub area (known as a Raion). Most of the feature names are self explanatory, with the following notes. See below for a complete list.
+The dataset also includes a collection of features about each property's surrounding neighborhood, and some features that are
+constant across each sub area (known as a Raion). Most of the feature names are self explanatory, with the following notes.
+See below for a complete list.
+(note: raion_popul and full_all are the same statistic calculated by different sources)
 
 full_all: subarea population
 male_f, female_f: subarea population by gender
@@ -76,7 +79,7 @@ mortgage_growth: Growth of mortgage lending
 mortgage_rate: Weighted average rate of mortgage loans
 grp: GRP of the subject of Russian Federation where Apartment is located
 grp_growth: Growth of gross regional product of the subject of the Russian Federation where Apartment is located
-income_per_cap: Average income per capita 
+income_per_cap: Average income per capita
 real_dispos_income_per_cap_growth: Growth in real disposable income of Population
 salary: Average monthly salary
 salary_growth: Growth of nominal wages
@@ -147,7 +150,7 @@ bandwidth_sports: Capacity of sports facilities
 population_reg_sports_share: Proportion of population regularly doing  sports
 students_reg_sports_share: Proportion of pupils and students regularly doing sports in the total number
 apartment_build: City residential apartment construction
-apartment_fund_sqm: City residential apartment fund 
+apartment_fund_sqm: City residential apartment fund
 
 
 # Complete description of neighbourhood features
@@ -184,8 +187,8 @@ full_all	Total number of  population in the municipality
 male_f	Male population
 female_f	Female population
 young_all	Population younger than working age
-young_male	Male population younger than working age 
-young_female	Feale population younger than working age 
+young_male	Male population younger than working age
+young_female	Feale population younger than working age
 work_all	Working-age population
 work_male	Male working-age population
 work_female	Female working-age population
@@ -239,7 +242,7 @@ metro_km_avto	Distance to subway by car, km
 metro_min_walk	Time to metro by foot
 metro_km_walk	Distance to the metro, km
 kindergarten_km	Distance to kindergarten
-school_km	Distance to high school 
+school_km	Distance to high school
 park_km	Distance to park
 green_zone_km	Distance to green zone
 industrial_zone_km	Distance to industrial zone
