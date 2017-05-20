@@ -1,0 +1,12 @@
+lasso.R
+	- Lasso regression model using caret for preprocessing and running the cross validation
+	- Also a redundant cross validation method with out caret and another model training just to predict the coefficients
+	- Before the running of the models there is some necessary data cleaning
+	- I'm not sure how to convert the standardized predictions back to their proper form.
+
+rf.R
+	- random forest model that isn't completely working
+
+choice_vars.txt
+	- Contains the variables that are going to be used in the model
+	- Read them in with scan instead of typing them out all the time
