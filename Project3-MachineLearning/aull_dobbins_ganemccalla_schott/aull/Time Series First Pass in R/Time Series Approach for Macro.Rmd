@@ -1,0 +1,162 @@
+---
+title: "Time Series Approach for Macro"
+author: "Wes Aull"
+date: "5/18/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE, cache=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(lubridate)
+library(xts)
+library(ggplot2)
+library(ggthemes)
+library(readr)
+library(corrplot)
+library(caret)
+library(car)
+library(fastICA)
+library(MTS)
+library(stats)
+library(xts)
+library(zoo)
+setwd("~/GoogleDrive/NYCDSA/bootcamp009_project/Project3-MachineLearning/aull_dobbins_ganemccalla_schott/aull/Time Series First Pass in R")
+
+############### Import Macro Data and Training Data To Construct Dependent Variable ####################
+
+macro <- read_csv("./macro.csv", 
+    col_types = cols(apartment_fund_sqm = col_number(), 
+        average_provision_of_build_contract = col_number(), 
+        average_provision_of_build_contract_moscow = col_number(), 
+        balance_trade_growth = col_number(), 
+        bandwidth_sports = col_number(), 
+        deposits_rate = col_number(), gdp_deflator = col_number(), 
+        gdp_quart = col_number(), gdp_quart_growth = col_number(), 
+        grp_growth = col_number(), hospital_bed_occupancy_per_year = col_number(), 
+        hospital_beds_available_per_cap = col_number(), 
+        incidence_population = col_number(), 
+        modern_education_share = col_number(), 
+        mortgage_growth = col_number(), net_capital_export = col_number(), 
+        oil_urals = col_number(), old_education_build_share = col_number(), 
+        population_reg_sports_share = col_number(), 
+        provision_retail_space_sqm = col_number(), 
+        rent_price_1room_bus = col_number(), 
+        rent_price_1room_eco = col_number(), 
+        rent_price_2room_bus = col_number(), 
+        rent_price_2room_eco = col_number(), 
+        rent_price_3room_bus = col_number(), 
+        rent_price_3room_eco = col_number(), 
+        `rent_price_4+room_bus` = col_number(), 
+        salary_growth = col_number(), students_state_oneshift = col_number(), 
+        timestamp = col_date(format = "%Y-%m-%d")))
+
+problems(macro) #0 rows - No data corruption classes were assigned.
+
+for (i in seq(ncol(macro),2)) {
+  macro[,i] = as.numeric(unlist(macro[,i]))
+}
+
+train <- read_csv("./train.csv", 
+    col_types = cols(build_year = col_number(), 
+        max_floor = col_number(), timestamp = col_date(format = "%Y-%m-%d")))
+
+## Join the data and mutate the dependent variable to be modeled (price / sq. foot).
+
+price = data.frame(train$timestamp,train$price_doc,train$full_sq)
+colnames(price) = c('timestamp','price_doc','full_sq')
+
+## Aggregate duplicate observations for one date due to time series analysis limitation.
+price = aggregate(x=price, by = list(unique.timestamp = price$timestamp), FUN=mean, na.rm=TRUE)
+
+rm(train)
+macro = left_join(price,macro, by = 'timestamp')
+rm(price)
+
+## Import the training dat for sake of price and square foot data.
+## Will make price / sq. foot into the dependent variable to be forecasted by the time series model,
+## removing the single most important variable that explains price variance at the property level.
+
+macro = macro %>%
+  mutate(p_sqf = price_doc / full_sq)
+
+#################### Clean Data of Highly Sparse Variables & Pare Down to Complete Obs. ######################
+
+## Remove highly sparse variables.
+data = macro
+for (i in seq(ncol(data),1)) {
+  if (sum(is.na(data[,i])) > 400) {
+    data[,i] = NULL
+  }  
+}
+
+## Remove variables with no variance (no explanatory power).
+data$baths_share = NULL
+data$water_pipes_share = NULL
+data$childbirth = NULL
+data$heating_share = NULL
+data$hot_water_share = NULL
+data$old_house_share = NULL
+
+## Pare down to complete observations.
+complete_data = data[complete.cases(data),]
+
+## Standardize data and convert date to POSIXlt.
+preProcessParameters = preProcess(complete_data, method = c('center','scale'))
+complete_stand_data = predict(preProcessParameters,complete_data)
+complete_stand_data$timestamp = as.POSIXlt.Date(complete_stand_data$timestamp)
+
+z = read.zoo(complete_stand_data, format = "%Y-%m-%d", split = 'price_doc')
+
+```
+
+
+```{r}
+colSums(is.na(data))
+```
+
+
+```{r}
+colSums(is.na(data))
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
