@@ -1,7 +1,9 @@
 library(VIM)
 library(mice)
 
-macro <- read.csv("~/Documents/NYCDSA/Projects/bootcamp009_project/Project3-MachineLearning/jackenyeart_rachelkogan_clairevignonkeser/macro.csv", stringsAsFactors=FALSE)
+#your paths will be different :)
+#setwd("~/Documents/NYCDSA/Projects/bootcamp009_project/Project3-MachineLearning/jackenyeart_rachelkogan_clairevignonkeser")
+#macro <- read.csv("~/Documents/NYCDSA/Projects/bootcamp009_project/Project3-MachineLearning/jackenyeart_rachelkogan_clairevignonkeser/macro.csv", stringsAsFactors=FALSE)
 
 #investigate missingness
 
@@ -30,5 +32,6 @@ str(macro_small)
 cor(macro_small)
 sapply(X = macro_small, FUN = class)
 
-write.csv(x = macro_small, file = 'macro_small.csv')
+
+write.csv(x = macro_small, file = 'macro_small.csv', row.names=FALSE)
 
