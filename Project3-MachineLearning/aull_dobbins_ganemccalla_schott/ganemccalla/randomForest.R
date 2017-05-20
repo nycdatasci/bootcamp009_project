@@ -11,9 +11,10 @@ reducedTrainData$sub_area = as.factor(reducedTrainData$sub_area)
 reducedTrainData$timestamp = as.Date(reducedTrainData$timestamp)
 
 #this will take a while to execute, 10-30 minutes
+library(VIM)
 inputedTrain = kNN(reducedTrainData, k = 9)
-#we wanted this to be a factor but Random Forest can't handle that many factors
-#inputedTrain$build_year = as.numeric(inputedTrain$build_year)
+#this gets rid of all the columns telling us which values are inputed
+inputedTrain = inputedTrain[1:14]
 
 set.seed(0)
 library(randomForest)
