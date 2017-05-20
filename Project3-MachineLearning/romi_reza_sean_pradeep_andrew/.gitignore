@@ -28,11 +28,11 @@ ENV/
 *.sqlite
 *.sqlite3
 *.db
-/.csv
+*.csv
 
 # Folders #
 ######################
-/data
+reza/data/
 
 # OS generated files #
 ######################
