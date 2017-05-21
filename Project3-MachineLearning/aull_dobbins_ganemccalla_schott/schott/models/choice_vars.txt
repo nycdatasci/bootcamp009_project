@@ -1,4 +1,3 @@
-timestamp
 full_sq
 life_sq
 floor

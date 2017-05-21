@@ -128,10 +128,3 @@ lasso.bestlambdatrain = predict(lasso.models.train, s = bestlambda.lasso, newx =
 ### Predicting with the final model
 pred = predict.train(ridge.caret, newdata = x.test)
 hist(pred, breaks = 100)
-
-# Write out id numbers and prices to a csv, not working quite right trying to switch to numeric
-predictions = as.data.frame(cbind(row.names(test_raw), pred))
-names(predictions) = c('id','price_doc')
-sapply(predictions, as.numeric)
-
-write.csv(predictions, 'submission_lasso.csv', row.names = F)
