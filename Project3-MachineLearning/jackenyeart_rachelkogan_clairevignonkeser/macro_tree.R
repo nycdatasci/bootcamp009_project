@@ -92,4 +92,10 @@ macro_test$timestamp <- NULL
 macro_test.pred <- predict(rf.macroall, macro_test)
 summary(macro_test.pred)
 
+
+
 write.csv(cbind(macro_test, macro_test.pred), 'macro_test_pred.csv')
+
+library(dplyr)
+importance(rf.macroall)
+as.data.frame(importance(rf.macroall)) %>% arrange(IncNodePurity)
