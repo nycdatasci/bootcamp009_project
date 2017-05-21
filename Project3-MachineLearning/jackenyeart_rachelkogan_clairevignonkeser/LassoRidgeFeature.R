@@ -5,6 +5,7 @@ library(glmnet)
 library(data.table)
 library(leaps)
 library(caret)
+library(VIM)
 
 
 #Read in the data
@@ -384,6 +385,56 @@ FinalCoefs = c('timestamp',
                'leisure_count_500',
                'prom_part_3000',
                'office_sqm_5000',
-               'mosque_count_5000')
+               'mosque_count_5000',
+               'price_doc')
 
 #Before running a multilinear regression, we should investigate missingness of these variables:
+
+
+#Loading in data set
+train_cleaned = read.csv('train_cleaned.csv', stringsAsFactors = FALSE)
+train_cleaned = train_cleaned[which(colnames(train_cleaned) %in% FinalCoefs)]
+
+# Investigate missingness
+colSums(is.na(train_cleaned))
+
+# Reformat the timestamp column to numeric
+train_cleaned$timestamp = as.Date(train_cleaned$timestamp)
+#Define a function that we can sapply
+dateconversion2 <- function(x){
+  return(as.numeric(julian(x,origin = train_cleaned$timestamp[1])))
+}
+#Apply to the timestamp column, and refine column
+train_cleaned$timestamp = sapply(train_cleaned$timestamp,dateconversion2)
+
+
+#Convert state to character (categorical variable):
+train_cleaned$state[is.na(train_cleaned$state)] = 5
+train_cleaned$state = as.character(train_cleaned$state)
+
+## Take complete cases to eliminate the few (43 in total) rows that had NAs for full_sq
+train_cleaned = train_cleaned[complete.cases(train_cleaned),]
+
+### Load in the test data, do similar cleaning:
+test_cleanedO = read.csv('test_cleaned.csv', stringsAsFactors = FALSE)
+
+#Convert the state variable to character
+test_cleanedO$state[is.na(test_cleanedO$state)] = 5
+test_cleanedO$state = as.character(test_cleanedO$state)
+
+##########Imputing the missing values for full_sq:  ####################
+
+#Identify the missing valueS:
+filter(test_cleanedO,is.na(test_cleanedO$full_sq))[,1:10]
+
+#Imputing the first 3 by life_eq, the last 2 by median full_sq
+test_cleanedO[test_cleanedO$id == 30938,]$full_sq = 37.80
+test_cleanedO[test_cleanedO$id == 35857,]$full_sq = 42.07
+test_cleanedO[test_cleanedO$id == 34670,]$full_sq = 122.60
+test_cleanedO[test_cleanedO$id == 35108,]$full_sq = median(test_cleanedO$full_sq, na.rm = TRUE)
+test_cleanedO[test_cleanedO$id == 36824,]$full_sq = median(test_cleanedO$full_sq, na.rm = TRUE)
+
+test_cleaned = test_cleanedO[which(colnames(test_cleanedO) %in% FinalCoefs)]
+
+
+
