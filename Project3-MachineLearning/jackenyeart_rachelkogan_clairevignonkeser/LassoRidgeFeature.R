@@ -89,34 +89,34 @@ length(y.test)/nrow(x)
 
 #Values of lambda over which to check.
 grid = 10^seq(10, 2, length = 100)
-
-#Fitting the ridge regression. Alpha = 0 for ridge regression.
-ridge.models = glmnet(x[train, ], y[train], alpha = 0, lambda = grid)
-
-#3
-plot(ridge.models, xvar = "lambda", label = TRUE, main = "Ridge Regression")
-
-#4
-set.seed(0)
-cv.ridge.out = cv.glmnet(x[train, ], y[train], alpha = 0, nfolds = 10, lambda = grid)
-
-#5 & 6
-plot(cv.ridge.out, main = "Ridge Regression\n")
-bestlambda.ridge = cv.ridge.out$lambda.min
-bestlambda.ridge
-log(bestlambda.ridge)
-
-#7
-ridge.bestlambdatrain = predict(ridge.models, s = bestlambda.ridge, newx = x[test, ])
-mean((ridge.bestlambdatrain - y.test)^2)
-
-#8
-ridge.out = glmnet(x, y, alpha = 0)
-predict(ridge.out, type = "coefficients", s = bestlambda.ridge)
-
-#9
-ridge.bestlambda = predict(ridge.out, s = bestlambda.ridge, newx = x)
-mean((ridge.bestlambda - y)^2)
+# 
+# #Fitting the ridge regression. Alpha = 0 for ridge regression.
+# ridge.models = glmnet(x[train, ], y[train], alpha = 0, lambda = grid)
+# 
+# #3
+# plot(ridge.models, xvar = "lambda", label = TRUE, main = "Ridge Regression")
+# 
+# #4
+# set.seed(0)
+# cv.ridge.out = cv.glmnet(x[train, ], y[train], alpha = 0, nfolds = 10, lambda = grid)
+# 
+# #5 & 6
+# plot(cv.ridge.out, main = "Ridge Regression\n")
+# bestlambda.ridge = cv.ridge.out$lambda.min
+# bestlambda.ridge
+# log(bestlambda.ridge)
+# 
+# #7
+# ridge.bestlambdatrain = predict(ridge.models, s = bestlambda.ridge, newx = x[test, ])
+# mean((ridge.bestlambdatrain - y.test)^2)
+# 
+# #8
+# ridge.out = glmnet(x, y, alpha = 0)
+# predict(ridge.out, type = "coefficients", s = bestlambda.ridge)
+# 
+# #9
+# ridge.bestlambda = predict(ridge.out, s = bestlambda.ridge, newx = x)
+# mean((ridge.bestlambda - y)^2)
 
 #MSE = 1.33* 10^13
 
@@ -146,7 +146,7 @@ mean((lasso.bestlambda - y)^2)
 MSE = 1.31 * 10^13
 
 #Exploratory:
-nonzeroCoef(predict(lasso.out, type = "coefficients", s = 268337))
+nonzeroCoef(predict(lasso.out, type = "coefficients", s = bestlambda.lasso))
 #RETURNS INDICES (NOT SO HELPFUL CAUSE OF INTRODUCED DUMMY VARIABLES)
 
 #or
@@ -165,6 +165,7 @@ nonzeroCs <- function(lambda) {
 for (ele in grid){
   if (length(nonzeroCs(ele)) < 25) {
     print(nonzeroCs(ele))
+    print(ele)
     print('')
   }
 }
@@ -264,17 +265,125 @@ rfmod <- train(price_doc ~ . - timestamp,
 
 varImp(rfmod)
 
-#Get more than 20
-D = data.frame(varImp(rfmod)$importance)
-D$varname = rownames(D)
-rownames(D) <- 1:nrow(D)
-arrange(D, desc(Overall))[1:50,]
-arrange(D, desc(Overall))[1:50,'varname'] #get the top n nam
+#Idea: Pick 20 top from RF, ~top 20 from lasso, take a union of that set:
 
 
-#################  One more last type of feature selection Best/Forward-Backward #################
+#Get N most important from Random Forest:
+NImportant <-function(N) {
+  D = data.frame(varImp(rfmod)$importance)
+  D$varname = rownames(D)
+  rownames(D) <- 1:nrow(D)
+  return(arrange(D, desc(Overall))[1:N,'varname']) #get the top n nam
+}
 
-regfit.full = regsubsets(price_doc~., sberCC)
-summary(regfit.full)
+#Get the top 20 returned as a list:
+RFCoefs = NImportant(20)
+
+#OUTPUT:
+# [1] "full_sq"                     "life_sq"                     "num_room"                   
+# [4] "kitch_sq"                    "build_year"                  "max_floor"                  
+# [7] "big_market_km"               "prom_part_3000"              "oil_chemistry_km"           
+# [10] "product_typeOwnerOccupier"   "trc_sqm_3000"                "cafe_sum_2000_min_price_avg"
+# [13] "thermal_power_plant_km"      "metro_min_walk"              "floor"                      
+# [16] "state"                       "power_transmission_line_km"  "additional_education_km"    
+# [19] "trc_sqm_1500"                "university_km"
 
 
+# To get ~top 20 from lasso, run the loop defined above (and commented out below)
+# and record the value of lambda for which number of non-zerocoefficients first exceeds 20:
+
+# for (ele in grid){
+#   if (length(nonzeroCs(ele)) < 25) {
+#     print(nonzeroCs(ele))
+#     print(ele)
+#     print('')
+#   }
+# }
+
+#This value of lambda = 298364.7
+
+LassoCoefs = nonzeroCs(298364.7)
+
+#OUTPUT:
+# [1] "(Intercept)"                 "timestamp"                   "full_sq"                    
+# [4] "kitch_sq"                    "state"                       "sub_areaHamovniki"          
+# [7] "sub_areaLomonosovskoe"       "sub_areaPresnenskoe"         "ID_metro"                   
+# [10] "sadovoe_km"                  "office_km"                   "ecologysatisfactory"        
+# [13] "trc_sqm_500"                 "church_count_500"            "leisure_count_500"          
+# [16] "trc_sqm_1000"                "cafe_count_1000_price_high"  "prom_part_2000"             
+# [19] "office_sqm_5000"             "cafe_sum_5000_min_price_avg" "mosque_count_5000"          
+# [22] "sport_count_5000" 
+
+# Note that all variables with "sub_area<<INSERTNAME>>" are part of the same original
+# feature (i.e. remove all of them and insert "sub_area")
+#ID_metro is numeric, and arbitrary, so it should've been removed from the start.
+# 
+LassoCoefs = LassoCoefs[LassoCoefs != "(Intercept)"]
+LassoCoefs = LassoCoefs[LassoCoefs != "sub_areaHamovniki"]
+LassoCoefs = LassoCoefs[LassoCoefs != "sub_areaLomonosovskoe"]
+LassoCoefs = LassoCoefs[LassoCoefs != "sub_areaPresnenskoe"]
+LassoCoefs = c(LassoCoefs,"sub_area")
+LassoCoefs = LassoCoefs[LassoCoefs != "ID_metro"]
+
+
+#Take a Union of the 2 sets (RF Union Lasso):
+OverallCoefs = union(RFCoefs,LassoCoefs)
+#Add a price_doc column:
+OverallCoefs=  c(OverallCoefs,'price_doc')
+
+# [1] "full_sq"                     "life_sq"                     "num_room"                   
+# [4] "kitch_sq"                    "build_year"                  "max_floor"                  
+# [7] "big_market_km"               "prom_part_3000"              "oil_chemistry_km"           
+# [10] "product_typeOwnerOccupier"   "trc_sqm_3000"                "cafe_sum_2000_min_price_avg"
+# [13] "thermal_power_plant_km"      "metro_min_walk"              "floor"                      
+# [16] "state"                       "power_transmission_line_km"  "additional_education_km"    
+# [19] "trc_sqm_1500"                "university_km"               "timestamp"                  
+# [22] "sadovoe_km"                  "office_km"                   "ecologysatisfactory"        
+# [25] "trc_sqm_500"                 "church_count_500"            "leisure_count_500"          
+# [28] "trc_sqm_1000"                "cafe_count_1000_price_high"  "prom_part_2000"             
+# [31] "office_sqm_5000"             "cafe_sum_5000_min_price_avg" "mosque_count_5000"          
+# [34] "sport_count_5000"            "sub_area"
+
+#################  One more last type of feature selection: Forward #################
+### Restrict original data set to only the variables listed above
+
+sberFeatSelected = sberCC[which(colnames(sberCC) %in% OverallCoefs)]
+
+#Convert state to character
+sberFeatSelected$state = as.character(sberFeatSelected$state)
+
+#Best Feature Selection:
+
+regfit.fwd = regsubsets(price_doc~., data = sberFeatSelected, nvmax = 20, method = "forward")
+summary(regfit.fwd)
+coef(regfit.fwd, 10)
+coef(regfit.fwd, 20)
+
+#Try to parse down to ~10:
+# 1. timestamp (may be redunandant when we factor in Rachel's stuff)
+# 2. full_sq
+# NOTE  Not including num_room, very positively correlated with full_sq
+# NOTE Not including life_sq, not too significant here and lots of missingness
+# 3. State, but change it to categorical
+# 4. sub_area, pain in the ass but apparently important
+# 5. sadovoe_km
+# 6. oil_chemistry_km
+# 7. church_count_500
+# 8. leisure_count_500
+# 9. prom_part_3000
+# 10. office_sqm_5000
+# 11. mosque_count_5000
+
+FinalCoefs = c('timestamp',
+               'full_sq',
+               'state',
+               'sub_area',
+               'sadovoe_km',
+               'oil_chemistry_km',
+               'church_count_500',
+               'leisure_count_500',
+               'prom_part_3000',
+               'office_sqm_5000',
+               'mosque_count_5000')
+
+#Before running a multilinear regression, we should investigate missingness of these variables:
