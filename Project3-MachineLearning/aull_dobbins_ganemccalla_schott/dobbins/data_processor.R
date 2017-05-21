@@ -1,12 +1,11 @@
 # @author Scott Dobbins
-# @date 2017-05-20 21:00
-# @version 0.5
-#*** reformulate colclasses for train so that it includes raion classes within it to be less obtuse
-#*** colclasses needs some altering based on which version it is too
-#*** make sure product_type is clean in both train and test
-#*** should I set keys on any of the data.table objects?
+# @date 2017-05-20 23:30
+# @version 0.6
 
-#*** generate avg_log_price and avg_Log_price_per_log_fullsq for each aggregate
+
+### FUTURE IMPROVEMENTS ###
+#*** should I set keys on any of the data.table objects?
+#*** generate avg_log_price and avg_Log_price_per_log_fullsq for each aggregate (join into existing data sets?)
 
 
 ### import packages ###
@@ -21,6 +20,7 @@ library(dplyr)
 # filenames
 train_raw_filename <- 'train.csv'
 test_raw_filename <- 'test.csv'
+macro_raw_filename <- 'macro.csv'
 
 train_total_filename <- 'train_total.csv'
 test_total_filename <- 'test_total.csv'
@@ -42,8 +42,12 @@ train_transforms_logprice_complete_filename <- 'train_transforms_logprice_comple
 test_transforms_complete_filename <- 'test_transforms_complete.csv'
 
 raion_filename <- 'raion.csv'
+yearly_filename <- 'yearly.csv'
+quarterly_filename <- 'quarterly.csv'
+monthly_filename <- 'monthly.csv'
+daily_filename <- 'daily.csv'
 
-# dependent colnames
+# colnames
 raion_colnames <- c("area_m",
                     "raion_popul",
                     "green_zone_part",
@@ -116,7 +120,132 @@ raion_colnames <- c("area_m",
                     "build_count_1971-1995",
                     "build_count_after_1995")
 
+yearly_colnames <- c("gdp_deflator", 
+                     "gdp_annual", 
+                     "gdp_annual_growth", 
+                     "grp", 
+                     "grp_growth", 
+                     "real_dispos_income_per_cap_growth", 
+                     "salary", 
+                     "salary_growth", 
+                     "retail_trade_turnover", 
+                     "retail_trade_turnover_per_cap", 
+                     "retail_trade_turnover_growth", 
+                     "labor_force", 
+                     "unemployment", 
+                     "employment", 
+                     "invest_fixed_capital_per_cap", 
+                     "invest_fixed_assets", 
+                     "profitable_enterpr_share", 
+                     "unprofitable_enterpr_share", 
+                     "share_own_revenues", 
+                     "overdue_wages_per_cap", 
+                     "fin_res_per_cap", 
+                     "marriages_per_1000_cap", 
+                     "divorce_rate", 
+                     "construction_value", 
+                     "invest_fixed_assets_phys", 
+                     "pop_natural_increase", 
+                     "pop_migration", 
+                     "pop_total_inc", 
+                     "childbirth", 
+                     "mortality", 
+                     "housing_fund_sqm", 
+                     "lodging_sqm_per_cap", 
+                     "water_pipes_share", 
+                     "baths_share", 
+                     "sewerage_share", 
+                     "gas_share", 
+                     "hot_water_share", 
+                     "electric_stove_share", 
+                     "heating_share", 
+                     "old_house_share", 
+                     "average_life_exp", 
+                     "infant_mortarity_per_1000_cap", 
+                     "perinatal_mort_per_1000_cap", 
+                     "incidence_population", 
+                     "load_of_teachers_preschool_per_teacher", 
+                     "child_on_acc_pre_school", 
+                     "load_of_teachers_school_per_teacher", 
+                     "students_state_oneshift", 
+                     "modern_education_share", 
+                     "old_education_build_share", 
+                     "provision_doctors", 
+                     "provision_nurse", 
+                     "load_on_doctors", 
+                     "power_clinics", 
+                     "hospital_beds_available_per_cap", 
+                     "hospital_bed_occupancy_per_year", 
+                     "provision_retail_space_sqm", 
+                     "provision_retail_space_modern_sqm", 
+                     "turnover_catering_per_cap", 
+                     "theaters_viewers_per_1000_cap", 
+                     "seats_theather_rfmin_per_100000_cap", 
+                     "museum_visitis_per_100_cap", 
+                     "bandwidth_sports", 
+                     "population_reg_sports_share", 
+                     "students_reg_sports_share", 
+                     "apartment_build", 
+                     "apartment_fund_sqm")
+
+quarterly_colnames <- c("gdp_quart", 
+                        "gdp_quart_growth", 
+                        "balance_trade_growth", 
+                        "average_provision_of_build_contract", 
+                        "average_provision_of_build_contract_moscow")
+
+monthly_colnames <- c("oil_urals", 
+                      "cpi", 
+                      "ppi", 
+                      "balance_trade", 
+                      "net_capital_export", 
+                      "deposits_value", 
+                      "deposits_growth", 
+                      "deposits_rate", 
+                      "mortgage_value", 
+                      "mortgage_growth", 
+                      "mortgage_rate", 
+                      "income_per_cap", 
+                      "fixed_basket", 
+                      "rent_price_4+room_bus", 
+                      "rent_price_3room_bus", 
+                      "rent_price_2room_bus", 
+                      "rent_price_1room_bus", 
+                      "rent_price_3room_eco", 
+                      "rent_price_2room_eco", 
+                      "rent_price_1room_eco")
+
+daily_colnames <- c("timestamp", 
+                    "usdrub", 
+                    "eurrub", 
+                    "brent", 
+                    "rts", 
+                    "micex", 
+                    "micex_rgbi_tr", 
+                    "micex_cbi_tr")
+
 # data reading data types
+macro_classes <- c(rep("character", 1), 
+                   rep("double", 20), 
+                   rep("integer", 1), 
+                   rep("double", 2), 
+                   rep("integer", 1), 
+                   rep("double", 20), 
+                   rep("integer", 1), 
+                   rep("double", 10), 
+                   rep("integer", 1), 
+                   rep("double", 21), 
+                   rep("character", 1), 
+                   rep("double", 2), 
+                   rep("character", 2), 
+                   rep("double", 4), 
+                   rep("integer", 6), 
+                   rep("double", 1), 
+                   rep("integer", 2), 
+                   rep("double", 2), 
+                   rep("integer", 1), 
+                   rep("double", 1))
+
 raion_classes <- c(rep("factor", 1), 
                    rep("double", 1), 
                    rep("integer", 1), 
@@ -186,8 +315,128 @@ train_transforms_logprice_classes <- train_total_classes[-c(3:6,9:10,221,229:230
 train_transforms_price_classes <- train_total_classes[-c(3:6,9:10,222,231:232)]
 test_transforms_classes <- test_total_classes[-c(-6:-1)]
 
+# date constants
+years <- c("2010", 
+           "2011", 
+           "2012", 
+           "2013", 
+           "2014", 
+           "2015", 
+           "2016")
+quarters <- c("2010-Q1", 
+              "2010-Q2", 
+              "2010-Q3", 
+              "2010-Q4", 
+              "2011-Q1", 
+              "2011-Q2", 
+              "2011-Q3", 
+              "2011-Q4", 
+              "2012-Q1", 
+              "2012-Q2", 
+              "2012-Q3", 
+              "2012-Q4", 
+              "2013-Q1", 
+              "2013-Q2", 
+              "2013-Q3", 
+              "2013-Q4", 
+              "2014-Q1", 
+              "2014-Q2", 
+              "2014-Q3", 
+              "2014-Q4", 
+              "2015-Q1", 
+              "2015-Q2", 
+              "2015-Q3", 
+              "2015-Q4", 
+              "2016-Q1", 
+              "2016-Q2", 
+              "2016-Q3", 
+              "2016-Q4")
+months <- c("2010-01", 
+            "2010-02", 
+            "2010-03", 
+            "2010-04", 
+            "2010-05", 
+            "2010-06", 
+            "2010-07", 
+            "2010-08", 
+            "2010-09", 
+            "2010-10", 
+            "2010-11", 
+            "2010-12", 
+            "2011-01", 
+            "2011-02", 
+            "2011-03", 
+            "2011-04", 
+            "2011-05", 
+            "2011-06", 
+            "2011-07", 
+            "2011-08", 
+            "2011-09", 
+            "2011-10", 
+            "2011-11", 
+            "2011-12", 
+            "2012-01", 
+            "2012-02", 
+            "2012-03", 
+            "2012-04", 
+            "2012-05", 
+            "2012-06", 
+            "2012-07", 
+            "2012-08", 
+            "2012-09", 
+            "2012-10", 
+            "2012-11", 
+            "2012-12", 
+            "2013-01", 
+            "2013-02", 
+            "2013-03", 
+            "2013-04", 
+            "2013-05", 
+            "2013-06", 
+            "2013-07", 
+            "2013-08", 
+            "2013-09", 
+            "2013-10", 
+            "2013-11", 
+            "2013-12", 
+            "2014-01", 
+            "2014-02", 
+            "2014-03", 
+            "2014-04", 
+            "2014-05", 
+            "2014-06", 
+            "2014-07", 
+            "2014-08", 
+            "2014-09", 
+            "2014-10", 
+            "2014-11", 
+            "2014-12", 
+            "2015-01", 
+            "2015-02", 
+            "2015-03", 
+            "2015-04", 
+            "2015-05", 
+            "2015-06", 
+            "2015-07", 
+            "2015-08", 
+            "2015-09", 
+            "2015-10", 
+            "2015-11", 
+            "2015-12", 
+            "2016-01", 
+            "2016-02", 
+            "2016-03", 
+            "2016-04", 
+            "2016-05", 
+            "2016-06", 
+            "2016-07", 
+            "2016-08", 
+            "2016-09", 
+            "2016-10")
+
 # other useful constants
 possible_materials <- c(1,2,4,5,6)
+possible_product_types <- c("Investment", "OwnerOccupier")
 raion_colindices <- 13:84
 
 
@@ -196,11 +445,16 @@ stupid <- function(a = 1, b = 2) {
 }
 
 ### data reading functions ###
-# parameter specifications: dataset can be 'all', 'train', 'test', or 'raion'
+# parameter specifications: dataset can be 'all', 'train', 'test', 'macro', or 'raion'
 #                         : type can be 'total', 'barebones', 'transforms', or 'raw'
 read_data <- function(directory = 'data/', dataset = 'all', type = 'raw', complete_only = FALSE, log_price = TRUE, data_frame = FALSE) {
   if(dataset == 'all') {
-    if(type != 'raw') {
+    if(type == 'raw') {
+      macro <- fread(input = paste0(directory, macro_raw_filename), 
+                     header = TRUE, 
+                     stringsAsFactors = FALSE, 
+                     colClasses = macro_classes)
+    } else {
       raion <- fread(input = paste0(directory, raion_filename), 
                      header = TRUE, 
                      stringsAsFactors = FALSE, 
@@ -309,6 +563,7 @@ read_data <- function(directory = 'data/', dataset = 'all', type = 'raw', comple
     if(data_frame) {
       train <- data.frame(train)
       test <- data.frame(test)
+      macro <- data.frame(macro)
       raion <- data.frame(raion)
     }
   } else if(dataset == 'train') {
@@ -435,6 +690,23 @@ read_data <- function(directory = 'data/', dataset = 'all', type = 'raw', comple
     if(data_frame) {
       test <- data.frame(test)
     }
+  } else if(dataset == 'macro') {
+    yearly <- fread(input = paste0(directory, yearly_filename), 
+                    header = TRUE, 
+                    stringsAsFactors = FALSE)#, 
+                    #colClasses = )
+    quarterly <- fread(input = paste0(directory, quarterly_filename), 
+                       header = TRUE, 
+                       stringsAsFactors = FALSE)#, 
+                       #colClasses = )
+    monthly <- fread(input = paste0(directory, monthly_filename), 
+                     header = TRUE, 
+                     stringsAsFactors = FALSE)#, 
+                     #colClasses = )
+    daily <- fread(input = paste0(directory, daily_filename), 
+                   header = TRUE, 
+                   stringsAsFactors = FALSE)#, 
+                   #colClasses = )
   } else if(dataset == 'raion') {
     raion <- fread(input = paste0(directory, raion_filename), 
                    header = TRUE, 
@@ -527,6 +799,7 @@ clean_data.table <- function(data, drop_dependents = FALSE, drop_transforms = FA
   data[num_room >= 10, c("num_room")] <- NA
   data[(kitch_sq <= 1) | (kitch_sq > 25), c("kitch_sq")] <- NA
   data[(state >= 1) & (state <= 4), c("state")] <- NA
+  data[!(product_type %in% possible_product_types), c("product_type")] <- NA
   # further cleaning based on multiple columns
   if("log_price" %in% data_colnames) {
     if(("log_fullsq" %in% data_colnames) & ("log_lifesq" %in% data_colnames) & ("price_per_fullsq" %in% data_colnames) & ("log_price_per_log_fullsq") %in% data_colnames) {
@@ -607,6 +880,7 @@ clean_data.frame <- function(data, drop_dependents = FALSE, drop_transforms = FA
   data$num_room[data$num_room >= 10] <- NA
   data$kitch_sq[(data$kitch_sq <= 1) | (data$kitch_sq > 25)] <- NA
   data$state[(data$state >= 1) & (data$state <= 4)] <- NA
+  data$product_type[!(data$product_type %in% possible_product_types)] <- NA
   # further cleaning based on multiple columns
   if("log_price" %in% data_colnames) {
     if(("log_fullsq" %in% data_colnames) & ("log_lifesq" %in% data_colnames) & ("price_per_fullsq" %in% data_colnames) & ("log_price_per_log_fullsq") %in% data_colnames) {
@@ -687,6 +961,27 @@ refresh_data <- function(read_directory = 'data/', write_directory = 'data/') {
   
   # read data
   read_data(read_directory)
+  
+  # process macro data
+  yearly <- unique(macro[, yearly_colnames, with = FALSE])
+  yearly[, years := .(years)]
+  setcolorder(yearly, c(ncol(yearly), 1:(ncol(yearly)-1)))
+  fwrite(yearly, file = paste0(write_directory, yearly_filename), append = FALSE)
+  
+  quarterly <- unique(macro[, quarterly_colnames, with = FALSE])
+  quarterly[, quarters := .(quarters)]
+  setcolorder(quarterly, c(ncol(quarterly), 1:(ncol(quarterly)-1)))
+  fwrite(quarterly, file = paste0(write_directory, quarterly_filename), append = FALSE)
+  
+  monthly <- unique(macro[, monthly_colnames, with = FALSE])
+  monthly <- monthly[!duplicated(monthly[, .(oil_urals, cpi)]),]
+  monthly[, months := .(months)]
+  setcolorder(monthly, c(ncol(monthly), 1:(ncol(monthly)-1)))
+  monthly[nrow(monthly), which(!(colnames(monthly) %in% c("months", "cpi", "ppi")))] <- NA
+  fwrite(monthly, file = paste0(write_directory, monthly_filename), append = FALSE)
+  
+  daily <- unique(macro[, daily_colnames, with = FALSE])
+  fwrite(daily, file = paste0(write_directory, daily_filename), append = FALSE)
   
   # process raion data from train and test data
   raion_train <- train[, raion_colindices, with = FALSE]
