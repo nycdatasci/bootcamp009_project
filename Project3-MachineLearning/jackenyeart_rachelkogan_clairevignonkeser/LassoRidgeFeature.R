@@ -3,11 +3,10 @@
 library(dplyr)
 library(glmnet)
 library(data.table)
+library(leaps)
+library(caret)
 
 
-
-#NOTE THAT THE DATA SET I AM IMPORTING IS THE COMPLETE CASES DATA SET AND IS NAMED DIFFERENTLY
-#YOU COULD IMPORT THE DATA SET AND USE COMPLETE.CASES IN R TO GET THE SAME RESULT.
 #Read in the data
 sberCC = read.csv('trainCC.csv', stringsAsFactors = FALSE)
 
@@ -24,9 +23,9 @@ for (i in c(1:length(names(sberCC)))){
 }
 
 #Helpful to actually look at the data too:
-View(trainCC)
-View(trainCC[,100:200])
-View(trainCC[,200:292])
+View(sberCC)
+View(sberCC[,100:200])
+View(sberCC[,200:292])
 
 #Drop ID
 # timestamp (2) to numeric ? (there should be a closeness btw. dates)
@@ -139,7 +138,7 @@ log(bestlambda.lasso)
 #MSE is locally minimized when log(lambda) ~= 9.81
 
 lasso.out = glmnet(x, y, alpha = 1)
-predict(lasso.out, type = "coefficients", s = bestlambda.lasso)
+lasso.coef = predict(lasso.out, type = "coefficients", s = bestlambda.lasso)[1:371,]
 #125 coefficients used (some from the same variable)
 
 lasso.bestlambda = predict(lasso.out, s = bestlambda.lasso, newx = x)
@@ -209,4 +208,73 @@ nonzeroCs(exp(12))
 # [28] "prom_part_2000"              "cafe_sum_2000_min_price_avg" "prom_part_3000"             
 # [31] "office_sqm_5000"             "cafe_sum_5000_min_price_avg" "cafe_count_5000_price_high" 
 # [34] "mosque_count_5000"           "sport_count_5000"  
+
+#Alternatively:
+lasso.coef = predict(lasso.out, type = "coefficients", s = exp(13))[1:371,]
+lasso.coef[lasso.coef != 0]
+
+####### PICK A SUBSET OF VARIABLES THAT MAKE SENSE TO CONSIDER, TO BE PARSED DOWN FOR 
+####### SIGNIFICANCE AND MISSINGNESS LATER ################
+
+selected_features = c('timestamp',
+                     'full_sq',
+                     'kitch_sq',
+                     'floor',
+                     'build_year',
+                     'num_room',
+                     'max_floor',
+                     'material',
+                     'state',
+                     'product_typeOwnerOccupier',
+                     'sub_area',
+                     'theater_km',
+                     'metro_km_avto',
+                     'railroad_km',
+                     'workplaces_km',
+                     'stadium_km',
+                     'metro_min_avto',
+                     'cafe_sum_3000_min_price_avg',
+                     'cemetery_km',
+                     'hospice_morgue_km',
+                     'sport_count_2000',
+                     'ice_rink_km',
+                     'railroad_station_avto_km',
+                     'indust_part',
+                     'culture_objects_top_25yes',
+                     'build_count_frame',
+                     'green_zone_km'
+                     
+                     )
+                     
+                     
+############ Reproducing Troy's Tree ############################
+
+#Get complete cases of dtrain
+# Set training control so that we only 1 run forest on the entire set of complete cases
+trControl <- trainControl(method='none')
+
+# Run random forest on complete cases of sberCC. Exclude incineration_raion since it
+# only has 1 factor level
+rfmod <- train(price_doc ~ . - timestamp,
+               method='rf',
+               data=sberCC,
+               trControl=trControl,
+               tuneLength=1,
+               importance=TRUE)
+
+varImp(rfmod)
+
+#Get more than 20
+D = data.frame(varImp(rfmod)$importance)
+D$varname = rownames(D)
+rownames(D) <- 1:nrow(D)
+arrange(D, desc(Overall))[1:50,]
+arrange(D, desc(Overall))[1:50,'varname'] #get the top n nam
+
+
+#################  One more last type of feature selection Best/Forward-Backward #################
+
+regfit.full = regsubsets(price_doc~., sberCC)
+summary(regfit.full)
+
 
