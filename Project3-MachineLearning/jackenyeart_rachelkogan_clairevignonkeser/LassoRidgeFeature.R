@@ -392,6 +392,7 @@ FinalCoefs = c('timestamp',
 
 
 #Loading in data set
+train_cleanedO = read.csv('train_cleaned.csv', stringsAsFactors = FALSE)
 train_cleaned = read.csv('train_cleaned.csv', stringsAsFactors = FALSE)
 train_cleaned = train_cleaned[which(colnames(train_cleaned) %in% FinalCoefs)]
 
@@ -402,7 +403,7 @@ colSums(is.na(train_cleaned))
 train_cleaned$timestamp = as.Date(train_cleaned$timestamp)
 #Define a function that we can sapply
 dateconversion2 <- function(x){
-  return(as.numeric(julian(x,origin = train_cleaned$timestamp[1])))
+  return(as.numeric(julian(x,origin = as.Date(train_cleanedO$timestamp[1]))))
 }
 #Apply to the timestamp column, and refine column
 train_cleaned$timestamp = sapply(train_cleaned$timestamp,dateconversion2)
@@ -436,5 +437,88 @@ test_cleanedO[test_cleanedO$id == 36824,]$full_sq = median(test_cleanedO$full_sq
 
 test_cleaned = test_cleanedO[which(colnames(test_cleanedO) %in% FinalCoefs)]
 
+# Reformat the timestamp column to numeric
+test_cleaned$timestamp = as.Date(test_cleaned$timestamp)
 
+#Apply to the timestamp column, and refine column
+test_cleaned$timestamp = sapply(test_cleaned$timestamp,dateconversion2)
+
+train2 = train_cleaned
+View(train2)
+train2$price_doc = log(train2$price_doc+1)
+##### Performing the multilinear regression ##################
+library(car)
+
+n = names(train_cleaned[,c(c(1:4),c(6:12))])
+f<-as.formula(paste("price_doc ~", paste(n[!n %in% "y"],collapse = "+")))
+f
+model.saturated = lm(f, data = train_cleaned)
+summary(model.saturated)
+
+influencePlot(model.saturated)
+
+######### Predict on the test set ##########
+LinModel1 = as.data.frame(predict(model.saturated, test_cleaned))
+LinModel1$id = test_cleanedO$id
+names(LinModel1) = c('price_doc','id')
+
+LinModel1 = LinModel1[,c(2,1)]
+
+# Reassigning the 'too-low' predictions
+LinModel1[LinModel1$price_doc < 100000,]$price_doc = 100000
+
+write.csv(LinModel1,file = 'LinModel1.csv', row.names = FALSE)
+
+mean(LinModel1$price_doc)
+median(LinModel1$price_doc)
+mean(train_cleaned$price_doc)
+
+
+vif(model.saturated) ###Identifies that many of the variables used have multicolinearity issues:
+#Namely: sadovoe_km, oil_chemistry_km, and office_sqm_50000, mosque_5000, prom_part_3000 
+# 'church_count_500' remove them:
+
+f2<-as.formula("price_doc ~ timestamp + full_sq + state + sub_area + leisure_count_500")
+f2
+model.saturated2 = lm(f2, data = train_cleaned)
+summary(model.saturated2)
+#(Nearly identical R^2)
+vif(model.saturated2)
+
+LinModel2 = as.data.frame(predict(model.saturated2, test_cleaned))
+LinModel2$id = test_cleanedO$id
+names(LinModel2) = c('price_doc','id')
+LinModel2 = LinModel2[,c(2,1)]
+
+LinModel2[LinModel2$price_doc < 100000,]$price_doc = 100000 
+
+write.csv(LinModel2,file = 'LinModel2.csv', row.names = FALSE)
+
+################  Look at the variances of all the variables ################
+
+names(test_cleanedO)[(as.numeric(sapply(test_cleanedO,sd)) > 100) & 
+                       !is.na(as.numeric(sapply(test_cleanedO,sd)))]
+
+sapply(test_cleanedO,sd)
+
+getvariances <- function(x){
+  if ((class(x) == "integer") | (class(x) == "numeric")){
+    n = x[!is.na(x)]
+    n = n/(max(n) - min(n))
+    return(sd(n))
+  }
+}
+
+#Not needed--do sapply
+# for (i in c(1:length(names(test_cleanedO)))) {
+#   print (names(test_cleanedO)[i])
+#   print(getvariances(test_cleanedO[,i]))
+# }
+
+SDs = sapply(test_cleanedO, getvariances)
+SDs = do.call(rbind.data.frame, SDs)
+SDs$varnames = rownames(SDs)
+rownames(SDs) = NULL
+SDs = SDs[,c(2,1)]
+arrange(SDs,SD)
 
