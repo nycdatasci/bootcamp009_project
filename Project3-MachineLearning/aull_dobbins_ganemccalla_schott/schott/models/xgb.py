@@ -65,24 +65,17 @@ else:
 
 #%%    
 ## Must encode object columns for the model
-"""
 for f in train.columns:
     if train[f].dtype=='object':
-        print('encoding feature: {}'.format(f))
+        print('encoding training feature: {}'.format(f))
         lbl = sklearn.preprocessing.LabelEncoder()
-        lbl.fit(list(train[f].values)) 
-        train[f] = lbl.transform(list(train[f].values))
-"""
+        train.loc[:,f] = lbl.fit_transform(train.loc[:,f])
         
-label_encoder = dict()
-
-for feature in train.columns:
-    if train[feature].dtype == 'object':
-        print('encoding feature: {}'.format(feature))
-        label_encoder[feature] = sklearn.preprocessing.LabelEncoder()
-        label_encoder[feature].fit(train[feature])
-        train.loc[:, feature + '_le'] = label_encoder[feature].transform(train[feature])
-        test.loc[:, feature + '_le'] = label_encoder[feature].transform(test[feature])
+for f in test.columns:
+    if test[f].dtype=='object':
+        print('encoding test feature: {}'.format(f))
+        lbl = sklearn.preprocessing.LabelEncoder()
+        test.loc[:,f] = lbl.fit_transform(test.loc[:,f])
 
 #%%
 # Convert data frames to numpy arrays
