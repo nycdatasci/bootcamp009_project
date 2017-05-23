@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @date 2017-05-20 23:30
-# @version 0.6
+# @date 2017-05-22 18:30
+# @version 0.6.2
 
 
 ### FUTURE IMPROVEMENTS ###
@@ -11,6 +11,7 @@
 ### import packages ###
 
 # (in ascending order of importance)
+library(lubridate)
 library(data.table)
 library(dplyr)
 
@@ -264,11 +265,10 @@ features_within_radius_classes <- c(rep("double", 2),
 test_raw_classes <- c(rep("integer", 1), 
                       rep("character", 1), 
                       rep("double", 2), 
-                      rep("integer", 2),
-                      rep("factor", 1), 
-                      rep("integer", 2), 
+                      rep("integer", 5), 
                       rep("double", 1), 
-                      rep("factor", 2), 
+                      rep("integer", 1), 
+                      rep("factor", 1), 
                       raion_classes, 
                       rep("integer", 1), 
                       rep("double", 14), 
@@ -440,123 +440,59 @@ possible_product_types <- c("Investment", "OwnerOccupier")
 raion_colindices <- 13:84
 
 
-stupid <- function(a = 1, b = 2) {
-  return(paste0(toString(a+b)))
-}
-
 ### data reading functions ###
 # parameter specifications: dataset can be 'all', 'train', 'test', 'macro', or 'raion'
 #                         : type can be 'total', 'barebones', 'transforms', or 'raw'
 read_data <- function(directory = 'data/', dataset = 'all', type = 'raw', complete_only = FALSE, log_price = TRUE, data_frame = FALSE) {
   if(dataset == 'all') {
     if(type == 'raw') {
-      macro <- fread(input = paste0(directory, macro_raw_filename), 
-                     header = TRUE, 
-                     stringsAsFactors = FALSE, 
-                     colClasses = macro_classes)
+      macro <- fread(input = paste0(directory, macro_raw_filename), colClasses = macro_classes)
     } else {
-      raion <- fread(input = paste0(directory, raion_filename), 
-                     header = TRUE, 
-                     stringsAsFactors = FALSE, 
-                     colClasses = raion_classes)
+      raion <- fread(input = paste0(directory, raion_filename), colClasses = raion_classes)
     }
     if(type == 'total') {
       if(complete_only) {
-        train <- fread(input = paste0(directory, train_total_complete_filename), 
-                       header = TRUE, 
-                       stringsAsFactors = FALSE,
-                       colClasses = train_classes)
-        test <- fread(input = paste0(directory, test_total_complete_filename), 
-                      header = TRUE, 
-                      stringsAsFactors = FALSE,
-                      colClasses = test_classes)
+        train <- fread(input = paste0(directory, train_total_complete_filename), colClasses = train_total_classes)
+        test <- fread(input = paste0(directory, test_total_complete_filename), colClasses = test_total_classes)
       } else {
-        train <- fread(input = paste0(directory, train_total_filename), 
-                       header = TRUE, 
-                       stringsAsFactors = FALSE,
-                       colClasses = train_classes)
-        test <- fread(input = paste0(directory, test_total_filename), 
-                      header = TRUE, 
-                      stringsAsFactors = FALSE,
-                      colClasses = test_classes)
+        train <- fread(input = paste0(directory, train_total_filename), colClasses = train_total_classes)
+        test <- fread(input = paste0(directory, test_total_filename), colClasses = test_total_classes)
       }
     } else if(type == 'barebones') {
       if(complete_only) {
-        test <- fread(input = paste0(directory, test_barebones_complete_filename), 
-                      header = TRUE, 
-                      stringsAsFactors = FALSE,
-                      colClasses = test_classes)
+        test <- fread(input = paste0(directory, test_barebones_complete_filename), colClasses = test_barebones_classes)
         if(log_price) {
-          train <- fread(input = paste0(directory, train_barebones_logprice_complete_filename), 
-                         header = TRUE, 
-                         stringsAsFactors = FALSE,
-                         colClasses = train_classes)
+          train <- fread(input = paste0(directory, train_barebones_logprice_complete_filename), colClasses = train_barebones_classes)
         } else {
-          train <- fread(input = paste0(directory, train_barebones_price_complete_filename), 
-                         header = TRUE, 
-                         stringsAsFactors = FALSE,
-                         colClasses = train_classes)
+          train <- fread(input = paste0(directory, train_barebones_price_complete_filename), colClasses = train_barebones_classes)
         }
       } else {
-        test <- fread(input = paste0(directory, test_barebonesfilename), 
-                      header = TRUE, 
-                      stringsAsFactors = FALSE,
-                      colClasses = test_classes)
+        test <- fread(input = paste0(directory, test_barebonesfilename), colClasses = test_barebones_classes)
         if(log_price) {
-          train <- fread(input = paste0(directory, train_barebones_logprice_filename), 
-                         header = TRUE, 
-                         stringsAsFactors = FALSE,
-                         colClasses = train_classes)
+          train <- fread(input = paste0(directory, train_barebones_logprice_filename), colClasses = train_barebones_classes)
         } else {
-          train <- fread(input = paste0(directory, train_barebones_price_filename), 
-                         header = TRUE, 
-                         stringsAsFactors = FALSE,
-                         colClasses = train_classes)
+          train <- fread(input = paste0(directory, train_barebones_price_filename), colClasses = train_barebones_classes)
         }
       }
     } else if(type == 'transforms') {
       if(complete_only) {
-        test <- fread(input = paste0(directory, test_transforms_complete_filename), 
-                      header = TRUE, 
-                      stringsAsFactors = FALSE,
-                      colClasses = test_classes)
+        test <- fread(input = paste0(directory, test_transforms_complete_filename), colClasses = test_transforms_classes)
         if(log_price) {
-          train <- fread(input = paste0(directory, train_transform_logprice_complete_filename), 
-                         header = TRUE, 
-                         stringsAsFactors = FALSE,
-                         colClasses = train_classes)
+          train <- fread(input = paste0(directory, train_transform_logprice_complete_filename), colClasses = train_transforms_classes)
         } else {
-          train <- fread(input = paste0(directory, train_transform_price_complete_filename), 
-                         header = TRUE, 
-                         stringsAsFactors = FALSE,
-                         colClasses = train_classes)
+          train <- fread(input = paste0(directory, train_transform_price_complete_filename), colClasses = train_transforms_classes)
         }
       } else {
-        test <- fread(input = paste0(directory, test_transforms_filename), 
-                      header = TRUE, 
-                      stringsAsFactors = FALSE,
-                      colClasses = test_classes)
+        test <- fread(input = paste0(directory, test_transforms_filename), colClasses = test_transforms_classes)
         if(log_price) {
-          train <- fread(input = paste0(directory, train_barebones_logprice_filename), 
-                         header = TRUE, 
-                         stringsAsFactors = FALSE,
-                         colClasses = train_classes)
+          train <- fread(input = paste0(directory, train_barebones_logprice_filename), colClasses = train_transforms_classes)
         } else {
-          train <- fread(input = paste0(directory, train_barebones_price_filename), 
-                         header = TRUE, 
-                         stringsAsFactors = FALSE,
-                         colClasses = train_classes)
+          train <- fread(input = paste0(directory, train_barebones_price_filename), colClasses = train_transforms_classes)
         }
       }
     } else if(type == 'raw') {
-      train <- fread(input = paste0(directory, train_raw_filename), 
-                     header = TRUE, 
-                     stringsAsFactors = FALSE,
-                     colClasses = train_classes)
-      test <- fread(input = paste0(directory, test_raw_filename), 
-                    header = TRUE, 
-                    stringsAsFactors = FALSE,
-                    colClasses = test_classes)
+      train <- fread(input = paste0(directory, train_raw_filename), colClasses = train_raw_classes)
+      test <- fread(input = paste0(directory, test_raw_filename), colClasses = test_raw_classes)
     } else {
       print("You asked for a type that doesn't exist")# raise error?
     }
@@ -566,76 +502,48 @@ read_data <- function(directory = 'data/', dataset = 'all', type = 'raw', comple
       macro <- data.frame(macro)
       raion <- data.frame(raion)
     }
+    if(type == 'raw') {
+      return(list('train' = train, 'test' = test, 'macro' = macro))
+    } else {
+      return(list('train' = train, 'test' = test, 'raion' = raion))
+    }
   } else if(dataset == 'train') {
     if(type == 'total') {
       if(complete_only) {
-        train <- fread(input = paste0(directory, train_total_complete_filename), 
-                       header = TRUE, 
-                       stringsAsFactors = FALSE,
-                       colClasses = train_classes)
+        train <- fread(input = paste0(directory, train_total_complete_filename), colClasses = train_total_classes)
       } else {
-        train <- fread(input = paste0(directory, train_total_filename), 
-                       header = TRUE, 
-                       stringsAsFactors = FALSE,
-                       colClasses = train_classes)
+        train <- fread(input = paste0(directory, train_total_filename), colClasses = train_total_classes)
       }
     } else if(type == 'barebones') {
       if(log_price) {
         if(complete_only) {
-          train <- fread(input = paste0(directory, train_barebones_logprice_complete_filename), 
-                         header = TRUE, 
-                         stringsAsFactors = FALSE,
-                         colClasses = train_classes)
+          train <- fread(input = paste0(directory, train_barebones_logprice_complete_filename), colClasses = train_barebones_classes)
         } else {
-          train <- fread(input = paste0(directory, train_barebones_logprice_filename), 
-                         header = TRUE, 
-                         stringsAsFactors = FALSE,
-                         colClasses = train_classes)
+          train <- fread(input = paste0(directory, train_barebones_logprice_filename), colClasses = train_barebones_classes)
         }
       } else {
         if(complete_only) {
-          train <- fread(input = paste0(directory, train_barebones_price_complete_filename), 
-                         header = TRUE, 
-                         stringsAsFactors = FALSE,
-                         colClasses = train_classes)
+          train <- fread(input = paste0(directory, train_barebones_price_complete_filename), colClasses = train_barebones_classes)
         } else {
-          train <- fread(input = paste0(directory, train_barebones_price_filename), 
-                         header = TRUE, 
-                         stringsAsFactors = FALSE,
-                         colClasses = train_classes)
+          train <- fread(input = paste0(directory, train_barebones_price_filename), colClasses = train_barebones_classes)
         }
       }
     } else if(type == 'transforms') {
       if(log_price) {
         if(complete_only) {
-          train <- fread(input = paste0(directory, train_transform_logprice_complete_filename), 
-                         header = TRUE, 
-                         stringsAsFactors = FALSE,
-                         colClasses = train_classes)
+          train <- fread(input = paste0(directory, train_transform_logprice_complete_filename), colClasses = train_transforms_classes)
         } else {
-          train <- fread(input = paste0(directory, train_transform_logprice_filename), 
-                         header = TRUE, 
-                         stringsAsFactors = FALSE,
-                         colClasses = train_classes)
+          train <- fread(input = paste0(directory, train_transform_logprice_filename), colClasses = train_transforms_classes)
         }
       } else {
         if(complete_only) {
-          train <- fread(input = paste0(directory, train_transform_price_complete_filename), 
-                         header = TRUE, 
-                         stringsAsFactors = FALSE,
-                         colClasses = train_classes)
+          train <- fread(input = paste0(directory, train_transform_price_complete_filename), colClasses = train_transforms_classes)
         } else {
-          train <- fread(input = paste0(directory, train_transform_price_filename), 
-                         header = TRUE, 
-                         stringsAsFactors = FALSE,
-                         colClasses = train_classes)
+          train <- fread(input = paste0(directory, train_transform_price_filename), colClasses = train_transforms_classes)
         }
       }
     } else if(type == 'raw') {
-      train <- fread(input = paste0(directory, train_raw_filename), 
-                     header = TRUE, 
-                     stringsAsFactors = FALSE,
-                     colClasses = train_classes)
+      train <- fread(input = paste0(directory, train_raw_filename), colClasses = train_raw_classes)
     } else {
       print("You asked for a type that doesn't exist")# raise error?
     }
@@ -645,45 +553,24 @@ read_data <- function(directory = 'data/', dataset = 'all', type = 'raw', comple
   } else if(dataset == 'test') {
     if(type == 'total') {
       if(complete_only) {
-        test <- fread(input = paste0(directory, test_total_complete_filename), 
-                      header = TRUE, 
-                      stringsAsFactors = FALSE,
-                      colClasses = test_classes)
+        test <- fread(input = paste0(directory, test_total_complete_filename), colClasses = test_total_classes)
       } else {
-        test <- fread(input = paste0(directory, test_total_filename), 
-                      header = TRUE, 
-                      stringsAsFactors = FALSE,
-                      colClasses = test_classes)
+        test <- fread(input = paste0(directory, test_total_filename), colClasses = test_total_classes)
       }
     } else if(type == 'barebones') {
       if(complete_only) {
-        test <- fread(input = paste0(directory, test_barebones_complete_filename), 
-                      header = TRUE, 
-                      stringsAsFactors = FALSE,
-                      colClasses = test_classes)
+        test <- fread(input = paste0(directory, test_barebones_complete_filename), colClasses = test_barebones_classes)
       } else {
-        test <- fread(input = paste0(directory, test_barebones_filename), 
-                      header = TRUE, 
-                      stringsAsFactors = FALSE,
-                      colClasses = test_classes)
+        test <- fread(input = paste0(directory, test_barebones_filename), colClasses = test_barebones_classes)
       }
     } else if(type == 'transforms') {
       if(complete_only) {
-        test <- fread(input = paste0(directory, test_transforms_complete_filename), 
-                      header = TRUE, 
-                      stringsAsFactors = FALSE,
-                      colClasses = test_classes)
+        test <- fread(input = paste0(directory, test_transforms_complete_filename), colClasses = test_transforms_classes)
       } else {
-        test <- fread(input = paste0(directory, test_transforms_filename), 
-                      header = TRUE, 
-                      stringsAsFactors = FALSE,
-                      colClasses = test_classes)
+        test <- fread(input = paste0(directory, test_transforms_filename), colClasses = test_transforms_classes)
       }
     } else if(type == 'raw') {
-      test <- fread(input = paste0(directory, test_raw_filename), 
-                    header = TRUE, 
-                    stringsAsFactors = FALSE,
-                    colClasses = test_classes)
+      test <- fread(input = paste0(directory, test_raw_filename), colClasses = test_raw_classes)
     } else {
       print("You asked for a type that doesn't exist")# raise error?
     }
@@ -691,27 +578,12 @@ read_data <- function(directory = 'data/', dataset = 'all', type = 'raw', comple
       test <- data.frame(test)
     }
   } else if(dataset == 'macro') {
-    yearly <- fread(input = paste0(directory, yearly_filename), 
-                    header = TRUE, 
-                    stringsAsFactors = FALSE)#, 
-                    #colClasses = )
-    quarterly <- fread(input = paste0(directory, quarterly_filename), 
-                       header = TRUE, 
-                       stringsAsFactors = FALSE)#, 
-                       #colClasses = )
-    monthly <- fread(input = paste0(directory, monthly_filename), 
-                     header = TRUE, 
-                     stringsAsFactors = FALSE)#, 
-                     #colClasses = )
-    daily <- fread(input = paste0(directory, daily_filename), 
-                   header = TRUE, 
-                   stringsAsFactors = FALSE)#, 
-                   #colClasses = )
+    yearly <- fread(input = paste0(directory, yearly_filename))#, colClasses = )
+    quarterly <- fread(input = paste0(directory, quarterly_filename))#, colClasses = )
+    monthly <- fread(input = paste0(directory, monthly_filename))#, colClasses = )
+    daily <- fread(input = paste0(directory, daily_filename))#, colClasses = )
   } else if(dataset == 'raion') {
-    raion <- fread(input = paste0(directory, raion_filename), 
-                   header = TRUE, 
-                   stringsAsFactors = FALSE, 
-                   colClasses = raion_classes)
+    raion <- fread(input = paste0(directory, raion_filename), colClasses = raion_classes)
     if(data_frame) {
       raion <- data.frame(raion)
     }
@@ -720,6 +592,53 @@ read_data <- function(directory = 'data/', dataset = 'all', type = 'raw', comple
   }
 }
 
+transform_data <- function(data) {
+  if("data.table" %in% class(data)) {
+    return(transform_data.table(data))
+  } else {
+    return(transform_data.frame(data))
+  }
+}
+
+transform_data.table <- function(data) {
+  data[, year := year(timestamp)]
+  data[, quarter := (paste0(year, "-Q", quarter(timestamp)))]
+  data[, month := (paste0(year, "-", month(timestamp)))]
+  data[, log_fullsq := (log(full_sq))]
+  data[, log_lifesq := (log(life_sq))]
+  data[, log_10p_floor := (log(10L + floor))]
+  data[, log_10p_maxfloor := (log(10L + max_floor))]
+  data[, log_1p_numroom := (log(1L + num_room))]
+  data[, log_kitchsq := (log(kitch_sq))]
+  if("price_doc" %in% colnames(data)) {
+    data[, log_price := (log(price_doc))]
+    data[, price_per_room := (price_doc / num_room)]
+    data[, price_per_fullsq := (price_doc / full_sq)]
+    data[, log_price_per_10p_log_room := (log(price_doc) / (10 + log(num_room)))]
+    data[, log_price_per_log_fullsq := (log(price_doc) / log(full_sq))]
+  }
+  return(data)
+}
+
+transform_data.frame <- function(data) {
+  data$year <- year(data$timestamp)
+  data$quarter <- paste0(data$year, "-Q", quarter(data$timestamp))
+  data$month <- paste0(data$year, "-", month(data$timestamp))
+  data$log_fullsq <- log(data$full_sq)
+  data$log_lifesq <- log(data$life_sq)
+  data$log_10p_floor <- log(10L + data$floor)
+  data$log_10p_maxfloor <- log(10L + data$max_floor)
+  data$log_1p_numroom <- log(1L + data$num_room)
+  data$log_kitchsq <- log(data$kitch_sq)
+  if("price_doc" %in% colnames(data)) {
+    data$log_price <- log(data$price_doc)
+    data$price_per_room <- data$price_doc / data$num_room
+    data$price_per_fullsq <- data$price_doc / data$full_sq
+    data$log_price_per_10p_log_room <- log(data$price_doc) / (10 + log(data$num_room))
+    data$log_price_per_log_fullsq <- log(data$price_doc) / log(data$full_sq)
+  }
+  return(data)
+}
 
 ### cleaner function definitions ###
 
@@ -735,9 +654,9 @@ read_data <- function(directory = 'data/', dataset = 'all', type = 'raw', comple
 #                   : complete_cases drops all incomplete observations
 clean_data <- function(data, drop_dependents = FALSE, drop_transforms = FALSE, drop_NA_threshold = 1, keep_ratios = FALSE, special_cases = TRUE, complete_cases = FALSE) {
   if("data.table" %in% class(data)) {
-    return(clean_data.table(data, drop_dependents, drop_transforms, special_cases, complete_cases))
+    return(clean_data.table(data, drop_dependents, drop_transforms, drop_NA_threshold, keep_ratios, special_cases, complete_cases))
   } else {
-    return(clean_data.frame(data, drop_dependents, drop_transforms, special_cases, complete_cases))
+    return(clean_data.frame(data, drop_dependents, drop_transforms, drop_NA_threshold, keep_ratios, special_cases, complete_cases))
   }
 }
 
@@ -753,53 +672,107 @@ clean_data.table <- function(data, drop_dependents = FALSE, drop_transforms = FA
         data_dependent_indices <- c(data_dependent_indices, colname_index)
       }
     }
-    data[, data_dependent_indices, with = FALSE] <- NULL
+    data[, (data_dependent_indices) := NULL]
   }
   if(drop_transforms) {
     if(keep_ratios) {
-      data[, starts_with("log_") & !contains("_per_"), with = FALSE] <- NULL
+      data[, (starts_with("log_") & !contains("_per_")) := NULL]
     } else {
-      data[, starts_with("log_"), with = FALSE] <- NULL
+      data[, (starts_with("log_")) := NULL]
     }
   }
-  if(drop_NA_threshold < 1) {
-    # get NA % for each column, then threshold for >= 10%, then pass those indices into selector
-    portion_NA <- unlist(lapply(train, function(x) sum(is.na(x))/length(x)), use.names = FALSE)
+  if(drop_NA_threshold < 1.0) {
+    # get NA % for each column, then threshold, then pass those indices into selector
+    portion_NA <- unlist(lapply(data, function(x) sum(is.na(x))/length(x)), use.names = FALSE)
     cols_to_drop <- which(portion_NA > drop_NA_theshold)
-    data[, cols_to_drop, with = FALSE] <- NULL
+    data[, (cols_to_drop) := NULL]
   }
   if(special_cases) {
-    data[(floor > 76) & ((floor %% 11) == 0), floor := (floor %/% 11)]
-    data[(floor > 76) & ((floor %/% 100) == ((floor %% 100) %/% 10)), floor := ((floor %/% 100)*10 + floor %% 10)]
-    data[(floor > 76) & (((floor %% 100) %/% 10) == (floor %% 10)), floor := (floor %% 10)]
-    data[(max_floor > 76) & ((max_floor %% 11) == 0), max_floor := (max_floor %/% 11)]
-    data[(max_floor > 76) & ((max_floor %/% 100) == ((max_floor %% 100) %/% 10)), max_floor := ((max_floor %/% 100)*10 + max_floor %% 10)]
-    data[(max_floor > 76) & (((max_floor %% 100) %/% 10) == (max_floor %% 10)), max_floor := (max_floor %% 10)]
-    data[build_year > 1e8, build_year := (build_year %% 1e5)]
-    data[build_year < 100, build_year := build_year + 1900L]
-    data[build_year < 217, build_year := (build_year - (build_year %% 100)) + 1800L + (build_year %% 100)]
-    data[build_year > 2017, build_year := (build_year - round((build_year - 2000) / 1000))]
-    data[num_room == 0, c("num_room")] <- 1
-    data[((state >= 10) & (state < 100)), state := (state %/% 10)]
+    if("log_10p_floor" %in% data_colnames) {
+      data[(floor > 76L) & ((floor %% 11L) == 0L), c("floor", "log_10p_floor") := list(floor %/% 11L, log(10 + (floor %/% 11L)))]
+      data[(floor > 76L) & ((floor %/% 100L) == ((floor %% 100L) %/% 10L)), c("floor", "log_10p_floor") := list((floor %/% 100L)*10L + floor %% 10L, log(10 + (floor %/% 100L)*10L + floor %% 10L))]
+      data[(floor > 76L) & (((floor %% 100L) %/% 10L) == (floor %% 10L)), c("floor", "log_10p_floor") := list(floor %% 10L, log(10 + (floor %% 10L)))]
+    } else {
+      data[(floor > 76L) & ((floor %% 11L) == 0L), floor := (floor %/% 11L)]
+      data[(floor > 76L) & ((floor %/% 100L) == ((floor %% 100L) %/% 10L)), floor := ((floor %/% 100L)*10L + floor %% 10L)]
+      data[(floor > 76L) & (((floor %% 100L) %/% 10L) == (floor %% 10L)), floor := (floor %% 10L)]
+    }
+    if("log_10p_maxfloor" %in% data_colnames) {
+      data[(max_floor > 76L) & ((max_floor %% 11L) == 0L), c("max_floor", "log_10p_maxfloor") := list(max_floor %/% 11L, log(10 + (max_floor %/% 11L)))]
+      data[(max_floor > 76L) & ((max_floor %/% 100L) == ((max_floor %% 100L) %/% 10L)), c("max_floor", "log_10p_maxfloor") := list((max_floor %/% 100L)*10L + max_floor %% 10L, log(10 + (max_floor %/% 100L)*10L + max_floor %% 10L))]
+      data[(max_floor > 76L) & (((max_floor %% 100L) %/% 10L) == (max_floor %% 10L)), c("max_floor", "log_10p_maxfloor") := list(max_floor %% 10L, log(10 + max_floor %% 10L))]
+    } else {
+      data[(max_floor > 76L) & ((max_floor %% 11L) == 0L), max_floor := (max_floor %/% 11L)]
+      data[(max_floor > 76L) & ((max_floor %/% 100L) == ((max_floor %% 100L) %/% 10L)), max_floor := ((max_floor %/% 100L)*10L + max_floor %% 10L)]
+      data[(max_floor > 76L) & (((max_floor %% 100L) %/% 10L) == (max_floor %% 10L)), max_floor := (max_floor %% 10L)]
+    }
+    data[build_year > 1e8L, build_year := (build_year %% 1e5L)]
+    data[build_year < 100L, build_year := (build_year + 1900L)]
+    data[build_year < 217L, build_year := (build_year - (build_year %% 100L)) + 1800L + (build_year %% 100L)]
+    data[build_year > 2017L, build_year := (build_year - as.integer(round((build_year - 2000L) / 1000L) * 1000L))]
+    if("log_1p_numroom" %in% data_colnames) {
+      data[num_room == 0L, c("num_room", "log_1p_numroom") := list(1L, log(1L + 1L))]
+    } else {
+      data[num_room == 0L, c("num_room") := list(1L)]
+    }
+    data[((state >= 10L) & (state < 100L)), state := (state %/% 10L)]
   }
   # simple cleaning based on single columns
-  data[life_sq <= 5, c("life_sq")] <- NA
-  data[full_sq <= 5, c("full_sq")] <- NA
-  data[life_sq > full_sq, life_sq := life_sq / 10]
-  data[life_sq > full_sq, life_sq := life_sq / 10]
-  data[kitch_sq > full_sq, kitch_sq := kitch_sq / 10]
-  data[kitch_sq > full_sq, kitch_sq := kitch_sq / 10]
-  data[full_sq >= 10*life_sq, full_sq := full_sq / 10]
-  data[full_sq >= 10*life_sq, full_sq := full_sq / 10]
-  data[(floor < 1) | (floor > 76), c("floor")] <- NA
-  data[(max_floor < 1) | (max_floor > 76), c("max_floor")] <- NA
-  data[floor > max_floor, c("max_floor")] <- NA
-  data[!(material %in% possible_materials), c("material")] <- NA
-  data[(build_year < 1850) | (build_year > 2017), c("build_year")] <- NA
-  data[num_room >= 10, c("num_room")] <- NA
-  data[(kitch_sq <= 1) | (kitch_sq > 25), c("kitch_sq")] <- NA
-  data[(state >= 1) & (state <= 4), c("state")] <- NA
-  data[!(product_type %in% possible_product_types), c("product_type")] <- NA
+  if("log_lifesq" %in% data_colnames) {
+    data[life_sq <= 5, c("life_sq", "log_lifesq") := list(NA, NA)]
+  } else {
+    data[life_sq <= 5, c("life_sq") := list(NA)]
+  }
+  if("log_fullsq" %in% data_colnames) {
+    data[full_sq <= 5, c("full_sq", "log_fullsq") := list(NA, NA)]
+  } else {
+    data[full_sq <= 5, c("full_sq") := list(NA)]
+  }
+  if("log_lifesq" %in% data_colnames) {
+    data[life_sq > full_sq, c("life_sq", "log_lifesq") := list(life_sq / 10, log_lifesq - log(10))]
+    data[life_sq > full_sq, c("life_sq", "log_lifesq") := list(life_sq / 10, log_lifesq - log(10))]
+  } else {
+    data[life_sq > full_sq, life_sq := life_sq / 10]
+    data[life_sq > full_sq, life_sq := life_sq / 10]
+  }
+  if("log_kitchsq" %in% data_colnames) {
+    data[kitch_sq > full_sq, c("kitch_sq", "log_kitchsq") := list(kitch_sq / 10, log_kitchsq - log(10))]
+    data[kitch_sq > full_sq, c("kitch_sq", "log_kitchsq") := list(kitch_sq / 10, log_kitchsq - log(10))]
+  } else {
+    data[kitch_sq > full_sq, kitch_sq := kitch_sq / 10]
+    data[kitch_sq > full_sq, kitch_sq := kitch_sq / 10]
+  }
+  if("log_fullsq" %in% data_colnames) {
+    data[full_sq >= 10*life_sq, c("full_sq", "log_fullsq") := list(full_sq / 10, log_fullsq - log(10))]
+    data[full_sq >= 10*life_sq, c("full_sq", "log_fullsq") := list(full_sq / 10, log_fullsq - log(10))]
+  } else {
+    data[full_sq >= 10*life_sq, full_sq := full_sq / 10]
+    data[full_sq >= 10*life_sq, full_sq := full_sq / 10]
+  }
+  if("log_10p_floor" %in% data_colnames) {
+    data[(floor < 1L) | (floor > 76L), c("floor", "log_10p_floor") := list(NA, NA)]
+  } else {
+    data[(floor < 1L) | (floor > 76L), c("floor") := list(NA)]
+  }
+  if("log_10p_maxfloor" %in% data_colnames) {
+    data[(max_floor < 1L) | (max_floor > 76L), c("max_floor", "log_10p_maxfloor") := list(NA, NA)]
+  } else {
+    data[(max_floor < 1L) | (max_floor > 76L), c("max_floor") := list(NA)]
+  }
+  data[!(material %in% possible_materials), c("material") := list(NA)]
+  data[(build_year < 1850L) | (build_year > 2017L), c("build_year") := list(NA)]
+  if("log_1p_numroom" %in% data_colnames) {
+    data[num_room >= 10L, c("num_room", "log_1p_numroom") := list(NA, NA)]
+  } else {
+    data[num_room >= 10L, c("num_room") := list(NA)]
+  }
+  if("log_kitchsq" %in% data_colnames) {
+    data[(kitch_sq <= 1) | (kitch_sq > 25), c("kitch_sq", "log_kitchsq") := list(NA, NA)]
+  } else {
+    data[(kitch_sq <= 1) | (kitch_sq > 25), c("kitch_sq") := list(NA)]
+  }
+  data[(state < 1) | (state > 4), c("state") := list(NA)]
+  data[!(product_type %in% possible_product_types), c("product_type") := list(NA)]
   # further cleaning based on multiple columns
   if("log_price" %in% data_colnames) {
     if(("log_fullsq" %in% data_colnames) & ("log_lifesq" %in% data_colnames) & ("price_per_fullsq" %in% data_colnames) & ("log_price_per_log_fullsq") %in% data_colnames) {
@@ -813,12 +786,15 @@ clean_data.table <- function(data, drop_dependents = FALSE, drop_transforms = FA
       data[((price_doc / full_sq) > 5e5) & (full_sq < 25), c("full_sq", "life_sq") := list(full_sq * 10, life_sq * 10)]
       data[(price_doc / full_sq) > 5e5, c("price_doc", "log_price") := list(price_doc / 10, log_price - log(10))]
     }
-  } else {
+  } else if("price_doc" %in% data_colnames) {
     data[(full_sq > 250) & (price_doc < exp(16.5)), full_sq := full_sq / 10]
     data[life_sq > full_sq, life_sq := life_sq / 10]
     data[((price_doc / full_sq) > 5e5) & (full_sq < 25), c("full_sq", "life_sq") := list(full_sq * 10, life_sq * 10)]
-    data[(price_doc / full_sq) > 5e5, price_doc := (price_doc / 10)]
+    data[(price_doc / full_sq) > 5e5, price_doc := (price_doc %/% 10L)]
   }
+  # fix feature data types
+  data[, material := as.factor(material)]
+  data[, state := as.factor(state)]
   return(data)
 }
 
@@ -914,53 +890,14 @@ clean_data.frame <- function(data, drop_dependents = FALSE, drop_transforms = FA
   return(data)
 }
 
-transform_data <- function(data) {
-  if("data.table" %in% class(data)) {
-    return(transform_data.table(data))
-  } else {
-    return(transform_data.frame(data))
-  }
-}
-
-transform_data.table <- function(data) {
-  data[, log_fullsq := log(full_sq)]
-  data[, log_lifesq := log(life_sq)]
-  data[, log_10p_floor := log(10+floor)]
-  data[, log_10p_maxfloor := log(10+max_floor)]
-  data[, log_1p_numroom := log(1+num_room)]
-  data[, log_kitchsq := log(kitch_sq)]
-  if("price_doc" %in% colnames(data)) {
-    data[, log_price := log(price_doc)]
-    data[, price_per_room := price_doc / num_room]
-    data[, price_per_fullsq := price_doc / full_sq]
-    data[, log_price_per_10p_log_room := log(price_doc) / (10+log(num_room))]
-    data[, log_price_per_log_fullsq := log(price_doc) / log(full_sq)]
-  }
-  return(data)
-}
-
-transform_data.frame <- function(data) {
-  data$log_fullsq <- log(data$full_sq)
-  data$log_lifesq <- log(data$life_sq)
-  data$log_10p_floor <- log(10+data$floor)
-  data$log_10p_maxfloor <- log(10+data$max_floor)
-  data$log_1p_numroom <- log(1+data$num_room)
-  data$log_kitchsq <- log(data$kitch_sq)
-  if("price_doc" %in% colnames(data)) {
-    data$log_price <- log(data$price_doc)
-    data$price_per_room <- data$price_doc / data$num_room
-    data$price_per_fullsq <- data$price_doc / data$full_sq
-    data$log_price_per_10p_log_room <- log(data$price_doc) / (10+log(data$num_room))
-    data$log_price_per_log_fullsq <- log(data$price_doc) / log(data$full_sq)
-  }
-  return(data)
-}
-
 # read raw data and write fresh cleaned data
 refresh_data <- function(read_directory = 'data/', write_directory = 'data/') {
   
   # read data
-  read_data(read_directory)
+  data_list <- read_data(read_directory)
+  train <- data_list[['train']]
+  test <- data_list[['test']]
+  macro <- data_list[['macro']]
   
   # process macro data
   yearly <- unique(macro[, yearly_colnames, with = FALSE])
@@ -977,7 +914,7 @@ refresh_data <- function(read_directory = 'data/', write_directory = 'data/') {
   monthly <- monthly[!duplicated(monthly[, .(oil_urals, cpi)]),]
   monthly[, months := .(months)]
   setcolorder(monthly, c(ncol(monthly), 1:(ncol(monthly)-1)))
-  monthly[nrow(monthly), which(!(colnames(monthly) %in% c("months", "cpi", "ppi")))] <- NA
+  monthly[nrow(monthly), (which(!(colnames(monthly) %in% c("months", "cpi", "ppi")))) := NA]
   fwrite(monthly, file = paste0(write_directory, monthly_filename), append = FALSE)
   
   daily <- unique(macro[, daily_colnames, with = FALSE])
@@ -994,6 +931,10 @@ refresh_data <- function(read_directory = 'data/', write_directory = 'data/') {
   setkey(raion, sub_area)
   raion <- unique(raion)
   fwrite(raion, file = paste0(write_directory, raion_filename), append = FALSE)
+  
+  # clean data
+  train <- clean_data(train, drop_dependents = TRUE)
+  test <- clean_data(test, drop_dependents = TRUE)
   
   # transform data
   train <- transform_data(train)
@@ -1036,5 +977,8 @@ refresh_data <- function(read_directory = 'data/', write_directory = 'data/') {
   
   test_transforms_complete <- test_transforms[complete.cases(test_transforms),]
   fwrite(test_transforms_complete, paste0(write_directory, test_transforms_complete_filename), append = FALSE)
+  
+  # return datasets as list
+  return(list('train' = train, 'test' = test, 'raion' = raion, 'yearly' = yearly, 'quarterly' = quarterly, 'monthly' = monthly, 'daily' = daily))
 }
 
