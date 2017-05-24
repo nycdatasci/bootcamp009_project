@@ -30,6 +30,8 @@ library(prophet)
 library(dse)
 library(midasr)
 library(corrplot)
+library(forecast)
+library(TTR)
 setwd("~/GoogleDrive/NYCDSA/bootcamp009_project/Project3-MachineLearning/aull_dobbins_ganemccalla_schott/data")
 
 ############### Import Macro Data and Training Data To Construct Dependent Variable ####################
@@ -81,10 +83,16 @@ price = aggregate(x=price, by = list(unique.timestamp = price$timestamp), FUN=me
 rm(train)
 macro = left_join(price,macro, by = 'timestamp')
 rm(price)
+macro$price_doc = log(macro$price_doc)
+macro$full_sq = log(macro$full_sq)
 
 ## Import the training dat for sake of price and square foot data.
 ## Will make price / sq. foot into the dependent variable to be forecasted by the time series model,
 ## removing the single most important variable that explains price variance at the property level.
+
+macro = macro %>%
+  mutate(brent_rub = brent * usdrub)
+macro_brent = NULL
 
 macro = macro %>%
   mutate(p_sqf = price_doc / full_sq)
@@ -140,7 +148,7 @@ for (j in seq((ncol(dly_complete_stand_data)-1),2)) {
   }
 }
 dly_complete_stand_data = dly_complete_stand_data[complete.cases(dly_complete_stand_data),]
-preProcessParameters = preProcess(dly_complete_stand_data, method = c('pca'))
+preProcessParameters = preProcess(dly_complete_stand_data[1:9], method = c('pca'))
 dly_complete_stand_data = predict(preProcessParameters,dly_complete_stand_data)
 dly_complete_stand_data$timestamp = as.POSIXlt.Date(dly_complete_stand_data$timestamp)
 dly_complete_stand_data$unique.timestamp = NULL
@@ -177,7 +185,6 @@ preProcessParameters = preProcess(psq, method = c('center','scale'))
 stand_psq = predict(preProcessParameters,psq)
 stand_psq$ds = as.POSIXct.Date(stand_psq$ds)
 stand_psq$unique.timestamp = NULL
-
 ```
 
 
@@ -185,21 +192,33 @@ stand_psq$unique.timestamp = NULL
 macro_xts <- xts(complete_stand_data[,-1], order.by=complete_stand_data[,1])
 dly_xts <- xts(dly_complete_stand_data[,-1], order.by=dly_complete_stand_data[,1])
 
+dly_ts = as.ts(macro[,1:2])
+dly_time_series_components = decompose(dly_ts)
+dly_ts
+
 ## Price / Square foot is shown to be stationary process.  I also plot its univariate time series model.
 psq_xts = xts(stand_psq[,-1], order.by = stand_psq[,1])
-adf.test(psq_xts)
+psq_mo_xts = to.monthly(psq_xts)
+psq_mo_xts$psq_mo_xts.Open = NULL
+psq_mo_xts$psq_mo_xts.High = NULL
+psq_mo_xts$psq_mo_xts.Low = NULL
+attr(psq_mo_xts, 'frequency') <- 12
 a = prophet(stand_psq)
 pred = predict(a,stand_psq)
 plot(a, pred, fill = y) + xlab('Date') + ylab('Standardized Price / Square Foot') + theme_economist() 
+
+# Auto Arima
+auto.arima(dly_complete_stand_data[,2],xreg=dly_complete_stand_data[,3:6])
 
 #Garch - Generalized Auto-regressive Conditioned Heteroskedasticity for the univariate on price / sq.
 garch(psq_xts, grad = "numerical")
 
 # Constructing a TSdata time series object for VAR on the daily time series.
-VARselect(dly_complete_stand_data[,2:5], lag.max = 120, type = "both")
+VARselect(dly_complete_stand_data[,2], lag.max = 200, type = "both", exogen = dly_complete_stand_data[,3:6])
 # We choose a lag of 13 as having the best AIC and FPE information criteria.  A lag of 1-2 days
 # also showed an excellent information criteria.
-var_13_dly = VAR(dly_complete_stand_data[,2:5], p = 13, type = "both")
+var_13_dly = VAR(dly_complete_stand_data[,2], p = 13, type = "both", exogen=dly_complete_stand_data[,3:6])
+options(max.print=1000000)
 summary(var_13_dly)
 
 # Constructing a generalized dynamical linear model using dlmodeler.  State space
@@ -222,6 +241,7 @@ summary(var_13_dly)
 # ARIMA (Auto-regressive integrated moving average)
 # MA(3)
 psq.ma = arima(psq_xts, order = c(0,0,3))
+psq.ma
 # ARMA(1,1)
 psq.arma = arima(psq_xts, order = c(1,0,1))
 # ARIMA(2,1,2)
@@ -264,8 +284,10 @@ y <- midas.sim(500,theta0,x,1)
 
 
 ```{r}
-dly_ts = TSdata(data = dly_xts$timestamp, input= coredata(dly_xts), output = coredata(dly_xts)[,4])
-
+dly_ts = as.ts(psq_mo_xts[,1])
+plot(decompose(dly_ts),col = 'red', col.lab = 'blue')
+axis(side = 1, at = c('Jan', 'Apr', 'Jul', 'Oct'), labels = c('Jan', 'Apr', 'Jul', 'Oct'))
+dly_ts
 model = estVARXls(dly_ts,max.lag=90,trend=TRUE)
 ```
 
