@@ -19,7 +19,7 @@
 *.tar
 *.zip
 
-# Logs and databases #
+# Logs and Data #
 ######################
 *.log
 *.sql
@@ -29,6 +29,10 @@
 
 # Folders #
 ######################
+*/redact
+*/data
+*/discogs
+*/bokeh_old
 
 # OS generated files #
 ######################
@@ -41,7 +45,7 @@ ehthumbs.db
 Thumbs.db
 Icon?
 
-# API Keys/Tokens  Configuration File   #
-######################
-*configuration.py
+# API Keys/Config File #
+#####################
+config.py
 *.ini

@@ -1,0 +1,137 @@
+---
+title: "Secondary Modelling"
+author: "Wes Aull"
+date: "5/23/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(MASS)
+library(lubridate)
+library(xts)
+library(ggplot2)
+library(ggthemes)
+library(readr)
+library(corrplot)
+library(caret)
+library(car)
+library(fastICA)
+library(MTS)
+library(stats)
+library(xts)
+library(zoo)
+library(KFAS)
+library(dlmodeler)
+library(vars)
+library(dplyr)
+library(tseries)
+library(prophet)
+library(dse)
+library(midasr)
+library(corrplot)
+setwd("~/GoogleDrive/NYCDSA/bootcamp009_project/Project3-MachineLearning/aull_dobbins_ganemccalla_schott/data")
+
+############### Import Macro Data and Training Data To Construct Dependent Variable ####################
+
+macro <- read_csv("./macro.csv", 
+    col_types = cols(apartment_fund_sqm = col_number(), 
+        average_provision_of_build_contract = col_number(), 
+        average_provision_of_build_contract_moscow = col_number(), 
+        balance_trade_growth = col_number(), 
+        bandwidth_sports = col_number(), 
+        deposits_rate = col_number(), gdp_deflator = col_number(), 
+        gdp_quart = col_number(), gdp_quart_growth = col_number(), 
+        grp_growth = col_number(), hospital_bed_occupancy_per_year = col_number(), 
+        hospital_beds_available_per_cap = col_number(), 
+        incidence_population = col_number(), 
+        modern_education_share = col_number(), 
+        mortgage_growth = col_number(), net_capital_export = col_number(), 
+        oil_urals = col_number(), old_education_build_share = col_number(), 
+        population_reg_sports_share = col_number(), 
+        provision_retail_space_sqm = col_number(), 
+        rent_price_1room_bus = col_number(), 
+        rent_price_1room_eco = col_number(), 
+        rent_price_2room_bus = col_number(), 
+        rent_price_2room_eco = col_number(), 
+        rent_price_3room_bus = col_number(), 
+        rent_price_3room_eco = col_number(), 
+        `rent_price_4+room_bus` = col_number(), 
+        salary_growth = col_number(), students_state_oneshift = col_number(), 
+        timestamp = col_date(format = "%Y-%m-%d")))
+
+problems(macro) #0 rows - No data corruption classes were assigned.
+
+for (i in seq(ncol(macro),2)) {
+  macro[,i] = as.numeric(unlist(macro[,i]))
+}
+
+macro = macro %>%
+  mutate(brent_rub = brent * usdrub)
+
+train <- read_csv("./train_clean.csv", 
+    col_types = cols(build_year = col_number(), 
+        max_floor = col_number(), timestamp = col_date(format = "%Y-%m-%d")))
+
+## Join the data and mutate the dependent variable to be modeled (price / sq. foot).
+
+price = data.frame(train$timestamp,train$price_doc,train$full_sq)
+colnames(price) = c('timestamp','price_doc','full_sq')
+
+## Aggregate duplicate observations for one date due to time series analysis limitation.
+price = aggregate(x=price, by = list(unique.timestamp = price$timestamp), FUN=mean, na.rm=TRUE)
+
+rm(train)
+macro = left_join(price,macro, by = 'timestamp')
+rm(price)
+
+macro = macro %>%
+  mutate(p_sqf = price_doc / full_sq)
+
+## Remove highly sparse variables.
+data = macro
+for (i in seq(ncol(data),1)) {
+  if (sum(is.na(data[,i])) > 400) {
+    data[,i] = NULL
+  }  
+}
+
+## Remove variables with no variance (no explanatory power).
+data$baths_share = NULL
+data$water_pipes_share = NULL
+data$childbirth = NULL
+data$heating_share = NULL
+data$hot_water_share = NULL
+data$old_house_share = NULL
+
+## Standardize data.
+preProcessParameters = preProcess(data, method = c('center','scale'))
+stand_data = predict(preProcessParameters,data)
+
+# Pull price / square foot from past.
+stand_data$p_sqf_100 = NULL
+for (i in 1161:102) {
+  stand_data$p_sqf_100[i] = ((stand_data$p_sqf[i-100]+stand_data$p_sqf[i-101]) / 2)
+}
+## Pare down to complete observations.
+complete_stand_data = stand_data[complete.cases(stand_data),]
+complete_stand_data$unique.timestamp = NULL
+ggplot(complete_stand_data,aes(x=timestamp,y=salary_growth)) + geom_point()
+```
+
+
+```{r cars}
+pared_linear_regression = lm(p_sqf ~ p_sqf_100, complete_stand_data[,2:ncol(complete_stand_data)])
+summary(pared_linear_regression)
+plot(pared_linear_regression)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
