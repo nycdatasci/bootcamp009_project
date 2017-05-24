@@ -5,12 +5,16 @@ library(scales)
 library(corrplot)
 library(DT)
 library(car)
+library(ggplot2)
 
 
 setwd('/Users/clairevignon/DataScience/NYC_DSA/project3_ML_kaggle')
 train = read.csv("train_cleaned.csv", stringsAsFactors = FALSE)
-macro = read.csv("macro.csv", stringsAsFactors = FALSE)
+# macro = read.csv("macro.csv", stringsAsFactors = FALSE)
 test = read.csv("test_cleaned.csv", stringsAsFactors = FALSE)
+
+# using log
+train$price_doc = log(train$price_doc+1)
 
 ##### Top Variables from Jack's lasso #####
 top_35 = c("full_sq", "num_room", "kitch_sq", "state", "sub_area", "indust_part",
@@ -48,7 +52,7 @@ corrplot(cor(train[, top_35_3], use="complete.obs"))
 top_35_reduced = c("id", "full_sq", "kitch_sq", "state", "sub_area", 'price_doc', "green_zone_km", 
                    "sadovoe_km", "railroad_km", "office_km", "theater_km")
 top_35_reduced_noprice = c("id", "full_sq", "kitch_sq", "state", "sub_area", "green_zone_km", 
-                   "sadovoe_km", "railroad_km", "office_km", "theater_km")
+                           "sadovoe_km", "railroad_km", "office_km", "theater_km")
 
 train_top35_reduced = subset(train, select= top_35_reduced)
 test_top35_reduced = subset(test, select= top_35_reduced_noprice)
@@ -63,13 +67,6 @@ train_top35_reduced$sub_area = factor(train_top35_reduced$sub_area)
 test_top35_reduced$state = factor(test_top35_reduced$state)
 test_top35_reduced$sub_area = factor(test_top35_reduced$sub_area)
 
-# Impute NA with median for numeric variables
-library(caret)
-pre = preProcess(train_top35_reduced, method = "medianImpute") 
-train_top35_reduced = predict(pre, train_top35_reduced)
-
-pre = preProcess(test_top35_reduced, method = "medianImpute") 
-test_top35_reduced = predict(pre, test_top35_reduced)
 
 # Impute NA with random for factor variables
 sum(is.na(train_top35_reduced$state)) #13559 NAs which is more than 30% of the
@@ -84,9 +81,6 @@ sum(is.na(test_top35_reduced))
 
 # # check relationship between variables (matrix scatter plot)
 # plot(train_top35_reduced, pch=16, col="blue", main="Matrix Scatterplot")
-
-##### Modeling #####
-## linear regression ##
 
 # 1- Is there a relationship between price and house characterictics?
 # fitting a multiple regression model of price onto top variables 
@@ -106,13 +100,96 @@ vif(model_1)
 
 # 4- How accurately can we predict the relationship?
 prediction = predict(model_1,test_top35_reduced) 
+prediction = exp(prediction)-1
 prediction = data.frame(id=test$id, price_doc=prediction)
-prediction = apply(prediction,2,function(x){x[x<0] = min(x[x>0]);x})
+# prediction = apply(prediction,2,function(x){x[x<0] = min(x[x>0]);x})
 write.csv(prediction, "prediction.csv", row.names=F)
-# fwrite(prediction,"prediction.csv",  sep=",")
+
+
+##### METHOD 2 - Linear Regression, different features, median imputation grouped by sub_area #####
+train_reduced = read.csv("train_reduced.csv", stringsAsFactors = FALSE)
+test_reduced = read.csv("test_reduced.csv", stringsAsFactors = FALSE)
+
+train_reduced = subset(train_reduced, select = -c(X))
+test_reduced = subset(test_reduced, select = -c(X))
+
+train_reduced$price_doc = log(train_reduced$price_doc+1)
+
+model_2 = lm(price_doc ~ . - id - usdrub - cpi - mortgage_rate - micex - timestamp, data = train_reduced)
+
+summary(model_2)
+vif(model_2)
+
+# VIF is higher than 5 for preschool_km, public_healthcare_km, swim_pool_km, 
+# public_transport_station_km, kindergarten_km, hospice_morgue_km so removing them
+model_2a = update(model_2, ~ . -preschool_km - public_healthcare_km - swim_pool_km - public_transport_station_km - kindergarten_km - hospice_morgue_km)
+summary(model_2a)
+vif(model_2a)
+
+prediction_2 = predict(model_2a,test_reduced) 
+prediction_2 = exp(prediction_2)-1
+prediction_2 = data.frame(id=test$id, price_doc=prediction_2)
+write.csv(prediction_2, "prediction_2.csv", row.names=F)
+
+##Improved score by 78 from method 2##
+
+##### METHOD 3 - Linear Regression, same as METHOD 2 + take macro into account in model #####
+
+
+
+
+
+
+
+
+
+
+
 
 
 ##### Improve upon the model #####
-## try different imputation ##
-## add /remove variables ##
-## deal with these negative values ##
+### use variables from random forest ###
+# use variables for which feature importance is >= 80
+top_80 = c("full_sq", "life_sq", "floor", "build_year", "max_floor", "kitch_sq",
+           "state", "additional_education_km", "public_transport_station_km", 
+           "num_room", "ID_metro", "big_church_km", "sub_area",
+           "preschool_km", "cafe_avg_price_500", "big_road2_km", "green_zone_km",
+           "kindergarten_km", "catering_km", "big_road1_km", 
+           "public_healthcare_km", "hospice_morgue_km", "swim_pool_km", "material", 
+           "green_part_1000", "railroad_km", "industrial_km", "cemetery_km",
+           "fitness_km", "theater_km", "radiation_km", "price_doc", "id")
+
+top_80_noprice = c("full_sq", "life_sq", "floor", "build_year", "max_floor", "kitch_sq",
+                   "state", "additional_education_km", "public_transport_station_km", 
+                   "num_room", "ID_metro", "big_church_km", "sub_area",
+                   "preschool_km", "cafe_avg_price_500", "big_road2_km", "green_zone_km",
+                   "kindergarten_km", "catering_km", "big_road1_km", 
+                   "public_healthcare_km", "hospice_morgue_km", "swim_pool_km", "material", 
+                   "green_part_1000", "railroad_km", "industrial_km", "cemetery_km",
+                   "fitness_km", "theater_km", "radiation_km", "id")
+
+
+train_top80 = subset(train, select= top_80)
+test_top80 = subset(test, select= top_80_noprice)
+
+str(train_top80)
+str(test_top80)
+
+# convert variables to factor type
+# convert state and sub_area variables to factor
+train_top80$floor = factor(train_top80$floor)
+test_top80$floor = factor(test_top80$floor)
+
+test_top35_reduced$state = factor(test_top35_reduced$state)
+test_top35_reduced$sub_area = factor(test_top35_reduced$sub_area)
+
+# impute missing values
+
+# scale dataframe
+
+
+# look at importance of state in price_doc
+
+
+
+summary(model_1)
