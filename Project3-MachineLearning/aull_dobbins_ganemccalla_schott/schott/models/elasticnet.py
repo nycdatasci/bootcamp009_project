@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+from math import log
 from sklearn import linear_model
 from sklearn.preprocessing import LabelEncoder
 from sklearn import preprocessing
@@ -23,7 +24,8 @@ Created on Sun May 21 20:25:04 2017
 @author: mes
 
 Implement an ElasticNet model for the Sberbank Housing Kaggle Competition.
-It must be flexible in the sense of bringing in data
+It must be flexible in the sense of bringing in data. The cleaning of data
+for this model may be moved to another file entirely. 
 """
 #%%
 DIR_PATH = '../../data/'
@@ -74,8 +76,8 @@ if SUBSET:
     test = test_raw[features]
 else:
     train = train_raw.copy()
-    test = train_raw.copy()
-    features = list(test.columns)
+    test = test_raw.copy()
+    features = list(train.columns)
     
 if 'timestamp' in features:
     train.drop('timestamp', inplace = True, axis = 1)
@@ -83,7 +85,6 @@ if 'timestamp' in features:
     features.remove('timestamp')
 if 'price_doc' in features:
     train.drop('price_doc', inplace = True, axis = 1)
-    test.drop('price_doc', inplace = True, axis = 1)
     features.remove('price_doc')
 
 #%%    
@@ -101,13 +102,11 @@ for f in test.columns:
         test.loc[:,f] = lbl.fit_transform(test.loc[:,f])
 
 #%%
-# Scale the data for the regression
+# Scale the train and test data for the regression and subsequent prediction
 scaler_Xtrain = preprocessing.StandardScaler().fit(train)
-scaler_Ytrain = preprocessing.StandardScaler().fit(train_raw.price_doc)
-scaler_test = preprocessing.StandardScaler().fit(test)
 Xtrain = scaler_Xtrain.transform(train)
-Ytrain = scaler_Ytrain.transform(train_raw.price_doc)
-Xtest = scaler_test.transform(test)
+Xtest = scaler_Xtrain.transform(test)
+Ytrain = train_raw.price_doc
 
 #%%
 ### Coarse search for the correct hyperparamater for the elasticnet regression
@@ -128,19 +127,43 @@ df_coef.plot(logx=True, title=title)
 plt.xlabel('alpha')
 plt.ylabel('coefficients')
 plt.legend(loc=1)
+plt.savefig('lasso_coefs' + time.strftime('%Y%m%d-%H%M') + '.png')
 plt.show()
 
 #%%
 """
 Must create custom mean squared error function to pass to the grid search
 because this function doesn't exist by default.
+
+Also creating AIC and BIC to compare different models
 """
 
 from sklearn.metrics import mean_squared_error
+# Instead of creating a new function can import make_scorer 
+# from sklearn.metrics import make_scorer
 
-def mse(estimator, X_test, y_test):
-    predictions = estimator.predict(X_test)
-    return mean_squared_error(y_test, predictions)
+def AIC(estimator, x, y):
+    k = x.shape[1]
+    predictions = estimator.predict(x)
+    rss = sum((predictions - y)**2)
+    return 2*k - 2*log(rss)
+    
+    
+def BIC(estimator, x, y):
+    n,k = x.shape
+    predictions = estimator.predict(x)
+    rss = sum((predictions - y)**2)
+    return k*log(n) - 2*log(rss)
+    
+    
+def mse(estimator, x, y):
+    predictions = estimator.predict(x)
+    return mean_squared_error(y, predictions)
+
+def adj_Rsq(estimator, x, y):
+    n,k = x.shape
+    val = estimator.score(x, y) * (n-1)/(n-k-1)
+    return val
 
 #%%
 from sklearn.model_selection import GridSearchCV
@@ -148,22 +171,50 @@ from sklearn.model_selection import GridSearchCV
 
 ## 'alpha' must match an actual parameter name
 grid_param = [{'alpha': np.logspace(-5,2,100)}]
-## fit all models
-para_search = GridSearchCV(estimator=elastic, param_grid=grid_param, scoring=mse, cv=10).fit(Xtrain, Ytrain)
+
+## fit all models with grid search to find optimal alpha
+para_search = GridSearchCV(estimator=elastic, param_grid=grid_param, 
+                           scoring=mse, cv=10).fit(Xtrain, Ytrain)
 
 #%%
-# Retrieve the alpha corresponding to the minimum mse
-scores = para_search.cv_results_['mean_test_score']
-min_alpha = np.where(scores == np.min(scores))
-bestalpha = para_search.cv_results_['param_alpha'][min_alpha][0]
+"""
+Write all the important information to a file
+
+"""
+
+file_name = 'runs/lasso_run' + time.strftime('%Y%m%d-%H%M.log')
+with open(file_name, 'w') as outfile:
+    for f in features:
+        #l = train[f].dtype + ':' + f
+        outfile.write(str(train[f].dtype) + ':' + f)
+        outfile.write('\n')
+    outfile.write('best CV score:' + str(para_search.best_score_))
+    outfile.write('\n')
+    outfile.write('best params:' + str(para_search.best_params_))
+    outfile.write('\n')
+    outfile.write('train MSE:' + str(mean_squared_error(lasso.predict(Xtrain), Ytrain)))
+    outfile.write('\n')
+    determination = "Adjusted R^2:%.4f" %adj_Rsq(lasso, Xtrain, Ytrain)
+    outfile.write(determination)
+    outfile.write('\n')
+    outfile.write("AIC:" + str(AIC(lasso, Xtrain, Ytrain)))
+    outfile.write('\n')
+    outfile.write("BIC:" + str(BIC(lasso, Xtrain, Ytrain)))
+#%%
+"""
+Specifically looking at the coefficients
+"""
+sum(abs(lasso.coef_[:]) < 1e-4)
 
 #%%
-# Fit the new model 
-lasso = linear_model.ElasticNet(alpha = bestalpha, l1_ratio = 1.0)
-lasso.fit(train, train_raw.price_doc)
-# determination
-print("The determination of ElasticNet is: %.4f" %lasso.score(train, train_raw.price_doc))
-y_pred = lasso.predict(test)
+"""
+In order to predict prices from the standardized coefficients,
+I must scale the test data using the mean and sd from the training data
+"""
+# Predict some prices
+y_pred = lasso.predict(Xtest)
+
+#%%
 # Flip negative values (not ideal)
 print 'flipping {} negative values'.format(np.sum(y_pred < 0))
 y_pred[y_pred < 0] = y_pred[y_pred < 0] * -1

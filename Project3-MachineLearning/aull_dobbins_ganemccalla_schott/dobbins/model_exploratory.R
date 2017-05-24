@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @date 2017-05-22 21:00
-# @version 0.6.2
+# @date 2017-05-24 15:30
+# @version 0.6.3
 
 ### import packages (in ascending order of importance) ###
 
@@ -29,8 +29,10 @@ daily <- data_list[['daily']]
 
 
 ### exploratory model time ###
-train_simple <- train[complete.cases(train), c(1,3:13,225:231)]
-mlr_model_empty <- lm(log_price ~ 1, data = train_simple)
+train_normal <- train[!(price_doc %% 1e6 == 0),]
+train_weird <- train[, weird := as.factor(ifelse(price_doc %% 1e6 == 0, 1, 0))]
+train_simple <- train[complete.cases(train), c(5:82,222:226,230:231)]
+mlr_model_empty <- lm(log_price ~ quarter + log_fullsq + log_kitchsq + sub_area + state + material + product_type + max_floor + floor + num_room + kremlin_km + metro_min_avto + bulvar_ring_km + industrial_km + additional_education_km, data = train_normal)
 mlr_model_full <- lm(log_price ~ ., data = train_simple)
 scope <- list(lower = formula(mlr_model_empty), upper = formula(mlr_model_full))
 
@@ -43,16 +45,16 @@ train_BIC_empty_both <- step(mlr_model_empty, scope, direction = "both", k = tra
 
 
 ### exploratory categorization time ###
-raions <- train[, .(log_price.mean = mean(log_price), log_price.sd = sd(log_price), log_price_per_log_fullsq.mean = mean(log_price_per_log_fullsq, na.rm = TRUE), log_price_per_log_fullsq.sd = sd(log_price_per_log_fullsq, na.rm = TRUE)), by = sub_area]
-states <- train[, .(log_price.mean = mean(log_price), log_price.sd = sd(log_price), log_price_per_log_fullsq.mean = mean(log_price_per_log_fullsq, na.rm = TRUE), log_price_per_log_fullsq.sd = sd(log_price_per_log_fullsq, na.rm = TRUE)), by = state]
-floors <- train[, .(log_price.mean = mean(log_price), log_price.sd = sd(log_price), log_price_per_log_fullsq.mean = mean(log_price_per_log_fullsq, na.rm = TRUE), log_price_per_log_fullsq.sd = sd(log_price_per_log_fullsq, na.rm = TRUE)), by = floor]
-max_floors <- train[, .(log_price.mean = mean(log_price), log_price.sd = sd(log_price), log_price_per_log_fullsq.mean = mean(log_price_per_log_fullsq, na.rm = TRUE), log_price_per_log_fullsq.sd = sd(log_price_per_log_fullsq, na.rm = TRUE)), by = max_floor]
-materials <- train[, .(log_price.mean = mean(log_price), log_price.sd = sd(log_price), log_price_per_log_fullsq.mean = mean(log_price_per_log_fullsq, na.rm = TRUE), log_price_per_log_fullsq.sd = sd(log_price_per_log_fullsq, na.rm = TRUE)), by = material]
-products <- train[, .(log_price.mean = mean(log_price), log_price.sd = sd(log_price), log_price_per_log_fullsq.mean = mean(log_price_per_log_fullsq, na.rm = TRUE), log_price_per_log_fullsq.sd = sd(log_price_per_log_fullsq, na.rm = TRUE)), by = product_type]
-rooms <- train[, .(log_price.mean = mean(log_price), log_price.sd = sd(log_price), log_price_per_log_fullsq.mean = mean(log_price_per_log_fullsq, na.rm = TRUE), log_price_per_log_fullsq.sd = sd(log_price_per_log_fullsq, na.rm = TRUE)), by = num_room]
-yearlies <- train[, .(log_price.mean = mean(log_price), log_price.sd = sd(log_price), log_price_per_log_fullsq.mean = mean(log_price_per_log_fullsq, na.rm = TRUE), log_price_per_log_fullsq.sd = sd(log_price_per_log_fullsq, na.rm = TRUE)), by = year]
-quarterlies <- train[, .(log_price.mean = mean(log_price), log_price.sd = sd(log_price), log_price_per_log_fullsq.mean = mean(log_price_per_log_fullsq, na.rm = TRUE), log_price_per_log_fullsq.sd = sd(log_price_per_log_fullsq, na.rm = TRUE)), by = quarter]
-monthlies <- train[, .(log_price.mean = mean(log_price), log_price.sd = sd(log_price), log_price_per_log_fullsq.mean = mean(log_price_per_log_fullsq, na.rm = TRUE), log_price_per_log_fullsq.sd = sd(log_price_per_log_fullsq, na.rm = TRUE)), by = month]
+raions <- train_weird[, .(count = .N, log_price.mean = mean(log_price), log_price.sd = sd(log_price), log_price_per_log_fullsq.mean = mean(log_price_per_log_fullsq, na.rm = TRUE), log_price_per_log_fullsq.sd = sd(log_price_per_log_fullsq, na.rm = TRUE), kremlin_km.mean = mean(kremlin_km, na.rm = TRUE), kremlin_km.sd = sd(kremlin_km, na.rm = TRUE), invest_prop = (sum(product_type == "Investment", na.rm = TRUE) / .N), weird_prop = (sum(product_type == "Investment" & weird == 1, na.rm = TRUE) / sum(product_type == "Investment", na.rm = TRUE))), by = sub_area]
+states <- train_weird[, .(count = .N, log_price.mean = mean(log_price), log_price.sd = sd(log_price), log_price_per_log_fullsq.mean = mean(log_price_per_log_fullsq, na.rm = TRUE), log_price_per_log_fullsq.sd = sd(log_price_per_log_fullsq, na.rm = TRUE), kremlin_km.mean = mean(kremlin_km, na.rm = TRUE), kremlin_km.sd = sd(kremlin_km, na.rm = TRUE), invest_prop = (sum(product_type == "Investment", na.rm = TRUE) / .N), weird_prop = (sum(product_type == "Investment" & weird == 1, na.rm = TRUE) / sum(product_type == "Investment", na.rm = TRUE))), by = state]
+floors <- train_weird[, .(count = .N, log_price.mean = mean(log_price), log_price.sd = sd(log_price), log_price_per_log_fullsq.mean = mean(log_price_per_log_fullsq, na.rm = TRUE), log_price_per_log_fullsq.sd = sd(log_price_per_log_fullsq, na.rm = TRUE), kremlin_km.mean = mean(kremlin_km, na.rm = TRUE), kremlin_km.sd = sd(kremlin_km, na.rm = TRUE), invest_prop = (sum(product_type == "Investment", na.rm = TRUE) / .N), weird_prop = (sum(product_type == "Investment" & weird == 1, na.rm = TRUE) / sum(product_type == "Investment", na.rm = TRUE))), by = floor]
+max_floors <- train_weird[, .(count = .N, log_price.mean = mean(log_price), log_price.sd = sd(log_price), log_price_per_log_fullsq.mean = mean(log_price_per_log_fullsq, na.rm = TRUE), log_price_per_log_fullsq.sd = sd(log_price_per_log_fullsq, na.rm = TRUE), kremlin_km.mean = mean(kremlin_km, na.rm = TRUE), kremlin_km.sd = sd(kremlin_km, na.rm = TRUE), invest_prop = (sum(product_type == "Investment", na.rm = TRUE) / .N), weird_prop = (sum(product_type == "Investment" & weird == 1, na.rm = TRUE) / sum(product_type == "Investment", na.rm = TRUE))), by = max_floor]
+materials <- train_weird[, .(count = .N, log_price.mean = mean(log_price), log_price.sd = sd(log_price), log_price_per_log_fullsq.mean = mean(log_price_per_log_fullsq, na.rm = TRUE), log_price_per_log_fullsq.sd = sd(log_price_per_log_fullsq, na.rm = TRUE), kremlin_km.mean = mean(kremlin_km, na.rm = TRUE), kremlin_km.sd = sd(kremlin_km, na.rm = TRUE), invest_prop = (sum(product_type == "Investment", na.rm = TRUE) / .N), weird_prop = (sum(product_type == "Investment" & weird == 1, na.rm = TRUE) / sum(product_type == "Investment", na.rm = TRUE))), by = material]
+products <- train_weird[, .(count = .N, log_price.mean = mean(log_price), log_price.sd = sd(log_price), log_price_per_log_fullsq.mean = mean(log_price_per_log_fullsq, na.rm = TRUE), log_price_per_log_fullsq.sd = sd(log_price_per_log_fullsq, na.rm = TRUE), kremlin_km.mean = mean(kremlin_km, na.rm = TRUE), kremlin_km.sd = sd(kremlin_km, na.rm = TRUE)), by = product_type]
+rooms <- train_weird[, .(count = .N, log_price.mean = mean(log_price), log_price.sd = sd(log_price), log_price_per_log_fullsq.mean = mean(log_price_per_log_fullsq, na.rm = TRUE), log_price_per_log_fullsq.sd = sd(log_price_per_log_fullsq, na.rm = TRUE), kremlin_km.mean = mean(kremlin_km, na.rm = TRUE), kremlin_km.sd = sd(kremlin_km, na.rm = TRUE), invest_prop = (sum(product_type == "Investment", na.rm = TRUE) / .N), weird_prop = (sum(product_type == "Investment" & weird == 1, na.rm = TRUE) / sum(product_type == "Investment", na.rm = TRUE))), by = num_room]
+yearlies <- train_weird[, .(count = .N, log_price.mean = mean(log_price), log_price.sd = sd(log_price), log_price_per_log_fullsq.mean = mean(log_price_per_log_fullsq, na.rm = TRUE), log_price_per_log_fullsq.sd = sd(log_price_per_log_fullsq, na.rm = TRUE), kremlin_km.mean = mean(kremlin_km, na.rm = TRUE), kremlin_km.sd = sd(kremlin_km, na.rm = TRUE), invest_prop = (sum(product_type == "Investment", na.rm = TRUE) / .N), weird_prop = (sum(product_type == "Investment" & weird == 1, na.rm = TRUE) / sum(product_type == "Investment", na.rm = TRUE))), by = year]
+quarterlies <- train_weird[, .(count = .N, log_price.mean = mean(log_price), log_price.sd = sd(log_price), log_price_per_log_fullsq.mean = mean(log_price_per_log_fullsq, na.rm = TRUE), log_price_per_log_fullsq.sd = sd(log_price_per_log_fullsq, na.rm = TRUE), kremlin_km.mean = mean(kremlin_km, na.rm = TRUE), kremlin_km.sd = sd(kremlin_km, na.rm = TRUE), invest_prop = (sum(product_type == "Investment", na.rm = TRUE) / .N), weird_prop = (sum(product_type == "Investment" & weird == 1, na.rm = TRUE) / sum(product_type == "Investment", na.rm = TRUE))), by = quarter]
+monthlies <- train_weird[, .(count = .N, log_price.mean = mean(log_price), log_price.sd = sd(log_price), log_price_per_log_fullsq.mean = mean(log_price_per_log_fullsq, na.rm = TRUE), log_price_per_log_fullsq.sd = sd(log_price_per_log_fullsq, na.rm = TRUE), kremlin_km.mean = mean(kremlin_km, na.rm = TRUE), kremlin_km.sd = sd(kremlin_km, na.rm = TRUE), invest_prop = (sum(product_type == "Investment", na.rm = TRUE) / .N), weird_prop = (sum(product_type == "Investment" & weird == 1, na.rm = TRUE) / sum(product_type == "Investment", na.rm = TRUE))), by = month]
 
 
 ### mega model ###
@@ -76,11 +78,11 @@ r_sq_adj_sum <- 0
 model_count <- 0
 
 for(raion in 1:nrow(raions)) {
-  subset <- train[sub_area == raions$sub_area[raion],]
-  subset <- subset[complete.cases(subset), .(log_price, log_fullsq, log_kitchsq, log_lifesq, num_room, floor, max_floor)]
+  subset <- train_normal[sub_area == raions$sub_area[raion],]
+  subset <- subset[complete.cases(subset), .(log_price, log_fullsq, log_kitchsq, log_lifesq, num_room, floor, max_floor, material, state, product_type, quarter, kremlin_km, metro_min_avto, bulvar_ring_km, industrial_km, additional_education_km)]
   models_num[raion] <- models_num[raion] + nrow(subset)
-  if(nrow(subset) > 7) {
-    model <- lm(formula = log_price ~ log_fullsq + log_kitchsq + log_lifesq + num_room + floor + max_floor, data = subset)
+  if(nrow(subset) > 12) {
+    model <- lm(formula = log_price ~ quarter + log_fullsq + log_kitchsq + state + material + product_type + max_floor + floor + num_room + kremlin_km + metro_min_avto + bulvar_ring_km + industrial_km + additional_education_km, data = subset)
     model_summary <- summary(model)
     coefficients <- model$coefficients
     if(is.na(model_summary$adj.r.squared)) print(paste0("raion: ", toString(raion)))
