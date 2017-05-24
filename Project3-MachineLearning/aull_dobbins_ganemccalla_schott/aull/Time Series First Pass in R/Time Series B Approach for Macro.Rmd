@@ -1,0 +1,301 @@
+---
+title: "Time Series Approach for Macro"
+author: "Wes Aull"
+date: "5/18/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE, cache=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+library(MASS)
+library(lubridate)
+library(xts)
+library(ggplot2)
+library(ggthemes)
+library(readr)
+library(corrplot)
+library(caret)
+library(car)
+library(fastICA)
+library(MTS)
+library(stats)
+library(xts)
+library(zoo)
+library(KFAS)
+library(dlmodeler)
+library(vars)
+library(dplyr)
+library(tseries)
+library(prophet)
+library(dse)
+library(midasr)
+library(corrplot)
+setwd("~/GoogleDrive/NYCDSA/bootcamp009_project/Project3-MachineLearning/aull_dobbins_ganemccalla_schott/data")
+
+############### Import Macro Data and Training Data To Construct Dependent Variable ####################
+
+macro <- read_csv("./macro.csv", 
+    col_types = cols(apartment_fund_sqm = col_number(), 
+        average_provision_of_build_contract = col_number(), 
+        average_provision_of_build_contract_moscow = col_number(), 
+        balance_trade_growth = col_number(), 
+        bandwidth_sports = col_number(), 
+        deposits_rate = col_number(), gdp_deflator = col_number(), 
+        gdp_quart = col_number(), gdp_quart_growth = col_number(), 
+        grp_growth = col_number(), hospital_bed_occupancy_per_year = col_number(), 
+        hospital_beds_available_per_cap = col_number(), 
+        incidence_population = col_number(), 
+        modern_education_share = col_number(), 
+        mortgage_growth = col_number(), net_capital_export = col_number(), 
+        oil_urals = col_number(), old_education_build_share = col_number(), 
+        population_reg_sports_share = col_number(), 
+        provision_retail_space_sqm = col_number(), 
+        rent_price_1room_bus = col_number(), 
+        rent_price_1room_eco = col_number(), 
+        rent_price_2room_bus = col_number(), 
+        rent_price_2room_eco = col_number(), 
+        rent_price_3room_bus = col_number(), 
+        rent_price_3room_eco = col_number(), 
+        `rent_price_4+room_bus` = col_number(), 
+        salary_growth = col_number(), students_state_oneshift = col_number(), 
+        timestamp = col_date(format = "%Y-%m-%d")))
+
+problems(macro) #0 rows - No data corruption classes were assigned.
+
+for (i in seq(ncol(macro),2)) {
+  macro[,i] = as.numeric(unlist(macro[,i]))
+}
+
+train <- read_csv("./train_clean.csv", 
+    col_types = cols(build_year = col_number(), 
+        max_floor = col_number(), timestamp = col_date(format = "%Y-%m-%d")))
+
+## Join the data and mutate the dependent variable to be modeled (price / sq. foot).
+
+price = data.frame(train$timestamp,train$price_doc,train$full_sq)
+colnames(price) = c('timestamp','price_doc','full_sq')
+
+## Aggregate duplicate observations for one date due to time series analysis limitation.
+price = aggregate(x=price, by = list(unique.timestamp = price$timestamp), FUN=mean, na.rm=TRUE)
+
+rm(train)
+macro = left_join(price,macro, by = 'timestamp')
+rm(price)
+
+## Import the training dat for sake of price and square foot data.
+## Will make price / sq. foot into the dependent variable to be forecasted by the time series model,
+## removing the single most important variable that explains price variance at the property level.
+
+macro = macro %>%
+  mutate(p_sqf = price_doc / full_sq)
+macro$price_doc = NULL
+macro$full_sq = NULL
+
+#################### Clean Data of Highly Sparse Variables & Pare Down to Complete Obs. ######################
+
+## Remove highly sparse variables.
+data = macro
+for (i in seq(ncol(data),1)) {
+  if (sum(is.na(data[,i])) > 400) {
+    data[,i] = NULL
+  }  
+}
+
+## Remove variables with no variance (no explanatory power).
+data$baths_share = NULL
+data$water_pipes_share = NULL
+data$childbirth = NULL
+data$heating_share = NULL
+data$hot_water_share = NULL
+data$old_house_share = NULL
+
+## Standardize data.
+preProcessParameters = preProcess(data, method = c('center','scale'))
+stand_data = predict(preProcessParameters,data)
+
+## Pare down to complete observations.
+complete_stand_data = stand_data[complete.cases(stand_data),]
+complete_stand_data$unique.timestamp = NULL
+
+## Anytime a series offers a new value (besides the initial), it is kept.
+## Anytime it doesn't change, the value is changed to NA.  This solves
+## this issue that many different series frequences have repeated 
+## observations for an observation that is not unique (and thus its
+## variance is falsely reduced). 
+for (j in seq((ncol(complete_stand_data)-1),1)) {
+  for (i in seq(nrow(complete_stand_data),2)) {
+    if (length(unique(complete_stand_data[,j])) < .5 * (length(complete_stand_data[,j]))) {
+      if (complete_stand_data[i,j] == complete_stand_data[(i-1),j]) {
+        complete_stand_data[i,j] = NA
+      }
+    }
+  }
+}
+
+## Break data series also into dataframes with same frequency.  Reduce collinearities.
+dly_complete_stand_data = complete_stand_data
+for (j in seq((ncol(dly_complete_stand_data)-1),2)) {
+  if (length(unique(dly_complete_stand_data[,j])) < .5 * (length(dly_complete_stand_data[,j]))) {
+    dly_complete_stand_data[,j] = NULL
+  }
+}
+dly_complete_stand_data = dly_complete_stand_data[complete.cases(dly_complete_stand_data),]
+preProcessParameters = preProcess(dly_complete_stand_data, method = c('pca'))
+dly_complete_stand_data = predict(preProcessParameters,dly_complete_stand_data)
+dly_complete_stand_data$timestamp = as.POSIXlt.Date(dly_complete_stand_data$timestamp)
+dly_complete_stand_data$unique.timestamp = NULL
+cor(dly_complete_stand_data[,2:4])
+
+qtr_complete_stand_data = complete_stand_data
+for (j in seq((ncol(qtr_complete_stand_data)-1),2)) {
+  if (length(unique(qtr_complete_stand_data[,j])) < 8 | length(unique(qtr_complete_stand_data[,j])) > 20) {
+    qtr_complete_stand_data[,j] = NULL
+  }
+}
+qtr_complete_stand_data = qtr_complete_stand_data[complete.cases(qtr_complete_stand_data),]
+qtr_complete_stand_data$timestamp = as.POSIXlt.Date(qtr_complete_stand_data$timestamp)
+qtr_complete_stand_data$unique.timestamp = NULL
+
+mon_complete_stand_data = complete_stand_data
+for (j in seq((ncol(mon_complete_stand_data)-1),2)) {
+  if (length(unique(mon_complete_stand_data[,j])) < 20 | length(unique(mon_complete_stand_data[,j])) > 50) {
+    mon_complete_stand_data[,j] = NULL
+  }
+}
+mon_complete_stand_data = mon_complete_stand_data[complete.cases(mon_complete_stand_data),]
+mon_complete_stand_data$timestamp = as.POSIXlt.Date(mon_complete_stand_data$timestamp)
+mon_complete_stand_data$unique.timestamp = NULL
+
+## Convert date to POSIXlt for entire data set.
+complete_stand_data$timestamp = as.POSIXlt.Date(complete_stand_data$timestamp)
+
+## Create a dataframe that can be used for the univariate time series analysis of price / square foot.
+
+psq = data.frame(macro$timestamp,macro$p_sqf)
+colnames(psq) = c('ds','y')
+preProcessParameters = preProcess(psq, method = c('center','scale'))
+stand_psq = predict(preProcessParameters,psq)
+stand_psq$ds = as.POSIXct.Date(stand_psq$ds)
+stand_psq$unique.timestamp = NULL
+
+```
+
+
+```{r}
+macro_xts <- xts(complete_stand_data[,-1], order.by=complete_stand_data[,1])
+dly_xts <- xts(dly_complete_stand_data[,-1], order.by=dly_complete_stand_data[,1])
+
+## Price / Square foot is shown to be stationary process.  I also plot its univariate time series model.
+psq_xts = xts(stand_psq[,-1], order.by = stand_psq[,1])
+adf.test(psq_xts)
+a = prophet(stand_psq)
+pred = predict(a,stand_psq)
+plot(a, pred, fill = y) + xlab('Date') + ylab('Standardized Price / Square Foot') + theme_economist() 
+
+#Garch - Generalized Auto-regressive Conditioned Heteroskedasticity for the univariate on price / sq.
+garch(psq_xts, grad = "numerical")
+
+# Constructing a TSdata time series object for VAR on the daily time series.
+VARselect(dly_complete_stand_data[,2:5], lag.max = 120, type = "both")
+# We choose a lag of 13 as having the best AIC and FPE information criteria.  A lag of 1-2 days
+# also showed an excellent information criteria.
+var_13_dly = VAR(dly_complete_stand_data[,2:5], p = 13, type = "both")
+summary(var_13_dly)
+
+# Constructing a generalized dynamical linear model using dlmodeler.  State space
+# is constructed, filtering and smoothing is applied.
+
+
+
+
+
+
+
+
+```
+
+
+```{r}
+
+
+
+# ARIMA (Auto-regressive integrated moving average)
+# MA(3)
+psq.ma = arima(psq_xts, order = c(0,0,3))
+# ARMA(1,1)
+psq.arma = arima(psq_xts, order = c(1,0,1))
+# ARIMA(2,1,2)
+# This model is composed of 2 prior periods of AP, 2 prior periods of white noise
+# and a first order difference.
+psq.arima = arima(psq_xts, order = c(2,1,2))
+```
+
+
+```{r}
+# MIDAS Regression
+y = diff(complete_stand_data$p_sqf)
+x = diff(complete_stand_data$usdrub)
+trend = 1:length(y)
+midas_m = weights_table(y~trend+fmls(x, 200:1015, 200))
+
+weights_table(p_sqf ~ gdp_quart + usdrub + brent + micex_rgbi_tr, m_ts)
+select_and_forecast()
+
+
+##The parameter function
+theta.h0 <- function(p, dk) {
+   i <- (1:dk-1)/100
+   pol <- p[3]*i + p[4]*i^2
+   (p[1] + p[2]*i)*exp(pol)
+}
+
+##Generate coefficients
+theta0 <- theta.h0(c(-0.1,10,-10,-10),4*12)
+
+##Plot the coefficients
+plot(theta0)
+
+##Generate the predictor variable
+x <- simplearma.sim(list(ar=0.6),1500*12,1,12)
+
+##Simulate the response variable
+y <- midas.sim(500,theta0,x,1)
+```
+
+
+```{r}
+dly_ts = TSdata(data = dly_xts$timestamp, input= coredata(dly_xts), output = coredata(dly_xts)[,4])
+
+model = estVARXls(dly_ts,max.lag=90,trend=TRUE)
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
