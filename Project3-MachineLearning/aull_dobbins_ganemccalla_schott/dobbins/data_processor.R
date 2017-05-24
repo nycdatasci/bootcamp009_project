@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @date 2017-05-22 18:30
-# @version 0.6.2
+# @date 2017-05-24 15:30
+# @version 0.6.3
 
 
 ### FUTURE IMPROVEMENTS ###
@@ -550,6 +550,7 @@ read_data <- function(directory = 'data/', dataset = 'all', type = 'raw', comple
     if(data_frame) {
       train <- data.frame(train)
     }
+    return(list('train' = train))
   } else if(dataset == 'test') {
     if(type == 'total') {
       if(complete_only) {
@@ -577,16 +578,19 @@ read_data <- function(directory = 'data/', dataset = 'all', type = 'raw', comple
     if(data_frame) {
       test <- data.frame(test)
     }
+    return(list('test' = test))
   } else if(dataset == 'macro') {
     yearly <- fread(input = paste0(directory, yearly_filename))#, colClasses = )
     quarterly <- fread(input = paste0(directory, quarterly_filename))#, colClasses = )
     monthly <- fread(input = paste0(directory, monthly_filename))#, colClasses = )
     daily <- fread(input = paste0(directory, daily_filename))#, colClasses = )
+    return(list('yearly' = yearly, 'quarterly' = quarterly, 'monthly' = monthly, 'daily' = daily))
   } else if(dataset == 'raion') {
     raion <- fread(input = paste0(directory, raion_filename), colClasses = raion_classes)
     if(data_frame) {
       raion <- data.frame(raion)
     }
+    return(list('raion' = raion))
   } else {
     print("You asked for a dataset that doesn't exist")# raise error?
   }
@@ -707,6 +711,7 @@ clean_data.table <- function(data, drop_dependents = FALSE, drop_transforms = FA
       data[(max_floor > 76L) & (((max_floor %% 100L) %/% 10L) == (max_floor %% 10L)), max_floor := (max_floor %% 10L)]
     }
     data[build_year > 1e8L, build_year := (build_year %% 1e5L)]
+    data[build_year == 1901, c("build_year") := list(NA)]
     data[build_year < 100L, build_year := (build_year + 1900L)]
     data[build_year < 217L, build_year := (build_year - (build_year %% 100L)) + 1800L + (build_year %% 100L)]
     data[build_year > 2017L, build_year := (build_year - as.integer(round((build_year - 2000L) / 1000L) * 1000L))]
@@ -756,8 +761,10 @@ clean_data.table <- function(data, drop_dependents = FALSE, drop_transforms = FA
   }
   if("log_10p_maxfloor" %in% data_colnames) {
     data[(max_floor < 1L) | (max_floor > 76L), c("max_floor", "log_10p_maxfloor") := list(NA, NA)]
+    data[floor > max_floor, c("max_floor", "log_10p_maxfloor") := list(NA, NA)]
   } else {
     data[(max_floor < 1L) | (max_floor > 76L), c("max_floor") := list(NA)]
+    data[floor > max_floor, c("max_floor") := list(NA)]
   }
   data[!(material %in% possible_materials), c("material") := list(NA)]
   data[(build_year < 1850L) | (build_year > 2017L), c("build_year") := list(NA)]
@@ -833,6 +840,7 @@ clean_data.frame <- function(data, drop_dependents = FALSE, drop_transforms = FA
     data$max_floor[(data$max_floor > 76) & ((data$max_floor %/% 100) == ((data$max_floor %% 100) %/% 10))] <- (data$max_floor[(data$max_floor > 76) & ((data$max_floor %/% 100) == ((data$max_floor %% 100) %/% 10))] %/% 100)*10 + data$max_floor[(data$max_floor > 76) & ((data$max_floor %/% 100) == ((data$max_floor %% 100) %/% 10))] %% 10
     data$max_floor[(data$max_floor > 76) & (((data$max_floor %% 100) %/% 10) == (data$max_floor %% 10))] <- data$max_floor[(data$max_floor > 76) & (((data$max_floor %% 100) %/% 10) == (data$max_floor %% 10))] %% 10
     data$build_year[data$build_year > 1e8] <- data$build_year[data$build_year > 1e8] %% 1e5
+    data$build_year[data$build_year == 1901] <- NA
     data$build_year[data$build_year < 100] <- data$build_year[data$build_year < 100] + 1900L
     data$build_year[data$build_year < 217] <- data$build_year[data$build_year < 217] - (data$build_year[data$build_year < 217] %% 100) + 1800L + data$build_year[data$build_year < 217] %% 100
     data$build_year[data$build_year > 2017] <- data$build_year[data$build_year > 2017] - round((data$build_year[data$build_year > 2017] - 2000) / 1000)
