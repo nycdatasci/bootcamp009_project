@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+from math import log
 from sklearn import linear_model
 from sklearn.preprocessing import LabelEncoder
 from sklearn import preprocessing
@@ -126,21 +127,43 @@ df_coef.plot(logx=True, title=title)
 plt.xlabel('alpha')
 plt.ylabel('coefficients')
 plt.legend(loc=1)
+plt.savefig('lasso_coefs' + time.strftime('%Y%m%d-%H%M') + '.png')
 plt.show()
 
 #%%
 """
 Must create custom mean squared error function to pass to the grid search
 because this function doesn't exist by default.
+
+Also creating AIC and BIC to compare different models
 """
 
 from sklearn.metrics import mean_squared_error
 # Instead of creating a new function can import make_scorer 
 # from sklearn.metrics import make_scorer
 
+def AIC(estimator, x, y):
+    k = x.shape[1]
+    predictions = estimator.predict(x)
+    rss = sum((predictions - y)**2)
+    return 2*k - 2*log(rss)
+    
+    
+def BIC(estimator, x, y):
+    n,k = x.shape
+    predictions = estimator.predict(x)
+    rss = sum((predictions - y)**2)
+    return k*log(n) - 2*log(rss)
+    
+    
 def mse(estimator, x, y):
     predictions = estimator.predict(x)
     return mean_squared_error(y, predictions)
+
+def adj_Rsq(estimator, x, y):
+    n,k = x.shape
+    val = estimator.score(x, y) * (n-1)/(n-k-1)
+    return val
 
 #%%
 from sklearn.model_selection import GridSearchCV
@@ -148,17 +171,35 @@ from sklearn.model_selection import GridSearchCV
 
 ## 'alpha' must match an actual parameter name
 grid_param = [{'alpha': np.logspace(-5,2,100)}]
-## fit all models
+
+## fit all models with grid search to find optimal alpha
 para_search = GridSearchCV(estimator=elastic, param_grid=grid_param, 
                            scoring=mse, cv=10).fit(Xtrain, Ytrain)
 
 #%%
-print 'best score is ' + str(para_search.best_score_)
-print 'best params are ' + str(para_search.best_params_)
-lasso = para_search.best_estimator_
-print 'train mse = ' + str(mean_squared_error(lasso.predict(Xtrain), Ytrain))
-print("The determination of ElasticNet is: %.4f" %lasso.score(Xtrain, Ytrain))
+"""
+Write all the important information to a file
 
+"""
+
+file_name = 'runs/lasso_run' + time.strftime('%Y%m%d-%H%M.log')
+with open(file_name, 'w') as outfile:
+    for f in features:
+        #l = train[f].dtype + ':' + f
+        outfile.write(str(train[f].dtype) + ':' + f)
+        outfile.write('\n')
+    outfile.write('best CV score:' + str(para_search.best_score_))
+    outfile.write('\n')
+    outfile.write('best params:' + str(para_search.best_params_))
+    outfile.write('\n')
+    outfile.write('train MSE:' + str(mean_squared_error(lasso.predict(Xtrain), Ytrain)))
+    outfile.write('\n')
+    determination = "Adjusted R^2:%.4f" %adj_Rsq(lasso, Xtrain, Ytrain)
+    outfile.write(determination)
+    outfile.write('\n')
+    outfile.write("AIC:" + str(AIC(lasso, Xtrain, Ytrain)))
+    outfile.write('\n')
+    outfile.write("BIC:" + str(BIC(lasso, Xtrain, Ytrain)))
 #%%
 """
 Specifically looking at the coefficients
