@@ -32,7 +32,6 @@ library(midasr)
 library(corrplot)
 library(forecast)
 library(TTR)
-setwd("~/GoogleDrive/NYCDSA/bootcamp009_project/Project3-MachineLearning/aull_dobbins_ganemccalla_schott/data")
 
 ############### Import Macro Data and Training Data To Construct Dependent Variable ####################
 
@@ -64,6 +63,11 @@ macro <- read_csv("./macro.csv",
 
 problems(macro) #0 rows - No data corruption classes were assigned.
 
+macro$rent_price_2room_eco <- ifelse(macro$rent_price_2room_eco == .1, 40.25, macro$rent_price_2room_eco)
+
+macro$rent_price_1room_eco <- ifelse(macro$rent_price_1room_eco == 2.31, 32.61, macro$rent_price_1room_eco)
+
+
 for (i in seq(ncol(macro),2)) {
   macro[,i] = as.numeric(unlist(macro[,i]))
 }
@@ -77,14 +81,28 @@ train <- read_csv("./train_clean.csv",
 price = data.frame(train$timestamp,train$price_doc,train$full_sq)
 colnames(price) = c('timestamp','price_doc','full_sq')
 
+# Log transform
+price$price_doc = log(price$price_doc)
+price$full_sq = log(price$full_sq)
+
+price = price %>%
+  mutate(p_sqf = price_doc / full_sq)
+price$price_doc = NULL
+price$full_sq = NULL
+
 ## Aggregate duplicate observations for one date due to time series analysis limitation.
 price = aggregate(x=price, by = list(unique.timestamp = price$timestamp), FUN=mean, na.rm=TRUE)
+
+## Take five day moving average.
+for (i in seq(ncol(price),6)) {
+  price$p_sqf[i] = median(price$p_sqf[i-5:i])
+  }  
 
 rm(train)
 macro = left_join(price,macro, by = 'timestamp')
 rm(price)
-macro$price_doc = log(macro$price_doc)
-macro$full_sq = log(macro$full_sq)
+
+
 
 ## Import the training dat for sake of price and square foot data.
 ## Will make price / sq. foot into the dependent variable to be forecasted by the time series model,
@@ -94,10 +112,7 @@ macro = macro %>%
   mutate(brent_rub = brent * usdrub)
 macro_brent = NULL
 
-macro = macro %>%
-  mutate(p_sqf = price_doc / full_sq)
-macro$price_doc = NULL
-macro$full_sq = NULL
+
 
 #################### Clean Data of Highly Sparse Variables & Pare Down to Complete Obs. ######################
 
@@ -170,6 +185,7 @@ for (j in seq((ncol(mon_complete_stand_data)-1),2)) {
     mon_complete_stand_data[,j] = NULL
   }
 }
+
 mon_complete_stand_data = mon_complete_stand_data[complete.cases(mon_complete_stand_data),]
 mon_complete_stand_data$timestamp = as.POSIXlt.Date(mon_complete_stand_data$timestamp)
 mon_complete_stand_data$unique.timestamp = NULL
@@ -185,6 +201,28 @@ preProcessParameters = preProcess(psq, method = c('center','scale'))
 stand_psq = predict(preProcessParameters,psq)
 stand_psq$ds = as.POSIXct.Date(stand_psq$ds)
 stand_psq$unique.timestamp = NULL
+
+## Create complete monthly data with daily taken at snapshot.
+mo_data = complete_stand_data
+for (i in seq(ncol(mo_data),1)) {
+  if (sum(is.na(mo_data[,i])) > 1000) {
+    mo_data[,i] = NULL
+  }  
+}
+complete_mo_data = mo_data[complete.cases(mo_data[2:ncol(mo_data)]),]
+preProcessParameters = preProcess(complete_mo_data[2:29], method = c('pca'))
+pca_complete_mo_data = predict(preProcessParameters,complete_mo_data[2:29])
+pca_complete_mo_data = data.frame(pca_complete_mo_data,complete_mo_data[,30])
+names(pca_complete_mo_data)[names(pca_complete_mo_data)=="complete_mo_data...30."] <- "p_sq"
+
+macro_regression = lm(p_sq ~.,pca_complete_mo_data)
+summary(macro_regression)
+plot(macro_regression)
+
+reduced_mo_data = complete_mo_data
+macro_regression = lm(p_sqf ~.,reduced_mo_data[,2:21])
+summary(macro_regression)
+plot(macro_regression)
 ```
 
 
@@ -207,6 +245,17 @@ a = prophet(stand_psq)
 pred = predict(a,stand_psq)
 plot(a, pred, fill = y) + xlab('Date') + ylab('Standardized Price / Square Foot') + theme_economist() 
 
+# Create monthly rolled daily to monthly.
+mo_xts = to.monthly(dly_xts)
+mo_xts$psq_mo_xts.Open = NULL
+mo_xts$psq_mo_xts.High = NULL
+mo_xts$psq_mo_xts.Low = NULL
+attr(mo_xts, 'frequency') <- 12
+
+dly_ts = as.ts(psq_mo_xts[,1])
+plot(decompose(dly_ts),col = 'red', col.lab = 'blue')
+axis(side = 1, at = c('Jan', 'Apr', 'Jul', 'Oct'), labels = c('Jan', 'Apr', 'Jul', 'Oct'))
+
 # Auto Arima
 auto.arima(dly_complete_stand_data[,2],xreg=dly_complete_stand_data[,3:6])
 
@@ -214,22 +263,25 @@ auto.arima(dly_complete_stand_data[,2],xreg=dly_complete_stand_data[,3:6])
 garch(psq_xts, grad = "numerical")
 
 # Constructing a TSdata time series object for VAR on the daily time series.
-VARselect(dly_complete_stand_data[,2], lag.max = 200, type = "both", exogen = dly_complete_stand_data[,3:6])
+VARselect(pca_complete_mo_data[,14], lag.max = , type = "both", exogen = dly_complete_stand_data[,2:13])
 # We choose a lag of 13 as having the best AIC and FPE information criteria.  A lag of 1-2 days
 # also showed an excellent information criteria.
-var_13_dly = VAR(dly_complete_stand_data[,2], p = 13, type = "both", exogen=dly_complete_stand_data[,3:6])
+var_13_dly = VAR([,2], p = 13, type = "both", exogen=dly_complete_stand_data[,3:6])
 options(max.print=1000000)
 summary(var_13_dly)
 
+# Constructing a TSdata time series object for VAR on the monthly time series.
+VARselect(pca_complete_mo_data[,14], lag.max = 3, type = "both", exogen = complete_mo_data[,2:14])
+# We choose a lag of 13 as having the best AIC and FPE information criteria.  A lag of 1-2 days
+# also showed an excellent information criteria.
+var_13_dly = VAR(pca_complete_mo_data[,2:14], p = 2, type = "both")
+options(max.print=1000000)
+summary(var_13_dly)
+
+
+
 # Constructing a generalized dynamical linear model using dlmodeler.  State space
 # is constructed, filtering and smoothing is applied.
-
-
-
-
-
-
-
 
 ```
 
@@ -287,8 +339,6 @@ y <- midas.sim(500,theta0,x,1)
 dly_ts = as.ts(psq_mo_xts[,1])
 plot(decompose(dly_ts),col = 'red', col.lab = 'blue')
 axis(side = 1, at = c('Jan', 'Apr', 'Jul', 'Oct'), labels = c('Jan', 'Apr', 'Jul', 'Oct'))
-dly_ts
-model = estVARXls(dly_ts,max.lag=90,trend=TRUE)
 ```
 
 
