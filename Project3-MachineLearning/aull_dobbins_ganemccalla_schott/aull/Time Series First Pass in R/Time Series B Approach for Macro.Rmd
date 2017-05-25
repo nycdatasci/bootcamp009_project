@@ -7,6 +7,8 @@ output: html_document
 
 ```{r setup, include=FALSE, cache=TRUE}
 knitr::opts_chunk$set(echo = TRUE)
+library(psych)
+library(reshape2)
 library(MASS)
 library(lubridate)
 library(xts)
@@ -32,6 +34,7 @@ library(midasr)
 library(corrplot)
 library(forecast)
 library(TTR)
+library(caret)
 
 ############### Import Macro Data and Training Data To Construct Dependent Variable ####################
 
@@ -60,6 +63,8 @@ macro <- read_csv("./macro.csv",
         `rent_price_4+room_bus` = col_number(), 
         salary_growth = col_number(), students_state_oneshift = col_number(), 
         timestamp = col_date(format = "%Y-%m-%d")))
+
+
 
 problems(macro) #0 rows - No data corruption classes were assigned.
 
@@ -215,14 +220,28 @@ pca_complete_mo_data = predict(preProcessParameters,complete_mo_data[2:29])
 pca_complete_mo_data = data.frame(pca_complete_mo_data,complete_mo_data[,30])
 names(pca_complete_mo_data)[names(pca_complete_mo_data)=="complete_mo_data...30."] <- "p_sq"
 
+preProcessParameters = preProcess(complete_mo_data[,2:30], method = c('YeoJohnson'))
+tran_complete_mo_data = predict(preProcessParameters,complete_mo_data[,2:30])
+
 macro_regression = lm(p_sq ~.,pca_complete_mo_data)
 summary(macro_regression)
 plot(macro_regression)
 
-reduced_mo_data = complete_mo_data
-macro_regression = lm(p_sqf ~.,reduced_mo_data[,2:21])
+macro_regression = lm(p_sqf ~ mortgage_growth + deposits_growth,tran_complete_mo_data)
 summary(macro_regression)
 plot(macro_regression)
+
+model.empty = lm(p_sqf ~ 1, data = tran_complete_mo_data) #The model with an intercept ONLY.
+model.full = lm(p_sqf ~ ., data = tran_complete_mo_data) #The model with ALL variables.
+scope = list(lower = formula(model.empty), upper = formula(model.full))
+
+forwardAIC = step(model.empty, scope, direction = "forward", k = 2)
+backwardAIC = step(model.full, scope, direction = "backward", k = 2)
+
+par(mfrow=c(4,2))
+par(mar = rep(2, 4))
+multi.hist(tran_complete_mo_data,bcol = 'lightsalmon')
+
 ```
 
 
