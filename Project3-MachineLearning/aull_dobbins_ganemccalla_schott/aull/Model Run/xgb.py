@@ -130,6 +130,7 @@ print(datetime.now())
 
 cv = xgb.cv(xgb_params, dtrain, num_boost_round = 5000, nfold = 5, metrics = {"rmse"})
 output.write(str(cv))
+print(cv)
 
 print(datetime.now())
 
