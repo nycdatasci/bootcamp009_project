@@ -124,7 +124,7 @@ dtest = xgb.DMatrix(X_test,
 #                      verbose_eval=50)
 print(datetime.now())
 
-cv = xgb.cv(data = dtrain, nrounds = 1, nthread = 2, nfold = 5, metrics = list("rmse"), max_depth = 3, eta = .5, objective = "reg:linear")
+cv = xgb.cv(dtrain, nrounds = 1, nthread = 2, nfold = 5, metrics = "rmse", max_depth = 3, eta = .5, objective = "reg:linear")
 print(cv)
 print(cv, verbose=TRUE)
 
