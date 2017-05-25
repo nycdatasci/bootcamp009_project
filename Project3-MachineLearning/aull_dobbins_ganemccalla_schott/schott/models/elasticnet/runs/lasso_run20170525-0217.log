@@ -1,0 +1,15 @@
+float64:basketball_km:893161.044507
+int64:full_sq:1661144.83968
+float64:kremlin_km:-18457.0861
+float64:office_km:-617906.352547
+float64:prom_part_1000:-542904.094327
+float64:prom_part_500:146873.745686
+float64:shopping_centers_km:-5882.19759183
+float64:ttk_km:-1836629.46063
+int64:yearmonth:577804.249801
+best CV score:2.9649182978e+13
+best params:{'alpha': 1.0000000000000001e-05, 'l1_ratio': 1.0}
+train MSE:1.75257439014e+13
+Adjusted R^2:0.2330
+AIC:-63.6384453731
+BIC:11.2823308423
