@@ -1,14 +1,14 @@
 
 
-train_raw = read.csv('train_clean.csv', header=TRUE)
-test_raw = read.csv('test_clean.csv', header=TRUE)
+train_raw = read.csv('train_total.csv', header=TRUE)
+test_raw = read.csv('test_total.csv', header=TRUE)
 raions = read.csv("raion_clusters.csv")
 
 reducedTrainData = dplyr::select(train_raw,price_doc,timestamp,full_sq,life_sq,
                                  floor,max_floor,material,build_year,num_room,
                                  kitch_sq,state,product_type,sub_area,kremlin_km,
                                  metro_km_walk,radiation_km,basketball_km,
-                                 school_km, park_km, mkad_km, water_km)
+                                 school_km, park_km, mkad_km, water_km,quarter)
 
 reducedTrainData$sub_area = as.factor(reducedTrainData$sub_area)
 reducedTrainData$state = as.factor(reducedTrainData$state)
@@ -21,7 +21,7 @@ reducedTestData = dplyr::select(test_raw,timestamp,full_sq,life_sq,
                                 floor,max_floor,material,build_year,num_room,
                                 kitch_sq,state,product_type,sub_area,kremlin_km,
                                 metro_km_walk,radiation_km,basketball_km,
-                                school_km, park_km, mkad_km, water_km)
+                                school_km, park_km, mkad_km, water_km,quarter)
 
 reducedTestData$sub_area = as.factor(reducedTestData$sub_area)
 reducedTestData$state = as.factor(reducedTestData$state)
@@ -44,10 +44,15 @@ inputedTest[inputedTest==""] = "Investment"
 inputedTest$product_type <- droplevels(inputedTest$product_type)
 library(randomForest)
 #this will take a while to execute, at least 30 minutes
+library(doMC)
+# register 3 cores to be used
+registerDoMC(4)
+
 rf.base = foreach(ntree=rep(166, 3), .combine=combine, .multicombine = TRUE,
                   .packages='randomForest') %dopar% {
                     randomForest(price_doc ~ ., data = inputedTrainModified)
                   }
+
 prediction = predict(rf.base,inputedTest)
 #write the prediction, if you modify the headers and add the id's
 #you can submit to kaggle
