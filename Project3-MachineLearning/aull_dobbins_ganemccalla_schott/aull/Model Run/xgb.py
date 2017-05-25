@@ -104,16 +104,16 @@ dtest = xgb.DMatrix(X_test,
                     feature_names=features)
 
 #%%
-# hyperparameters
-#xgb_params = {
-#    'eta': 0.02,
-#    'max_depth': 5,
-#    'subsample': .8,
-#    'colsample_bytree': 0.7,
-#    'objective': 'reg:linear',
-#    'eval_metric': 'rmse',
-#    'silent': 1
-#}
+ hyperparameters
+xgb_params = {
+    'eta': 0.5,
+    'max_depth': 3,
+    'subsample': .8,
+    'colsample_bytree': 0.7,
+    'objective': 'reg:linear',
+    'eval_metric': 'rmse',
+    'silent': 1
+}
 
 #Tune the model
 #sub_model = xgb.train(xgb_params, 
@@ -124,7 +124,7 @@ dtest = xgb.DMatrix(X_test,
 #                      verbose_eval=50)
 print(datetime.now())
 
-cv = xgb.cv(dtrain, nrounds = 1, nthread = 2, nfold = 5, metrics = "rmse", max_depth = 3, eta = .5, objective = "reg:linear")
+cv = xgb.cv(xgb_params, dtrain_sub, num_boost_round = 500, nfold = 4, metrics = {"rmse","auc"})
 print(cv)
 print(cv, verbose=TRUE)
 
