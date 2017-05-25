@@ -104,7 +104,7 @@ dtest = xgb.DMatrix(X_test,
                     feature_names=features)
 
 #%%
- hyperparameters
+#hyperparameters
 xgb_params = {
     'eta': 0.5,
     'max_depth': 3,
