@@ -1,24 +1,6 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 """
-Created on Tue May 23 00:43:22 2017
-
-@author: mes
-"""
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import os
-from math import log
-from sklearn import linear_model
-from sklearn.preprocessing import LabelEncoder
-from sklearn import preprocessing
-
-SUBSET = False
-
-#!/usr/bin/env python2
-# -*- coding: utf-8 -*-
-"""
 Created on Sun May 21 20:25:04 2017
 
 @author: mes
@@ -27,108 +9,16 @@ Implement an ElasticNet model for the Sberbank Housing Kaggle Competition.
 It must be flexible in the sense of bringing in data. The cleaning of data
 for this model may be moved to another file entirely. 
 """
-#%%
-DIR_PATH = '../../data/'
-train_file = 'imputedTrainLimitedVariables.csv'
-test_file = 'imputedTestLimitedVariables.csv'
 
-## loading data as Pandas dataframes
-"""
-train_raw = pd.read_csv(os.path.join(DIR_PATH, train_file), 
-                        header='infer', 
-                        index_col='id',
-                        parse_dates=['timestamp'])
-test_raw = pd.read_csv(os.path.join(DIR_PATH, test_file), 
-                       header='infer', 
-                       index_col='id',
-                       parse_dates=['timestamp'])
-"""
-
-train_raw = pd.read_csv(os.path.join(DIR_PATH, train_file), 
-                        header='infer')
-test_raw = pd.read_csv(os.path.join(DIR_PATH, test_file), 
-                       header='infer')
-
-#%%
-## Trim down the sub_area levels to the top 25 and put all others as there
-## own separate level
-freq_area = np.array(train_raw.loc[:, 'sub_area'].value_counts()[:30].index)
-
-train_raw.loc[~train_raw['sub_area'].isin(freq_area), 'sub_area'] = 'other'
-test_raw.loc[~test_raw['sub_area'].isin(freq_area), 'sub_area'] = 'other'
-
-## time features, the timestamp as is makes this decomposition fail
-train_raw.timestamp = train_raw.timestamp.astype('datetime64')
-test_raw.timestamp = test_raw.timestamp.astype('datetime64')
-train_raw.loc[:, 'year'] = train_raw.loc[:, 'timestamp'].apply(lambda x: x.strftime('%Y'))
-train_raw.loc[:, 'month'] = train_raw.loc[:, 'timestamp'].apply(lambda x: x.strftime('%m'))
-
-test_raw.loc[:, 'year'] = test_raw.loc[:, 'timestamp'].apply(lambda x: x.strftime('%Y'))
-test_raw.loc[:, 'month'] = test_raw.loc[:, 'timestamp'].apply(lambda x: x.strftime('%m'))
-
-## This allows the model to run over a subset of the entire data
-if SUBSET:
-    features = ['month', 'year', 'full_sq', 'life_sq', 'floor', 
-                    'max_floor', 'material', 'build_year', 'num_room',
-                    'kitch_sq', 'state', 'radiation_km', 'basketball_km',
-                    'museum_km'] 
-    train = train_raw[features]
-    test = test_raw[features]
-else:
-    train = train_raw.copy()
-    test = test_raw.copy()
-    features = list(train.columns)
-    
-if 'timestamp' in features:
-    train.drop('timestamp', inplace = True, axis = 1)
-    test.drop('timestamp', inplace = True, axis = 1)
-    features.remove('timestamp')
-if 'price_doc' in features:
-    train.drop('price_doc', inplace = True, axis = 1)
-    features.remove('price_doc')
-
-#%%    
-## Must encode object columns for the model
-for f in train.columns:
-    if train[f].dtype=='object':
-        print('encoding training feature: {}'.format(f))
-        lbl = LabelEncoder()
-        train.loc[:,f] = lbl.fit_transform(train.loc[:,f])
-        
-for f in test.columns:
-    if test[f].dtype=='object':
-        print('encoding test feature: {}'.format(f))
-        lbl = LabelEncoder()
-        test.loc[:,f] = lbl.fit_transform(test.loc[:,f])
-
-#%%
-# Scale the train and test data for the regression and subsequent prediction
-scaler_Xtrain = preprocessing.StandardScaler().fit(train)
-Xtrain = scaler_Xtrain.transform(train)
-Xtest = scaler_Xtrain.transform(test)
-Ytrain = train_raw.price_doc
-
-#%%
-### Coarse search for the correct hyperparamater for the elasticnet regression
-alphas_elastic = np.logspace(-20, 20, 100)
-coef_elastic = []
-
-for i in alphas_elastic:
-    elastic = linear_model.ElasticNet(l1_ratio =1.0)
-    elastic.set_params(alpha = i)
-    elastic.fit(Xtrain, Ytrain)
-    coef_elastic.append(elastic.coef_)
-
-# Plot how the coefficients change over the alpha range
-df_coef = pd.DataFrame(coef_elastic, index=alphas_elastic, columns=features)
-#df_coef = pd.DataFrame(coef_elastic)
-title = 'Lasso coefficients as a function of the regularization'
-df_coef.plot(logx=True, title=title)
-plt.xlabel('alpha')
-plt.ylabel('coefficients')
-plt.legend(loc=1)
-plt.savefig('lasso_coefs' + time.strftime('%Y%m%d-%H%M') + '.png')
-plt.show()
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import os
+from math import log
+from sklearn import linear_model, preprocessing
+from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import mean_squared_error
+import time
 
 #%%
 """
@@ -137,8 +27,6 @@ because this function doesn't exist by default.
 
 Also creating AIC and BIC to compare different models
 """
-
-from sklearn.metrics import mean_squared_error
 # Instead of creating a new function can import make_scorer 
 # from sklearn.metrics import make_scorer
 
@@ -165,16 +53,155 @@ def adj_Rsq(estimator, x, y):
     val = estimator.score(x, y) * (n-1)/(n-k-1)
     return val
 
+DIR_PATH = '/home/mes/Projects/nycdsa/communal/bootcamp009_project/Project3-MachineLearning/aull_dobbins_ganemccalla_schott/schott/data/'
+train_file = 'train_clean.csv'
+test_file = 'test_clean.csv'
+feature_file = 'feature_types.npy'
+
+## loading data as Pandas dataframes
+train_raw = pd.read_csv(os.path.join(DIR_PATH, train_file), 
+                    header='infer', 
+                    index_col='id',
+                    parse_dates=['timestamp'])
+test_raw = pd.read_csv(os.path.join(DIR_PATH, test_file), 
+                    header='infer', 
+                    index_col='id',
+                    parse_dates=['timestamp'])
+    
+feature_types = np.load(os.path.join(DIR_PATH, feature_file)).item()
+    
+#%%
+"""
+Define variable subsets
+"""
+#base = ['timestamp', 'full_sq','floor','kremlin_km','basketball_km',
+#        'state','sub_area']
+base = ['timestamp', 'full_sq','kremlin_km','basketball_km',
+        'state','sub_area']
+extra1 = ['area_m', 'cemetery_km', 'catering_km', 'ecology']
+extra2 = ['workplaces_km', 'office_km', 'market_shop_km', 'raion_popul']
+extra3 = ['museum_km', 'build_year']
+
+#%%
+"""
+Decide what the features space will include.
+"""
+features = base
+
+price = train_raw.price_doc
+train = train_raw[features]
+test = test_raw[features]
+
+#%%
+"""
+Handle case features
+## Trim down the sub_area levels to the top 25 and put all others as there
+       own separate level
+## Break down timestamp into year month components, then update the dtype
+    dictionary and features list
+"""
+if 'sub_area' in features:
+    freq_area = np.array(train.loc[:, 'sub_area'].value_counts()[:30].index)
+    train_raw.loc[~train['sub_area'].isin(freq_area), 'sub_area'] = 'other'
+    test_raw.loc[~test['sub_area'].isin(freq_area), 'sub_area'] = 'other'
+
+if 'timestamp' in features:
+    if not train.timestamp.dtype == 'datetime64[ns]':
+        train.timestamp = train.timestamp.astype('datetime64[ns]')
+    if not test.timestamp.dtype == 'datetime64[ns]':
+        test.timestamp = test.timestamp.astype('datetime64[ns]')
+    train.loc[:, 'yearmonth'] = train.loc[:, 'timestamp'].apply(lambda x: x.strftime('%Y%m'))
+    test.loc[:, 'yearmonth'] = test.loc[:, 'timestamp'].apply(lambda x: x.strftime('%Y%m'))
+    train.drop('timestamp', inplace = True, axis = 1)
+    test.drop('timestamp', inplace = True, axis = 1)
+    features.remove('timestamp')
+    features.append('yearmonth')
+    feature_types['yearmonth'] = 'int64'
+    del feature_types['timestamp']
+
+#%%
+"""
+Go through each feature. Find its dtype in the dictionary and convert it
+if it doesn't match.
+
+Do this for the training and test set
+"""
+for feat in features:
+    if not train[feat].dtype == feature_types[feat]:
+        train[feat] = train[feat].astype(feature_types[feat])
+    if not test[feat].dtype == feature_types[feat]:
+        test[feat] = test[feat].astype(feature_types[feat])
+    
+        
+#%%
+"""
+Must transfer categorical columns into dummy variables if they exist.
+Then update the features to reflect the expanded columns.
+"""
+train = pd.get_dummies(train)
+test = pd.get_dummies(test)
+
+#%%
+"""
+If for some reason the column number between the test and training set aren't
+equal, then drop the columns in the test set that don't match in the training
+set.
+"""
+
+if train.shape[1] > test.shape[1]:
+    train = train[test.columns]
+else:
+    test = test[train.columns]
+    
+features = train.columns
+
+#%%
+# Scale the train and test data for the regression and subsequent prediction
+scaler_Xtrain = preprocessing.StandardScaler().fit(train)
+Xtrain = scaler_Xtrain.transform(train)
+Xtest = scaler_Xtrain.transform(test)
+Ytrain = train_raw.price_doc
+
+#%%
+### Coarse search for the correct hyperparamater for the elasticnet regression
+alphas_elastic = np.logspace(-20, 20, 100)
+coef_elastic = []
+
+for i in alphas_elastic:
+    elastic = linear_model.ElasticNet(l1_ratio =1.0)
+    elastic.set_params(alpha = i)
+    elastic.fit(Xtrain, Ytrain)
+    coef_elastic.append(elastic.coef_)
+
+#%%
+# Plot how the coefficients change over the alpha range
+df_coef = pd.DataFrame(coef_elastic, index=alphas_elastic, columns=features)
+#df_coef = pd.DataFrame(coef_elastic)
+title = 'Lasso coefficients as a function of the regularization'
+df_coef.plot(logx=True, title=title, figsize=(20,20))
+plt.xlabel('alpha')
+plt.ylabel('coefficients')
+plt.legend(loc=1)
+plt.savefig('runs/lasso_coefs' + time.strftime('%Y%m%d-%H%M') + '.png')
+plt.show()
+
 #%%
 from sklearn.model_selection import GridSearchCV
 ## set the possible parameters from 3 to 30
 
 ## 'alpha' must match an actual parameter name
-grid_param = [{'alpha': np.logspace(-5,2,100)}]
+grid_param = [{'alpha': np.logspace(-5,2,30),
+               'l1_ratio': [0.33, 0.66, 1.0]}]
 
 ## fit all models with grid search to find optimal alpha
 para_search = GridSearchCV(estimator=elastic, param_grid=grid_param, 
                            scoring=mse, cv=10).fit(Xtrain, Ytrain)
+
+#%%
+"""
+Visualize the evolution of the errors over the alpha range
+"""
+
 
 #%%
 """
