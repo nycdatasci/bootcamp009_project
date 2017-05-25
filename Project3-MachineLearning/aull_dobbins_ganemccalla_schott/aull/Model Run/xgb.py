@@ -22,7 +22,7 @@ import sklearn
 from sklearn.grid_search import GridSearchCV   #Perforing grid search
 
 
-f = open('xgb_log', 'w')
+output = open('xgb_log', 'w')
 
 SUBSET = True
 
@@ -129,7 +129,8 @@ xgb_params = {
 print(datetime.now())
 
 cv = xgb.cv(xgb_params, dtrain, num_boost_round = 5000, nfold = 5, metrics = {"rmse"})
-f.write(cv)
+output.write(str(cv))
+print(cv)
 
 print(datetime.now())
 
@@ -144,7 +145,7 @@ print(datetime.now())
 #print(clf.best_score_)
 #print(clf.best_params_)
 
-f.close()
+output.close()
 #%%
 # Train the model
 #full_model = xgb.train(xgb_params,
