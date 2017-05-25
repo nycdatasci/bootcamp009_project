@@ -124,9 +124,9 @@ xgb_params = {
 #                      verbose_eval=50)
 print(datetime.now())
 
-cv = xgb.cv(xgb_params, dtrain_sub, num_boost_round = 500, nfold = 4, metrics = {"rmse"})
+cv = xgb.cv(xgb_params, dtrain, num_boost_round = 500, nfold = 4, metrics = {"rmse"})
 print(cv)
-print(cv, verbose=TRUE)
+print(cv, verbose=True)
 
 print(datetime.now())
 #%%
