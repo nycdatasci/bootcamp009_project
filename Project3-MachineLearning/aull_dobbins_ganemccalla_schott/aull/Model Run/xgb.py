@@ -19,6 +19,10 @@ sys.path.append('/home/mes/venv/lib/python2.7/site-packages/')
 import xgboost as xgb
 ## label encoding
 import sklearn
+from sklearn.grid_search import GridSearchCV   #Perforing grid search
+
+
+f = open('xgb_log', 'w')
 
 SUBSET = True
 
@@ -106,8 +110,8 @@ dtest = xgb.DMatrix(X_test,
 #%%
 #hyperparameters
 xgb_params = {
-    'eta': 0.5,
-    'max_depth': 3,
+    'eta': 0.3,
+    'max_depth': 6,
     'subsample': .8,
     'colsample_bytree': 0.7,
     'objective': 'reg:linear',
@@ -124,11 +128,23 @@ xgb_params = {
 #                      verbose_eval=50)
 print(datetime.now())
 
-cv = xgb.cv(xgb_params, dtrain, num_boost_round = 500, nfold = 4, metrics = {"rmse"})
-print(cv)
-print(cv, verbose=True)
+cv = xgb.cv(xgb_params, dtrain, num_boost_round = 5000, nfold = 5, metrics = {"rmse"})
+f.write(cv)
 
 print(datetime.now())
+
+## Now let's run a grid search:
+
+#cv_params = {'max_depth': [3,4,5,6,7,8], 'min_child_weight': [1,2,3,4,5]}
+#ind_params = {'learning_rate': 0.2, 'n_estimators': 1000, 'seed':0, 'subsample': 0.8, 'colsample_bytree': 0.8, 
+#             'objective': 'reg:linear'}
+#xgb_model = xgb.XGBRegressor()
+#opt_GBM = GridSearchCV(xgb_model,ind_params, cv_params, scoring = 'rmse', cv = 5, verbose = 1) 
+
+#print(clf.best_score_)
+#print(clf.best_params_)
+
+f.close()
 #%%
 # Train the model
 #full_model = xgb.train(xgb_params,
