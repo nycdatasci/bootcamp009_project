@@ -255,7 +255,7 @@ dtest = xgb.DMatrix(X_test,
 
 gridsearch_params = {
     'max_depth' : [3,4,5,6,7,8],
-    'min_child_weight' : [1,2,3,4,5]
+    'min_child_weight' : [1,2,3,4,5],
     'eta' : [.4],
     'subsample': [.8],
     'objective': ['reg:linear'],
