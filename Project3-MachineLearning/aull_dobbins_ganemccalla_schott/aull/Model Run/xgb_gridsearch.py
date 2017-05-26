@@ -258,7 +258,7 @@ xgb_params = {
     'objective': 'reg:linear',
     'silent': 1,
     'colsample_bytree': 0.8, 
-    'num_boost_round' = 1000
+    'num_boost_round': 1000
 }
 
 #Tune the model
