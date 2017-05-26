@@ -290,7 +290,7 @@ opt_GBM.best_params_
 print(datetime.now())
 
 #%%
-Train the model
+#Train the model
 full_model = xgb.train(**opt_GBM.best_params_,
                        dtrain, 
                        verbose_eval=20)
