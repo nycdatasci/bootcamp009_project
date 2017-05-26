@@ -253,15 +253,20 @@ dtest = xgb.DMatrix(X_test,
 #%%
 #hyperparameters
 xgb_params = {
+    'eta' : .4,
     'subsample': .8,
     'objective': 'reg:linear',
     'silent': 1,
     'colsample_bytree': 0.8, 
     'num_boost_round': 1000,
-    'scoring' : 'rmse',
+}
+
+gridsearch_params = {
     'max_depth' : [3,4,5,6,7,8],
     'min_child_weight' : [1,2,3,4,5]
 }
+
+
 
 #Tune the model
 #sub_model = xgb.train(xgb_params, 
@@ -280,9 +285,8 @@ print(datetime.now())
 
 ## Now let's run a grid search:
 
-cv_params = {'max_depth': [3,4,5,6,7,8], 'min_child_weight': [1,2,3,4,5]}
 xgb_model = xgb.XGBRegressor()
-opt_GBM = GridSearchCV(xgb_model,xgb_params, cv = 5, verbose = 1) 
+opt_GBM = GridSearchCV(xgb_model,gridsearch_params, scoring = 'rmse', fit_params = xgb_params, cv = 5, verbose = 1) 
 opt_GBM.fit(X_train, y_train)  
 opt_GBM.grid_scores
 opt_GBM.best_model_
