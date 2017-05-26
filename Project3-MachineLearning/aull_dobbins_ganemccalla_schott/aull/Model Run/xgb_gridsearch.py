@@ -253,7 +253,6 @@ dtest = xgb.DMatrix(X_test,
 #%%
 #hyperparameters
 xgb_params = {
-    'eta': 0.4,
     'subsample': .8,
     'objective': 'reg:linear',
     'silent': 1,
