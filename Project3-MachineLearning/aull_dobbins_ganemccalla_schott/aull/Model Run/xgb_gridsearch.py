@@ -213,11 +213,8 @@ else:
     features = list(test.columns)
 
 
-######### Code below is necessary for categorical features needing encoding to dummy variables.  Used a simpler operation using pandas above
-######### for the variables chosen.
-
 #%%    
-## Must encode object columns for the model
+#Must encode object columns for the model
 #for f in train.columns:
 #    if train[f].dtype=='object':
 #        print('encoding training feature: {}'.format(f))
