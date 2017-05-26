@@ -212,19 +212,23 @@ else:
     test = train_raw.copy()
     features = list(test.columns)
 
+
+######### Code below is necessary for categorical features needing encoding to dummy variables.  Used a simpler operation using pandas above
+######### for the variables chosen.
+
 #%%    
 ## Must encode object columns for the model
-for f in train.columns:
-    if train[f].dtype=='object':
-        print('encoding training feature: {}'.format(f))
-        lbl = sklearn.preprocessing.LabelEncoder()
-        train.loc[:,f] = lbl.fit_transform(train.loc[:,f])
+#for f in train.columns:
+#    if train[f].dtype=='object':
+#        print('encoding training feature: {}'.format(f))
+#        lbl = sklearn.preprocessing.LabelEncoder()
+#        train.loc[:,f] = lbl.fit_transform(train.loc[:,f])
         
-for f in test.columns:
-    if test[f].dtype=='object':
-        print('encoding test feature: {}'.format(f))
-        lbl = sklearn.preprocessing.LabelEncoder()
-        test.loc[:,f] = lbl.fit_transform(test.loc[:,f])
+#for f in test.columns:
+#    if test[f].dtype=='object':
+#        print('encoding test feature: {}'.format(f))
+#        lbl = sklearn.preprocessing.LabelEncoder()
+#        test.loc[:,f] = lbl.fit_transform(test.loc[:,f])
 
 #%%
 # Convert data frames to numpy arrays
