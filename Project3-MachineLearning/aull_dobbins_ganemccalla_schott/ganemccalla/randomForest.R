@@ -85,7 +85,7 @@ plot(1:16, oob.err, pch = 16, type = "b",
      main = "Random Forest OOB Error Rates\nby # of Variables")
 
 
-boost.base = gbm(price_doc ~ ., data = inputedTrainModified,
+boost.base = gbm(price_doc ~ ., data = inputedTrain,
                    distribution = "gaussian",
                    n.trees = 1000000,
                    interaction.depth = 4)
