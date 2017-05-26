@@ -50,7 +50,7 @@ registerDoMC(4)
 
 rf.base = foreach(ntree=rep(166, 3), .combine=combine, .multicombine = TRUE,
                   .packages='randomForest') %dopar% {
-                    randomForest(price_doc ~ ., data = inputedTrainModified)
+                    randomForest(price_doc ~ ., data = inputedTrain)
                   }
 
 prediction = predict(rf.base,inputedTest)
@@ -72,7 +72,7 @@ oob.err = numeric(16)
 for (mtry in 1:16) {
   fit = foreach(ntree=rep(166, 3), .combine=combine, .multicombine = TRUE,
                 .packages='randomForest') %dopar% {
-                  randomForest(price_doc ~ ., data = inputedTrainModified, mtry=mtry)
+                  randomForest(price_doc ~ ., data = inputedTrain, mtry=mtry)
                 }
   oob.err[mtry] = fit$mse[500]
   cat("We're performing iteration", mtry, "\n")
@@ -90,8 +90,8 @@ boost.base = gbm(price_doc ~ ., data = inputedTrainModified,
                    n.trees = 1000000,
                    interaction.depth = 4)
 n.trees = seq(from = 100000, to = 1000000, by = 100000)
-predmat = predict(boost.base, newdata = inputedTrainModified, n.trees = n.trees)
-berr = with(inputedTrainModified, apply((predmat - price_doc)^2, 2, mean))
+predmat = predict(boost.base, newdata = inputedTrain, n.trees = n.trees)
+berr = with(inputedTrain, apply((predmat - price_doc)^2, 2, mean))
 
 svg('boosting_test_err.svg')
 plot(n.trees, berr, pch = 16,
