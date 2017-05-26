@@ -256,7 +256,8 @@ xgb_params = {
     'eta': 0.4,
     'subsample': .8,
     'objective': 'reg:linear',
-    'silent': 1
+    'silent': 1,
+    'colsample_bytree': 0.8, 
     'num_boost_round' = 1000
 }
 
