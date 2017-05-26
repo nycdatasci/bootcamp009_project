@@ -287,7 +287,7 @@ print(datetime.now())
 xgb_model = xgb.XGBRegressor()
 opt_GBM = GridSearchCV(xgb_model,gridsearch_params, cv = 5, verbose = 1) 
 opt_GBM.fit(X_train, Y_train)  
-opt_GBM.grid_scores
+opt_GBM.grid_scores_
 opt_GBM.best_model_
 opt_GBM.best_score_
 opt_GBM.best_params_
