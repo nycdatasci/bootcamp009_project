@@ -260,8 +260,8 @@ xgb_params = {
     'colsample_bytree': 0.8, 
     'num_boost_round': 1000,
     'scoring' : 'rmse'
-    'max_depth': [3,4,5,6,7,8],
-    'min_child_weight': [1,2,3,4,5]
+    'max_depth' : [3,4,5,6,7,8],
+    'min_child_weight' : [1,2,3,4,5]
 }
 
 #Tune the model
