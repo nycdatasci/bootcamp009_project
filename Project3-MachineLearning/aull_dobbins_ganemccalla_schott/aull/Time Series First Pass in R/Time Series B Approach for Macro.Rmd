@@ -35,6 +35,13 @@ library(corrplot)
 library(forecast)
 library(TTR)
 library(caret)
+library(caTools)
+library(quantmod)
+
+rice$p_sqf
+############## Predefined functions #############
+ma <- function(x,n=5){filter(x,rep(1/n,n), sides=1)}
+
 
 ############### Import Macro Data and Training Data To Construct Dependent Variable ####################
 
@@ -65,7 +72,6 @@ macro <- read_csv("./macro.csv",
         timestamp = col_date(format = "%Y-%m-%d")))
 
 
-
 problems(macro) #0 rows - No data corruption classes were assigned.
 
 macro$rent_price_2room_eco <- ifelse(macro$rent_price_2room_eco == .1, 40.25, macro$rent_price_2room_eco)
@@ -86,38 +92,46 @@ train <- read_csv("./train_clean.csv",
 price = data.frame(train$timestamp,train$price_doc,train$full_sq)
 colnames(price) = c('timestamp','price_doc','full_sq')
 
-# Log transform
-price$price_doc = log(price$price_doc)
-price$full_sq = log(price$full_sq)
+# Log transform (Leaving it turned off right now while doing EDA).
+#price$price_doc = log(price$price_doc)
+#price$full_sq = log(price$full_sq)
+
+#Re-frame data for better features to model at the Russian macro level.
 
 price = price %>%
   mutate(p_sqf = price_doc / full_sq)
 price$price_doc = NULL
 price$full_sq = NULL
 
-## Aggregate duplicate observations for one date due to time series analysis limitation.
-price = aggregate(x=price, by = list(unique.timestamp = price$timestamp), FUN=mean, na.rm=TRUE)
+macro = macro %>%
+  mutate(brent_rub = brent * usdrub)
+macro_brent = NULL
 
-## Take five day moving average.
-for (i in seq(ncol(price),6)) {
-  price$p_sqf[i] = median(price$p_sqf[i-5:i])
-  }  
+## Aggregate duplicate observations for one date due to time series analysis limitation.
+price = aggregate(x=p_sqf, by = list(unique.timestamp = price$timestamp), FUN=mean, na.rm=TRUE)
+
+## Take fifteen day moving average.
+price$p_sqf = runmean(price$p_sqf,15)
+macro$brent_rub = runmean(macro$brent_rub,15)
+
+## Calculate the rates of change based on estimated lag factors.
+
 
 rm(train)
 macro = left_join(price,macro, by = 'timestamp')
 rm(price)
 
-
+a = lm(p_sqf ~ brent_rub,macro)
+plot(a)
+summary(a)
 
 ## Import the training dat for sake of price and square foot data.
 ## Will make price / sq. foot into the dependent variable to be forecasted by the time series model,
 ## removing the single most important variable that explains price variance at the property level.
 
-macro = macro %>%
-  mutate(brent_rub = brent * usdrub)
-macro_brent = NULL
 
 
+a = lm()
 
 #################### Clean Data of Highly Sparse Variables & Pare Down to Complete Obs. ######################
 
