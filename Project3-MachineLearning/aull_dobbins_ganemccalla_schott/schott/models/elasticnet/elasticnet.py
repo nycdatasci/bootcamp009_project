@@ -18,6 +18,7 @@ from math import log
 from sklearn import linear_model, preprocessing
 from sklearn.metrics import mean_squared_error
 import time
+import seaborn as sns
 
 #%%
 """
@@ -52,9 +53,21 @@ def adj_Rsq(estimator, x, y):
     val = estimator.score(x, y) * (n-1)/(n-k-1)
     return val
 
+#%%
+"""
+Create correlation plot function
+"""
+def corr_plot(data):
+    corrmtx = data.corr()
+    g = sns.clustermap(corrmtx, annot=True, linewidths=.5)
+    for i, ax in enumerate(g.fig.axes):   ## getting all axes of the fig object
+        ax.set_yticklabels(ax.get_yticklabels(), rotation = 0)
+
+#%%
+
 DIR_PATH = '/home/mes/Projects/nycdsa/communal/bootcamp009_project/Project3-MachineLearning/aull_dobbins_ganemccalla_schott/data/'
-train_file = 'train_clean.csv'
-test_file = 'test_clean.csv'
+train_file = 'train_total.csv'
+test_file = 'test_total.csv'
 feature_file = 'feature_types.npy'
 
 ## loading data as Pandas dataframes
@@ -77,7 +90,9 @@ Define variable subsets
 #        'state','sub_area']
 #base = ['timestamp', 'full_sq','kremlin_km','basketball_km',
 #        'state']
-base = ['timestamp', 'full_sq','kremlin_km','basketball_km', 'state']
+#base = ['timestamp', 'full_sq','kremlin_km','basketball_km', 'state']
+#base = ['log_fullsq', 'num_room', 'max_floor', 'kremlin_km', 'log_kitchsq','basketball_km']
+base = ['log_fullsq', 'max_floor', 'basketball_km']
 sub_area = ['sub_area']
 extra1 = ['area_m', 'cemetery_km', 'catering_km', 'ecology']
 extra2 = ['workplaces_km', 'office_km', 'market_shop_km', 'raion_popul']
@@ -97,13 +112,15 @@ for i in range(len(feature_types)):
 """
 Decide what the features space will include.
 """
-random_floats = list(np.random.choice(floats,35,replace = False))
-features = list(np.unique(base + random_floats))
+#random_floats = list(np.random.choice(floats,35,replace = False))
+#features = list(np.unique(base + random_floats))
+features = base
 
 #%%
 """
 Drop feature columns with missing values. Will match train and test columns
 later. 
+"""
 """
 tmp = features[:]
 for feat in tmp: 
@@ -113,11 +130,21 @@ for feat in tmp:
     if val > 0:
         print 'removing ' + feat
         features.remove(feat)
+"""
 
 #%%
-price = train_raw.price_doc
+price = train_raw.log_price
 train = train_raw[features]
 test = test_raw[features]
+
+#%%
+"""
+Drop rows that have missing values
+"""
+train_indexes = list(~train.apply(pd.isnull, 0).apply(any,1))
+train = train.iloc[train_indexes,:]
+price = price[train_indexes]
+test = train.iloc[list(~test.apply(pd.isnull, 0).apply(any,1)),:]
 
 #%%
 """
@@ -187,11 +214,18 @@ features = list(train.columns)
 scaler_Xtrain = preprocessing.StandardScaler().fit(train)
 Xtrain = scaler_Xtrain.transform(train)
 Xtest = scaler_Xtrain.transform(test)
-Ytrain = train_raw.price_doc
+Ytrain = price
+
+#%%
+"""
+Plot a correlation plot
+"""
+corr_plot(train)
+plt.savefig('runs/elastic_corr' + time.strftime('%Y%m%d-%H%M') + '.png')
 
 #%%
 ### Coarse search for the correct hyperparamater for the elasticnet regression
-alphas_elastic = np.logspace(-7, 16, 100)
+alphas_elastic = np.logspace(-10, 5, 200)
 coef_elastic = []
 elastic = linear_model.ElasticNet(l1_ratio = 1.0)
 
@@ -217,12 +251,13 @@ from sklearn.model_selection import GridSearchCV
 ## set the possible parameters from 3 to 30
 
 ## 'alpha' must match an actual parameter name
-grid_param = [{'alpha': np.logspace(-5,10,100),
-               'l1_ratio': [0.7, 0.9, 1.0]}]
+grid_param = [{'alpha': np.logspace(-10,2,100),
+               'l1_ratio': np.linspace(0.0,1.0,10)}]
 
+elastic = linear_model.ElasticNet()
 ## fit all models with grid search to find optimal alpha
 para_search = GridSearchCV(estimator=elastic, param_grid=grid_param, 
-                           scoring=mse, cv=10).fit(Xtrain, Ytrain)
+                           scoring=mse, cv=5).fit(Xtrain, Ytrain)
 
 #%%
 """
@@ -233,7 +268,7 @@ elastic.fit(Xtrain, Ytrain)
 
 #%%
 """
-Visualize the evolution of the errors over the alpha range
+Visualize the residuals
 """
 
 
@@ -271,6 +306,7 @@ In order to predict prices from the standardized coefficients,
 I must scale the test data using the mean and sd from the training data
 """
 # Predict some prices
+y_predtrain = elastic.predict(Xtrain)
 y_pred = elastic.predict(Xtest)
 
 #%%

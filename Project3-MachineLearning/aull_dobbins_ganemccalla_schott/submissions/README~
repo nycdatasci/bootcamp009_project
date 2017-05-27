@@ -1,0 +1,13 @@
+kaggle_geomean.py
+
+	Computes the geometric average ((x1*x2*x3...*xn)/n) of the two column kaggle submissions.
+
+	Run as such:
+	python(2.7) kaggle_geomean.py '*.csv' 'ensembled/geomean_submission.csv'
+
+kaggle_avg.py
+
+	Computes the regular average
+
+	Run as such:
+	python(2.7) kaggle_avgmean.py '*.csv' 'ensembled/mean_submission.csv'

@@ -1,0 +1,19 @@
+kaggle_geomean.py
+
+	Computes the weighted geometric average ((x1*x2*x3...*xn)/n) of the two column kaggle submissions. Unfortunately it's hard to control
+	the order of the globbing. That is the regex pulling in of all the local csv's. Run the script once with test weights and it will print
+	out the order of processing. Use that print out to determine the order of the weights. 
+
+	Run as such:
+	python(2.7) kaggle_geomean.py '*.csv' 'ensembled/geomean_submission.csv' '1,2,3...'
+
+	python2_executable script_name.py glob_csv outputfile comma_separated_list_of_weights
+
+
+
+kaggle_avg.py
+
+	Computes the weighted regular average
+
+	Run as such:
+	python(2.7) weighted kaggle_avgmean.py '*.csv' 'ensembled/mean_submission.csv'
