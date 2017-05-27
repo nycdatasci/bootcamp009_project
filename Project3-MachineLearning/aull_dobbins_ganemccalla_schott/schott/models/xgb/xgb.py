@@ -13,7 +13,7 @@ import pandas as pd
 import numpy as np
 import os
 import sys
-sys.path.append('/home/mes/venv/lib/python2.7/site-packages/')
+#sys.path.append('/home/mes/venv/lib/python2.7/site-packages/')
 import xgboost as xgb
 ## label encoding
 import sklearn
@@ -21,7 +21,7 @@ import sklearn
 SUBSET = True
 
 #%%
-DIR_PATH = '../../data/'
+DIR_PATH = '../../../data/'
 train_file = 'train_total.csv'
 test_file = 'test_total.csv'
 

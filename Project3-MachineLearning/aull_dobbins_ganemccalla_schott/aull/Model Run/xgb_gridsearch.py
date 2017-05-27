@@ -15,6 +15,7 @@ import pandas as pd
 import numpy as np
 import os
 import sys
+import math
 sys.path.append('/home/mes/venv/lib/python2.7/site-packages/')
 import xgboost as xgb
 ## label encoding
@@ -85,59 +86,27 @@ if SUBSET:
                 'ID_railroad_station_walk',
                 'railroad_station_avto_km',
                 'railroad_station_avto_min',
-                'ID_railroad_station_avto',
                 'public_transport_station_km',
                 'public_transport_station_min_walk',
                 'water_km',
-                'mkad_km',
-                'ttk_km',
                 'sadovoe_km',
                 'bulvar_ring_km',
                 'kremlin_km',
                 'big_road1_km',
-                'ID_big_road1',
                 'big_road2_km',
-                'ID_big_road2',
                 'railroad_km',
                 'zd_vokzaly_avto_km',
-                'ID_railroad_terminal',
-                'bus_terminal_avto_km',
-                'ID_bus_terminal',
                 'oil_chemistry_km',
                 'nuclear_reactor_km',
                 'radiation_km',
                 'power_transmission_line_km',
                 'thermal_power_plant_km',
-                'ts_km',
-                'big_market_km',
-                'market_shop_km',
-                'fitness_km',
-                'swim_pool_km',
-                'ice_rink_km',
-                'stadium_km',
-                'basketball_km',
-                'hospice_morgue_km',
-                'detention_facility_km',
-                'public_healthcare_km',
-                'university_km',
-                'workplaces_km',
-                'shopping_centers_km',
-                'office_km',
-                'additional_education_km',
-                'preschool_km',
-                'big_church_km',
-                'church_synagogue_km',
                 'mosque_km',
                 'theater_km',
                 'museum_km',
                 'exhibition_km',
                 'catering_km',
                 'green_part_500',
-                'prom_part_500',
-                'office_count_500',
-                'office_sqm_500',
-                'trc_count_500',
-                'trc_sqm_500',
                 'cafe_count_500',
                 'cafe_sum_500_min_price_avg',
                 'cafe_sum_500_max_price_avg',
@@ -149,18 +118,7 @@ if SUBSET:
                 'cafe_count_500_price_2500',
                 'cafe_count_500_price_4000',
                 'cafe_count_500_price_high',
-                'big_church_count_500',
-                'church_count_500',
-                'mosque_count_500',
-                'leisure_count_500',
-                'sport_count_500',
-                'market_count_500',
                 'green_part_1000',
-                'prom_part_1000',
-                'office_count_1000',
-                'office_sqm_1000',
-                'trc_count_1000',
-                'trc_sqm_1000',
                 'cafe_count_1000',
                 'cafe_sum_1000_min_price_avg',
                 'cafe_sum_1000_max_price_avg',
@@ -172,12 +130,6 @@ if SUBSET:
                 'cafe_count_1000_price_2500',
                 'cafe_count_1000_price_4000',
                 'cafe_count_1000_price_high',
-                'big_church_count_1000',
-                'church_count_1000',
-                'mosque_count_1000',
-                'leisure_count_1000',
-                'sport_count_1000',
-                'market_count_1000',
                 'sub_area_Bogorodskoe',
                 "sub_area_Gol'janovo",
                 'sub_area_Izmajlovo',
@@ -265,8 +217,6 @@ gridsearch_params = {
     'n_estimators': [250],
 }
 
-
-
 #Tune the model
 #sub_model = xgb.train(xgb_params, 
 #                      dtrain_sub, 
@@ -280,12 +230,15 @@ print(datetime.now())
 #output.write(str(cv))
 #print(cv)
 
+#%%
 
 
+#%%
 ## Now let's run a grid search:
 
 xgb_model = xgb.XGBRegressor()
-opt_GBM = GridSearchCV(xgb_model,gridsearch_params, cv = 5, verbose = 1) 
+opt_GBM = GridSearchCV(xgb_model,gridsearch_params, cv = 5, verbose = 1, n_jobs = 2) 
+#opt_GBM = GridSearchCV(xgb_model,xgb_params, cv = 5, verbose = 1)
 opt_GBM.fit(X_train, Y_train)  
 print(opt_GBM.grid_scores_)
 print(opt_GBM.best_estimator_)
@@ -295,15 +248,31 @@ print(opt_GBM.best_params_)
 print(datetime.now())
 
 #%%
+"""
+for i in opt_GBM.best_params_:
+    print type(opt_GBM.best_params_[i])
+    print opt_GBM.best_params_[i]
+    
+#%%
+for i in xgb_params:
+    print type(xgb_params[i])
+    print xgb_params[i]
+"""
+
+#%%
 #Train the model
-full_model = xgb.train(dtrain,
-                        **opt_GBM.best_params_,
-                        verbose_eval=20)
+#full_model = xgb.train(**opt_GBM.best_params_, dtrain = dtrain)
+full_model = xgb.train(opt_GBM.best_params_, dtrain)
+#full_model = xgb.train(xgb_params, dtrain = dtrain)
 
 #predict the prices from the test data
 y_pred = full_model.predict(dtest)
 
+# Transform from ln(price) to regular price
+y_pred = np.exp(y_pred)
+
+
 #%%
 #Write them to csv for submission
 submit = pd.DataFrame({'id': np.array(test.index), 'log_price': y_pred})
-submit.to_csv('submissions/submission_xgb3.csv', index=False)
+submit.to_csv('submissions/submission_xgb.csv', index=False)
