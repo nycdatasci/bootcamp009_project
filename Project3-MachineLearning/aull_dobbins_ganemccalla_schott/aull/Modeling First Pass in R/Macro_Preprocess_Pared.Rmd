@@ -56,12 +56,13 @@ for (i in seq(ncol(macro),2)) {
 }
 # Import the training dat for sake of price (dependent variable) data.  
 train <- read_csv("./train.csv", 
-    col_types = cols(build_year = col_number(), 
-        max_floor = col_number(), timestamp = col_date(format = "%Y-%m-%d")))
+    col_types = cols(build_year = col_integer(), 
+        max_floor = col_integer(), timestamp = col_date(format = "%Y-%m-%d")))
+colSums(is.na(train))
 
 # Grab the best variables of train set, and join to the macro data set by date.
 train_var_chosen = c('timestamp','price_doc','full_sq','life_sq','floor',
-               'max_floor','build_year')
+               'max_floor','build_year','sub_area')
 
 price = data.frame(train$timestamp,train$price_doc,train$full_sq,train$life_sq,train$floor,train$max_floor,train$build_year)
 colnames(price) = c('timestamp','price_doc','full_sq','life_sq','floor',
@@ -119,6 +120,9 @@ After completing one iteration of this document, it became apparent to me that I
 ```{r, echo = TRUE}
 macro = macro %>%
   mutate(rent = ifelse(full_sq <= 50,(rent_price_1room_bus+rent_price_1room_eco)/2,ifelse(full_sq <= 80,(rent_price_2room_bus+rent_price_2room_eco)/2,ifelse(full_sq <= 110,(rent_price_3room_bus+rent_price_3room_eco)/2,(rent_price_3room_bus+rent_price_3room_eco)/1.5))))
+
+price$logprice = log(price$price_doc)
+ggplot(data = price,aes(x=logprice)) + geom_histogram()
 
 ```
 
@@ -259,7 +263,7 @@ The backward stepwise regression proved computationally very inefficient (I will
 I'm going to try one linear regression of my own choosing:
 
 ```{r}
-pared_linear_regression = lm(price_doc ~ full_sq + life_sq + floor + max_floor + gdp_quart + usdrub + oil_urals + micex_rgbi_tr + rent + mortgage_rate, complete_stand_data[,2:ncol(complete_stand_data)])
+pared_linear_regression = lm(price_doc ~ full_sq, complete_stand_data[,2:ncol(complete_stand_data)])
 summary(pared_linear_regression)
 plot(pared_linear_regression)
 ```
