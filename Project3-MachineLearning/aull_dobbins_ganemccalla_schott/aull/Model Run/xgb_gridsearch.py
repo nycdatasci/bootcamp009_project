@@ -268,6 +268,10 @@ full_model = xgb.train(opt_GBM.best_params_, dtrain)
 #predict the prices from the test data
 y_pred = full_model.predict(dtest)
 
+# Transform from ln(price) to regular price
+y_pred = np.exp(y_pred)
+
+
 #%%
 #Write them to csv for submission
 submit = pd.DataFrame({'id': np.array(test.index), 'log_price': y_pred})
