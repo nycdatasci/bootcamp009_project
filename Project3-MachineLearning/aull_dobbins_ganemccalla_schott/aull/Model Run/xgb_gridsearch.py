@@ -15,6 +15,7 @@ import pandas as pd
 import numpy as np
 import os
 import sys
+import math
 sys.path.append('/home/mes/venv/lib/python2.7/site-packages/')
 import xgboost as xgb
 ## label encoding
@@ -204,7 +205,7 @@ dtest = xgb.DMatrix(X_test,
 
 #%%
 #hyperparameters
-"""
+
 gridsearch_params = {
     'max_depth' : [3,4,5,6,7,8],
     'min_child_weight' : [1,2,3,4,5],
@@ -215,20 +216,6 @@ gridsearch_params = {
     'colsample_bytree': [0.8], 
     'n_estimators': [250],
 }
-"""
-
-gridsearch_params = {
-    'max_depth' : [3],
-    'min_child_weight' : [1],
-    'learning_rate' : [.4],
-    'subsample': [.8],
-    'objective': ['reg:linear'],
-    'silent': [1],
-    'colsample_bytree': [0.8], 
-    'n_estimators': [250],
-}
-
-
 
 #Tune the model
 #sub_model = xgb.train(xgb_params, 
@@ -243,12 +230,15 @@ print(datetime.now())
 #output.write(str(cv))
 #print(cv)
 
+#%%
 
 
+#%%
 ## Now let's run a grid search:
 
 xgb_model = xgb.XGBRegressor()
-opt_GBM = GridSearchCV(xgb_model,gridsearch_params, cv = 5, verbose = 1) 
+opt_GBM = GridSearchCV(xgb_model,gridsearch_params, cv = 5, verbose = 1, n_jobs = 2) 
+#opt_GBM = GridSearchCV(xgb_model,xgb_params, cv = 5, verbose = 1)
 opt_GBM.fit(X_train, Y_train)  
 print(opt_GBM.grid_scores_)
 print(opt_GBM.best_estimator_)
@@ -258,10 +248,22 @@ print(opt_GBM.best_params_)
 print(datetime.now())
 
 #%%
+"""
+for i in opt_GBM.best_params_:
+    print type(opt_GBM.best_params_[i])
+    print opt_GBM.best_params_[i]
+    
+#%%
+for i in xgb_params:
+    print type(xgb_params[i])
+    print xgb_params[i]
+"""
+
+#%%
 #Train the model
-full_model = xgb.train(dtrain,
-                        **opt_GBM.best_params_,
-                        verbose_eval=20)
+#full_model = xgb.train(**opt_GBM.best_params_, dtrain = dtrain)
+full_model = xgb.train(opt_GBM.best_params_, dtrain)
+#full_model = xgb.train(xgb_params, dtrain = dtrain)
 
 #predict the prices from the test data
 y_pred = full_model.predict(dtest)
@@ -269,4 +271,4 @@ y_pred = full_model.predict(dtest)
 #%%
 #Write them to csv for submission
 submit = pd.DataFrame({'id': np.array(test.index), 'log_price': y_pred})
-submit.to_csv('submissions/submission_xgb3.csv', index=False)
+submit.to_csv('submissions/submission_xgb.csv', index=False)
