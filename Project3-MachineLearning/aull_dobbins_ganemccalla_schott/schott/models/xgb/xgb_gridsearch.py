@@ -15,12 +15,13 @@ import pandas as pd
 import numpy as np
 import os
 import sys
+import time
 #sys.path.append('/home/mes/venv/lib/python2.7/site-packages/')
 import xgboost as xgb
 ## label encoding
 import sklearn
-from sklearn.grid_search import GridSearchCV   #Perforing grid search
-
+from sklearn.grid_search import GridSearchCV   #Performing grid search
+#import matplotlib.pyplot as plt
 
 
 SUBSET = True
@@ -204,7 +205,7 @@ dtest = xgb.DMatrix(X_test,
 
 #%%
 #hyperparameters
-"""
+
 gridsearch_params = {
     'max_depth' : [3,4,5,6,7,8],
     'min_child_weight' : [1,2,3,4,5],
@@ -215,8 +216,8 @@ gridsearch_params = {
     'colsample_bytree': [0.8], 
     'n_estimators': [250],
 }
-"""
 
+"""
 gridsearch_params = {
     'max_depth' : [3],
     'min_child_weight' : [1],
@@ -227,16 +228,15 @@ gridsearch_params = {
     'colsample_bytree': [0.8], 
     'n_estimators': [250],
 }
-
-
+"""
 
 #Tune the model
-#sub_model = xgb.train(xgb_params, 
-#                      dtrain_sub, 
-#                      num_boost_round=2000,
-#                      evals=[(d_val, 'val')],
-#                      early_stopping_rounds=20, 
-#                      verbose_eval=50)
+sub_model = xgb.train(xgb_params, 
+                      dtrain_sub, 
+                      num_boost_round=2000,
+                      evals=[(d_val, 'val')],
+                      early_stopping_rounds=20, 
+                      verbose_eval=50)
 print(datetime.now())
 
 #cv = xgb.cv(xgb_params, dtrain, num_boost_round = 5000, nfold = 5, metrics = {"rmse"})
@@ -248,7 +248,7 @@ print(datetime.now())
 ## Now let's run a grid search:
 
 xgb_model = xgb.XGBRegressor()
-opt_GBM = GridSearchCV(xgb_model,gridsearch_params, cv = 5, verbose = 1) 
+opt_GBM = GridSearchCV(xgb_model,gridsearch_params, cv = 5, n_jobs = 4, verbose = 1) 
 opt_GBM.fit(X_train, Y_train)  
 print(opt_GBM.grid_scores_)
 print(opt_GBM.best_estimator_)
@@ -259,12 +259,23 @@ print(datetime.now())
 
 #%%
 #Train the model
-full_model = xgb.train(dtrain, **opt_GBM.best_params_)
+full_model = xgb.train(opt_GBM.best_params_, dtrain)
+full_model.save_model('xgb0002.model')
+
+#%%
+#Create the importance plot (I wish I could do this remotely)
+#fig, ax = plt.subplots(figsize=(12,18))
+#xgb.plot_importance(model, max_num_features=50, height=0.8, ax=ax)
+#plt.savefig('figure/xgb_importance_' + time.strftime('%Y%m%d-%H%M') + '.png') 
 
 #predict the prices from the test data
 y_pred = full_model.predict(dtest)
 
+# Transform from ln(price) to regular price
+y_pred = np.exp(y_pred)
+
 #%%
 #Write them to csv for submission
-submit = pd.DataFrame({'id': np.array(test.index), 'log_price': y_pred})
-submit.to_csv('submissions/submission_xgb3.csv', index=False)
+submit = pd.DataFrame({'id': np.array(test.index), 'price_doc': y_pred})
+savefile = 'submissions/submission_xgb_' + time.strftime('%Y%m%d-%H%M') + '.csv'
+submit.to_csv(savefile, index=False)
