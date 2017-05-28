@@ -1,9 +1,11 @@
-
-
+#we import data
 train_raw = read.csv('train_total.csv', header=TRUE)
 test_raw = read.csv('test_total.csv', header=TRUE)
 raions = read.csv("raion_clusters.csv")
 
+#select a subset of it (this can vary, I've tried multiple subsets)
+#we performance the same functions for both test and train data (besides selecting
+#price_doc in train but no test)
 reducedTrainData = dplyr::select(train_raw,price_doc,timestamp,full_sq,life_sq,
                                  floor,max_floor,material,build_year,num_room,
                                  kitch_sq,state,product_type,sub_area,kremlin_km,
@@ -45,21 +47,21 @@ inputedTest$product_type <- droplevels(inputedTest$product_type)
 library(randomForest)
 #this will take a while to execute, at least 30 minutes
 library(doMC)
-# register 3 cores to be used
+# register 4 cores to be used
 registerDoMC(4)
 
 rf.base = foreach(ntree=rep(166, 3), .combine=combine, .multicombine = TRUE,
                   .packages='randomForest') %dopar% {
                     randomForest(price_doc ~ ., data = inputedTrain)
                   }
-
+#this gives us our prediction
 prediction = predict(rf.base,inputedTest)
 #write the prediction, if you modify the headers and add the id's
 #you can submit to kaggle
 write.csv(prediction,"rfPrediction.csv")
 rf.base
 
-
+#this generates figures we use in the slides
 svg('importance.svg')
 importance(rf.base)
 dev.off()
@@ -67,7 +69,8 @@ svg('varImpPlot.svg')
 varImpPlot(rf.base)
 dev.off()
 
-
+#this takes a very long time to run, it's used in the slides
+#to determine the optimal number of variables
 oob.err = numeric(16)
 for (mtry in 1:16) {
     fit = randomForest(price_doc ~ ., data = inputedTrain, mtry=mtry)
@@ -81,18 +84,11 @@ plot(1:16, oob.err, pch = 16, type = "b",
      ylab = "OOB Mean Squared Error",
      main = "Random Forest OOB Error Rates\nby # of Variables")
 dev.off()
-library(gbm)
-boost.base = gbm(price_doc ~ ., data = inputedTrain,
-                   distribution = "gaussian",
-                   n.trees = 1000000,
-                   interaction.depth = 4)
-n.trees = seq(from = 100000, to = 1000000, by = 100000)
-predmat = predict(boost.base, newdata = inputedTrain, n.trees = n.trees)
-berr = with(inputedTrain, apply((predmat - price_doc)^2, 2, mean))
 
-svg('boosting_test_err.svg')
-plot(n.trees, berr, pch = 16,
-     ylab = "Mean Squared Error",
-     xlab = "# Trees",
-     main = "Boosting Test Error")
-dev.off()
+
+
+library(forestFloor)
+#these give us a color coded plot of each of the variables performances
+ff = forestFloor(rf.base,inputedTrain)
+Col = fcol(ff,cols=1,outlier.lim = 2.5)
+plot(ff,col=Col,plot_GOF =T)
