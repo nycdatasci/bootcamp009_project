@@ -231,12 +231,12 @@ gridsearch_params = {
 """
 
 #Tune the model
-#sub_model = xgb.train(xgb_params, 
-#                      dtrain_sub, 
-#                      num_boost_round=2000,
-#                      evals=[(d_val, 'val')],
-#                      early_stopping_rounds=20, 
-#                      verbose_eval=50)
+sub_model = xgb.train(xgb_params, 
+                      dtrain_sub, 
+                      num_boost_round=2000,
+                      evals=[(d_val, 'val')],
+                      early_stopping_rounds=20, 
+                      verbose_eval=50)
 print(datetime.now())
 
 #cv = xgb.cv(xgb_params, dtrain, num_boost_round = 5000, nfold = 5, metrics = {"rmse"})
@@ -260,7 +260,7 @@ print(datetime.now())
 #%%
 #Train the model
 full_model = xgb.train(opt_GBM.best_params_, dtrain)
-full_model.save_model('xgb0001.model')
+full_model.save_model('xgb0002.model')
 
 #%%
 #Create the importance plot (I wish I could do this remotely)
