@@ -58,8 +58,8 @@ macro <- read_csv("./macro.csv",
 train <- read_csv("~/GoogleDrive/NYCDSA/bootcamp009_project/Project3-MachineLearning/aull_dobbins_ganemccalla_schott/data/imputedTrainLimitedVariables.csv", 
                   col_types = cols(timestamp = col_datetime(format = "%m/%d/%y")))
 
-price = data.frame(train$timestamp,train$price_doc,train$full_sq,train$sub_area)
-colnames(price) = c('timestamp','price_doc','full_sq','sub_area')
+price = data.frame(train$timestamp,train$price_doc,train$full_sq,train$sub_area,train$kremlin_km)
+colnames(price) = c('timestamp','price_doc','full_sq','sub_area','kremlin_km')
 
 ############################# Data Cleaning & Feature Extraction ################################
 
@@ -159,11 +159,17 @@ a = lm(price_square_meter ~ brent_rub + lending_spread + rent_price_1room_bus, m
 summary(a)
 BIC(a)
 
-#RE_Index = data.frame(macro$timestamp,a$fitted.values)
-#colnames(RE_Index) = c('timestamp','RE_Macro_Index')
-#write.csv(RE_Index, file = 'RE_Macro_Index',row.names = FALSE)
+RE_Index = data.frame(macro$timestamp,a$fitted.values)
+colnames(RE_Index) = c('timestamp','RE_Macro_Index')
+write.csv(RE_Index, file = 'RE_Macro_Index',row.names = FALSE)
 
-inputedTestLimitedVariables <-
+test <-
   read_csv("~/GoogleDrive/NYCDSA/bootcamp009_project/Project3-MachineLearning/aull_dobbins_ganemccalla_schott/aull/Time Series First Pass in R/inputedTestLimitedVariables.csv",
            col_types = cols(timestamp = col_datetime(format = "%m/%d/%y")))
+test$timestamp = as.Date(test$timestamp)
+
+test = left_join(test,RE_Index)
+
+rf.complete = randomForest(price_doc ~ ., train)
+
 
