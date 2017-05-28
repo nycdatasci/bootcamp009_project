@@ -1,23 +1,10 @@
 library(psych)
-library(reshape2)
-library(lubridate)
-library(xts)
 library(ggplot2)
 library(ggthemes)
 library(readr)
 library(corrplot)
-library(MTS)
 library(stats)
-library(xts)
-library(zoo)
 library(dlmodeler)
-library(vars)
-library(tseries)
-library(prophet)
-library(dse)
-library(corrplot)
-library(forecast)
-library(TTR)
 library(caTools)
 library(quantmod)
 library(urca)
@@ -25,8 +12,9 @@ library(dplyr)
 
 set.seed(0)
 
-############### Import Macro Data and Training Data To Construct Dependent Variable ####################
+############### Import Macro Data and Training Data To Construct Macro Variable ####################
 
+## Kaggle-provided Macro Data.
 macro_f <- read_csv("./macro.csv", 
                   col_types = cols(apartment_fund_sqm = col_number(), 
                                    average_provision_of_build_contract = col_number(), 
@@ -53,33 +41,35 @@ macro_f <- read_csv("./macro.csv",
                                    salary_growth = col_number(), students_state_oneshift = col_number(), 
                                    timestamp = col_date(format = "%Y-%m-%d")))
 
-
+# Training Set After Cleaning & Imputation by Scott.
 train <- read_csv("~/GoogleDrive/NYCDSA/bootcamp009_project/Project3-MachineLearning/aull_dobbins_ganemccalla_schott/data/imputed/train_total.csv", 
                         col_types = cols(timestamp = col_date(format = "%Y-%m-%d")))
 train$timestamp = as.Date(train$timestamp)
 
+# Test Set After Cleaning and Imputation by Scott.
 test <- read_csv("~/GoogleDrive/NYCDSA/bootcamp009_project/Project3-MachineLearning/aull_dobbins_ganemccalla_schott/data/imputed/test_total.csv", 
                  col_types = cols(timestamp = col_datetime(format = "%Y-%m-%d")))
 test$timestamp = as.Date(test$timestamp)
 
+# Extract major series from train set for modelling against macro data.
 price = data.frame(train$timestamp,train$price_doc,train$full_sq,train$sub_area,train$kremlin_km)
 colnames(price) = c('timestamp','price_doc','full_sq','sub_area','kremlin_km')
 
 ############################# Data Cleaning & Feature Extraction ################################
 
-########### Clean-up of Clearly Mistaken Data
+########### Clean-up of Clearly Mistaken Data in Macro Set
 
-## Clearly incorrect values that are imputed from the prior month's value.
+## Incorrect values / imputing from the prior month's value.
 macro_f$rent_price_2room_eco <- ifelse(macro_f$rent_price_2room_eco == .1, 40.25, macro_f$rent_price_2room_eco)
 macro_f$rent_price_1room_eco <- ifelse(macro_f$rent_price_1room_eco == '2.31', 32.61, macro_f$rent_price_1room_eco)
 
-########### Feature Creation
+########################################## Feature Creation
 
 ## Calculate price / square meter.
 price = price %>%
   mutate(p_sqm = price_doc / full_sq)
 
-## Calculate barrel oil in rubles.  Oil is a major source of exports (and highly correlated
+## Calculate barrel of oil in rubles.  Oil is a major source of exports (and highly correlated
 ## with its other mineral/energy exports).  Revenue at the local currency level represent
 ## Russia's true cash inflows for its exports that take into account both the international
 ## price for oil and Russia's exchange rate.
@@ -87,20 +77,24 @@ macro_f = macro_f %>%
   mutate(brent_rub = brent * usdrub)
 macro_f$macro_brent = NULL
 
-## The metric represents the amount of profit that a bank makes on a loan.  The larger the
-## the spread, the greater incentive the bank has to lend, which is the main source of credit
-## for real estate when credit is used.
+## Lending spread represents the amount of profit that a bank makes on a loan.  The larger the
+## the spread, the greater incentive the bank & other credit intermediaries have to lend, which
+## is the main source of credit for real estate *when* credit is used.
 macro_f = macro_f %>%
   mutate(lending_spread = mortgage_rate - deposits_rate)
 
 ############## Feature Extraction through Aggregation, Smoothing, and Rate of Change
 
-## Aggregate duplicate observations for one date due to time series analysis limitation.
+## Aggregate duplicate observations for one date for time series analysis.
 price = aggregate(x=price$p_sqm, by = list(unique.timestamp = price$timestamp), FUN=mean, na.rm=TRUE)
 colnames(price) = c('timestamp','price_square_meter')
 price$timestamp = as.Date(price$timestamp)
 
-## Take sixty day moving average.
+## Take 90-day moving average on more stable metrics and 200-day moving average on more volatile metrics.
+## The point here is to smooth its medium-term trend from short-term & transactional noise, along with measurement
+## intervals for the monthly time series that can be easily observed. I use a higher level of smoothing on the financial
+## market variables, which is particularly necessary for Brent oil in rubles.
+
 price$price_square_meter = runmean(price$price_square_meter,90)
 macro_f$brent_rub = runmean(macro_f$brent_rub,200)
 macro_f$mortgage_rate = runmean(macro_f$mortgage_rate,200)
@@ -110,19 +104,9 @@ macro_f$rent_price_2room_bus = runmean(macro_f$rent_price_2room_bus,90)
 macro_f$rent_price_1room_eco = runmean(macro_f$rent_price_1room_eco,90)
 macro_f$rent_price_2room_eco = runmean(macro_f$rent_price_2room_eco,90)
 
-# Note the base lagged price / square meter for calculating rate of change.
-# This is later used to test predictions in the multi-transaction training set.
+## Calculate the 400-day rate of change on each variable (% change over ~13-14 months) with necessary
+## smoothing that allows for the medium-term trend to be illustrated.
 
-#for (i in seq(nrow(price),401)) {  
-#  price$p_sqm_lagged[i] = price$price_square_meter[(i-400)]
-#}
-
-#psqmlagged = data.frame(price$timestamp,price$p_sqm_lagged)
-#colnames(psqmlagged) = c('timestamp','p_sqm_lagged')
-
-#price$p_sqm_lagged = NULL
-
-## Calculate the rates of change based on estimated/optimized lag in impact (in days).
 price$price_square_meter = Delt(price$price_square_meter, k = 400)
 macro_f$brent_rub = Delt(macro_f$brent_rub, k = 400)
 macro_f$mortgage_rate = Delt(macro_f$mortgage_rate, k = 400)
