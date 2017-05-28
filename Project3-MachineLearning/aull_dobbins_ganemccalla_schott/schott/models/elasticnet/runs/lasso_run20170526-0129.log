@@ -1,0 +1,12 @@
+float64:log_fullsq:0.00549919177763
+float64:num_room:0.00436276948545
+int64:max_floor:0.001225461623
+float64:kremlin_km:0.0163646150654
+float64:log_kitchsq:-0.00729344153345
+float64:basketball_km:-0.00674594721348
+best CV score:0.366188081191
+best params:{'alpha': 1.0000000000000001e-05, 'l1_ratio': 0.7}
+train MSE:0.364955950751
+Adjusted R^2:0.0005
+AIC:-5.14080374287
+BIC:40.3294791791

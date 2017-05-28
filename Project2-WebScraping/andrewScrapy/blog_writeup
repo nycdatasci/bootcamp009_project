@@ -1,0 +1,65 @@
+Provides clear purpose and subject:
+Who is the target audience?
+What are the questions you are trying to answer from the dataset?
+Pertinent examples, graphs, and/or statistics; supports conclusions/ideas with evidence.
+There is a conclusion summarizing the presentation.
+
+The Motivation
+Data Collection (scrapy part)
+Examples, Graphs, etc (Insight)
+Logistic Regression Predictions (Predictions)
+Further Improvements
+
+
+Intro
+The Great Bambino. The Big Unit. Rocket. Henry Rowengarter. If you're familiar with the sport of baseball, you might recognize some of these names from real life or the movies. Since baseball has been engrained in the fabric of America for almost 200 years, and since it is my favorite sport, I decided that I thought it might be fun to look back at some of the best players to ever play the game, and see how modern day players stack up against them.
+
+The Motivation
+Sports analytics has taken a huge leap in the recent years, and with the wealth of data available for baseball, many teams are employing analytics departments to extract value out of statistics. Similary, I decided to scrape the hall of fame players on baseballreference.com to determine how good a baseball has to be in order to be inducted. Additionally, I took a sample of data from players that have played since 1989 and investigated their statistics in order to predict whether or not they might be elibigle to make the hall of fame.
+
+Extracting the Data
+The parent URL I used to extract Hall of Fame player statistics was on Baseball Reference, an baseball database that has all the baseball statistics one could ever wish for.: http://www.baseball-reference.com/awards/hof.shtml. I had to write two separate spiders to take into account the different statistics used to measure a batter's statistical output and a pitcher's statistical output. All in all, there are 163 batters in the baseball hall of fame, which translates to a file of roughly 3500 rows. There are 77 pitchers in the hall of fame, which translates to a file of about 1600 rows. The data for more recent players was downloaded and filtered to include only batters that had over 500 plate appearances per year, and only pitchers who pitched over 150 innings per year in order to normalize numbers.
+
+Examples
+First, I took a look at batters. I wanted to get a sense of the distribution of number home runs are hit per season for hall of fame batters, as well as number of hits per season. The histograms look like this:
+
+# Insert plots here
+
+Hitting a high number of home runs don't appear to be a huge indication of making it to the hall of fame, although it probably doesn't hurt. We do see that on average, there are roughly 160 games hit per year most frequently, which translates to about one hit per game. A batter that bats .300 for a season, or fails to get a hit 70% of their at bats, is considered a great hitter. I also plotted the total number of strikeouts against number of walks, and noticed that many HOF hitters had tremendous plate discipline (walks were greated than strikeouts).
+
+# insert plot
+
+Finally, I plotted the batter based on OPS, or On Base Percentage plus Slugging Percentage, a general statistic to measure the overall value of a player. Suffice to say, I was not surprised to see Babe Ruth at the top of that list.
+
+# Insert plot
+
+For pitchers, I mostly wanted to see their performance in terms of outcomes they could control, which are home runs allowed, strikeouts, and walks. I plotted the strikeouts per nine innings against the walks per nine innings. We see an interesting linear trend, where the higher the strikeout nubmers, the higher the walks. This could say something about the pithcers ability to spin and curve the baseball in order to deceive hitters, which might lead to a lot of strikeouts but also less control.
+
+# Insert plot.
+
+In order to measure overall value of a pitchers, I measured their FIP, or fielding independent pitching. This takes into account number of home runs allowed, number of strikeouts, number of walks, and a constant number to normalize the statistic. The lower the FIP, the better.
+
+# Insert plot
+
+Big Ed Walsh is, according to FIP, the best pitchers in the hall of fame, followed by the more contemporary Pedro Martinez.
+
+
+Predicting Hall of Famers
+Since I had the hall of fame statistics, I figure that I could use these as a baseline and try to write a logistic regression model that would take data for more recent players and predict whether or not they would would make the hall of fame. I combined my hall of fame data with the separate subset of players, and then used cross-validation to train the model, then predict and test it on the test set. There are a few things worth noting for the model:
+- I only used one training and test set, and could have used a higher K value to cross-validate the model.
+- The data is highly biased, as I could have grabbed more data for non hall of fame players, but due to time contraints, did not.
+- We could use more advanced statistics to more accurately predict, but I used the data from the statistics I scraped.
+
+For predicting pitchers, I used backwards selection, and tested the correlation between each variable to make sure there was as little multicollinearity as possible. I then created a binary variable to categorized players that are in the hall of fame versus those who aren't. For batters, my best model had hits per season as the most significant predictor (the higher the better), followed by overall strikeout rate (the lower the better). The accuracy of this model was 97%, which beat the baseline of 83% by a wide margin. The accuracy was very high and variance was very low, and I definitely could have used more data to obtain a better model.
+
+For pitchers, my best predictor was walks and hits per inning (the fewer the better), and homeruns per 9 innings (fewer the better). FIP also was included in the model, though including it might have not been necessary, as it is essentially a total measure of homeruns, walks, and strikeouts. The accuracy of this model was 95%, which beat the baseline model of 90%. Again, this was highly biased due to lack of data and cross-validating my model.
+
+
+Further Improvements
+More data, more cross-validating, more advanced statistics.
+Babe Ruth is the best hitter, Ed Walsh the best pitcher.
+Baseball teams, please hire me.
+
+
+
+

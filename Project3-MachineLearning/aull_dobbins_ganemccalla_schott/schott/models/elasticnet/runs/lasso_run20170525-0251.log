@@ -1,0 +1,30 @@
+float64:basketball_km:125676.929088
+float64:big_church_km:-169690.159953
+float64:big_road1_km:-324124.725543
+float64:bulvar_ring_km:-463009.83607
+float64:bus_terminal_avto_km:36293.9842317
+float64:cemetery_km:40342.5782768
+float64:fitness_km:-281572.256742
+int64:full_sq:1650823.92422
+float64:green_part_1500:-11893.0363413
+float64:ice_rink_km:293828.665416
+float64:kremlin_km:2550163.67412
+float64:mkad_km:1183705.05069
+float64:mosque_km:-167897.922853
+float64:prom_part_1500:-603805.568831
+float64:public_transport_station_km:178245.752908
+float64:railroad_km:536900.496898
+float64:railroad_station_avto_min:-345910.646574
+float64:school_km:-764203.71012
+float64:theater_km:208146.576206
+float64:ttk_km:-3174874.67079
+float64:water_treatment_km:390698.098032
+float64:workplaces_km:-551289.445683
+float64:zd_vokzaly_avto_km:-158013.726498
+int64:yearmonth:591841.895671
+best CV score:2.93200324305e+13
+best params:{'alpha': 1.0000000000000001e-05, 'l1_ratio': 1.0}
+train MSE:1.69779951958e+13
+Adjusted R^2:0.2571
+AIC:-33.5749398238
+BIC:166.213796751

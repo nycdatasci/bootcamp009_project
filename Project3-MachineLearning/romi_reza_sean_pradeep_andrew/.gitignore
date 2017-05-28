@@ -1,0 +1,50 @@
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# virtualenv
+.venv
+venv/
+ENV/
+
+# pyenv
+.python-version
+.pyc
+
+# Packages #
+############
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Logs and Data #
+######################
+*.log
+*.sql
+*.sqlite
+*.sqlite3
+*.db
+*.csv
+
+# Folders #
+######################
+reza/data/
+
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Icon?
+
+# API Keys/Config File #
+#####################
+*.ini

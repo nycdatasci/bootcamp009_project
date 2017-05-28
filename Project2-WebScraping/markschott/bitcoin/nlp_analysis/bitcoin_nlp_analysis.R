@@ -1,34 +1,24 @@
 library(syuzhet)
 
-### I want to calculate the normalized interpretations for sentences and words for all 4 models
-### That means I'll end up with 8 values
+### Carry out the sentiment analysis on some articles from 99bitcoins.com
+### Using about 1/2 and 1/2 full articles to summaries.
+### In addition I'll do a nrc_sentiment analysis over time
 
-#news = read.csv('../data/bitcoin_news_99bitcoins.csv', stringsAsFactors = F)
-# strip dollar signs from val and val_after_10_days
 news = readRDS('news.Rds')
-news$val = as.numeric(sapply(news$val, function(x) gsub('\\$','',x)))
-news$val_after_10days = as.numeric(sapply(news$val_after_10days, function(x) gsub('\\$','',x)))
+
+# Remove dollar signs from what should be numeric values
+#news$val = as.numeric(sapply(news$val, function(x) gsub('\\$','',x)))
+#news$val_after_10days = as.numeric(sapply(news$val_after_10days, function(x) gsub('\\$','',x)))
 
 ###
-## Fill in missing values from the headline blurb
-#fill_in_missing = function(x) {
-#  indy = which(news$long_story==x)
-#  if (x=='') {
-#    x=news$story[indy]
-#  }
-#}
-
-for (i in seq(1:61)) {
-  if (news$long_story[i] == '') {
-    print(i)
-    news$long_story[i] = news$story[i]
+## Fill in missing values from the long stories with the summary of the article in the story column
+fill_in_missing = function(x) {
+  indy = which(news$long_story==x)
+  if (x=='') {
+    x=news$story[indy]
   }
 }
 
-#news$long_story = sapply(news$long_story, fill_in_missing)
-
-# Calculate 10 day price difference from column
-news$val_diff = news$val_after_10days - news$val
 
 # Define the token function
 get_tokes = function(x, meth) {
@@ -70,7 +60,6 @@ syuz_vec = sapply(news$story, get_vecs, meth = 'syuzhet')
 #afinn_vec = sapply(news$story, get_vecs, meth = 'afinn')
 #nrc_vec = sapply(news$story, get_vecs, meth = 'nrc')
 
-model = lm(news$val_diff ~ syuz_vec)
 
 svg(paste0('sentences','.svg'))
 plot(jitter(syuz_vec), news$val_diff, xlab = 'Sentiment score',
@@ -80,11 +69,6 @@ plot(jitter(syuz_vec), news$val_diff, xlab = 'Sentiment score',
 abline(model,lty=2)
 #legend("topleft", c("Regression Line", "Conf. Band", "Pred. Band"),
 #       lty = c(2, 1, 1), col = c("black", "blue", "red"))
-str1 = paste('Intercept p =','0.986')
-str2 = paste('Slope p =','0.284')
-str3 = paste('Overall p =','0.2837')
-str4 = paste('R^2 =','0.02125')
-legend("topleft", c(str1,str2,str3,str4))
 #points(jitter(bing_vec), news$val_diff, col= 'red')
 #points(jitter(afinn_vec), news$val_diff, col= 'blue')
 #points(jitter(nrc_vec), news$val_diff, col= 'green')
@@ -105,6 +89,7 @@ syuz_long_word = sapply(news$long_story, get_tokes, meth = 'syuzhet')
 #dev.off()
 
 syuz_long_vec = sapply(news$long_story, get_vecs, meth = 'syuzhet')
+model = lm(news$val_diff ~ syuz_long_vec)
 #bing_long_vec = sapply(news$long_story, get_vecs, meth = 'bing')
 #afinn_long_vec = sapply(news$long_story, get_vecs, meth = 'afinn')
 #nrc_long_vec = sapply(news$long_story, get_vecs, meth = 'nrc')
@@ -115,6 +100,11 @@ plot(syuz_long_vec, news$val_diff,
      xlab = 'Sentiment Score',
      ylab = '10 Day Price Difference',
      col = 'blue')
+#str1 = paste('Intercept p =','0.986')
+#str2 = paste('Slope p =','0.284')
+#str3 = paste('Overall p =','0.2837')
+#str4 = paste('R^2 =','0.02125')
+legend("topleft", c(str1,str2,str3,str4))
 #points(bing_long_vec, news$val_diff, col= 'red')
 #points(afinn_long_vec, news$val_diff, col= 'blue')
 #points(jitter(nrc_long_vec), news$val_diff, col= 'green')
@@ -176,15 +166,15 @@ row.names(feels) = seq(1:61)
 feels$event_no = news$event_no
 #feels$price = news$val
 plot(feels$event_no, feels$anger, col='red',type='l')
-points(feels$event_no, feels$anticipation, col='blue',type='l')
-points(feels$event_no, feels$disgust, col='#abd8a0', type='l')
-points(feels$event_no, feels$fear, col='black',type='l')
-points(feels$event_no, feels$joy, col='#e54dff',type='l')
-points(feels$event_no, feels$sadness, col='purple',type='l')
-points(feels$event_no, feels$surprise, col='red',type='l')
-points(feels$event_no, feels$trust, col='blue',type='l')
-points(feels$event_no, feels$negative, col='#3c0017',type='l')
-points(feels$event_no, feels$positive, col='blue',type='l')
+points(feels$event_no, feels$anticipation, col='blue')
+points(feels$event_no, feels$disgust, col='#abd8a0')
+points(feels$event_no, feels$fear, col='black')
+points(feels$event_no, feels$joy, col='#e54dff')
+points(feels$event_no, feels$sadness, col='purple')
+points(feels$event_no, feels$surprise, col='red')
+points(feels$event_no, feels$trust, col='blue')
+points(feels$event_no, feels$negative, col='#3c0017')
+points(feels$event_no, feels$positive, col='blue')
 
 ### Need to clean this data frame
 library(tidyr)
@@ -192,8 +182,41 @@ feels = gather(feels, event_no)
 names(feels) = c('event_no','emotion','degree')
 
 ### Too many lines for one plot... I'll do a facet wrap
-svg(paste0('emotion_facet_wrap','.svg'))
+#svg(paste0('emotion_facet_wrap','.svg'))
 library(ggplot2)
-feels %>% ggplot(aes(event_no, degree)) + geom_line() +
-  facet_wrap(~emotion)
+feels %>% ggplot(aes(event_no, degree)) + geom_point() +
+  facet_wrap(~emotion) + geom_smooth(method='lm')
+
+#dev.off()
+feels_pos = feels %>% filter(emotion == 'positive')
+method.pos = lm(degree ~ event_no, data = feels_pos)
+summary(method.pos)
+plot(method.pos)
+
+feels_neg = feels %>% filter(emotion == 'negative')
+method.neg = lm(degree ~ event_no, data = feels_neg)
+summary(method.neg)
+plot(method.neg)
+
+# Trust method has lowest p value so I will use this for demonstration
+feels_trust = feels %>% filter(emotion == 'trust')
+method.trust = lm(degree ~ event_no, data = feels_trust)
+summary(method.trust)
+plot(method.trust)
+
+###########################################3
+
+conf.band = predict(method.trust, feels_trust, interval = "confidence")
+pred.band = predict(method.trust, feels_trust, interval = "prediction")
+
+#Visualizing the confidence and prediction bands.
+svg('trust.svg')
+plot(feels_trust$event_no, feels_trust$degree, xlab = "Event Number", ylab = "Degree of Emotion",
+     main = "nrc_sentiment Trust over Time for 99Bitcoins.com News Articles")
+abline(method.trust, lty = 2)
+
+lines(feels_trust$event_no, conf.band[, 2], col = "blue") #Plotting the lower confidence band.
+lines(feels_trust$event_no, conf.band[, 3], col = "blue") #Plotting the upper confidence band.
+lines(feels_trust$event_no, pred.band[, 2], col = "red") #Plotting the lower prediction band.
+lines(feels_trust$event_no, pred.band[, 3], col = "red") #Plotting the upper prediction band.
 dev.off()

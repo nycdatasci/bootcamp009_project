@@ -1,0 +1,9 @@
+float64:log_fullsq:0.0
+int64:max_floor:0.0
+float64:basketball_km:-0.0
+best CV score:0.357173347797
+best params:{'alpha': 0.37649358067924715, 'l1_ratio': 0.9}
+train MSE:0.356614999942
+Adjusted R^2:0.0000
+AIC:-11.6817967496
+BIC:11.9341939068

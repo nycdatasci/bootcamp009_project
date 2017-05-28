@@ -32,15 +32,7 @@ class SpiderDodger(scrapy.Spider):
 
 		for link in links:
 			new_url = 'http://www.baseball-reference.com' + link
-			# >>>>>>>> remove all the print statements once your are done. <<<<<<<<<
-			print new_url
 			yield scrapy.Request(new_url, callback = self.parse_player)
-
-		# for testing
-		# new_url = "http://www.baseball-reference.com/players/p/piazzmi01.shtml"
-		# yield scrapy.Request(new_url, callback = self.parse_player)
-		# new_url = "http://www.baseball-reference.com/players/r/ruthba01.shtml"
-		# yield scrapy.Request(new_url, callback = self.parse_player)
 
 
 
@@ -50,20 +42,12 @@ class SpiderDodger(scrapy.Spider):
 		scrape the player pages
 		'''
 		# Find the positions, and pass any that are equal to pitchers
-		try:
+		if response.xpath('//*[@id="meta"]/div[2]/p[1]/text()').extract() == []:
+			position = ""
+		else:
 			position = str(response.xpath('//*[@id="meta"]/div[2]/p[1]/text()').extract()[1].strip())
-		except IndexError:
-			print "Out of range"
 
-		# >>>>>>>> First of all, you can combine these two by rewriting the verify function. <<<<<<<<
-		# >>>>>>>> Second, I am not sure when the verify function will throw an error. <<<<<<<<<<<<<<<
-		try:
-			position = self.verify(position)
-		except AttributeError:
-			print "No position"
-
-		# if position == 'Pitcher':
-		# 	pass
+		position = self.verify(position)
 
 		# Player name
 		if not response.xpath('//*[@id="meta"]/div[2]/h1/text()').extract_first():
@@ -71,18 +55,13 @@ class SpiderDodger(scrapy.Spider):
 		else:
 			name = response.xpath('//*[@id="meta"]/div[2]/h1/text()').extract_first()
 
-		try:
-			name = self.verify(name)
-		except AttributeError:
-			print "Could not find name"
+		name = self.verify(name)
 
 		# Defensive Position
 
 
 		rows = response.xpath('//*[@id="content"]//table/tbody/tr')
-		# >>>>>> for row in rows might be more efficient here. <<<<<<<<<<<
-		for i in range(1, len(rows)):
-
+		for row in rows:
 			# Year
 			year = str(rows[i].xpath('./th//text()').extract_first())
 			# Team
@@ -124,42 +103,34 @@ class SpiderDodger(scrapy.Spider):
 			# Intentional Walks
 			ibb = str(rows[i].xpath('./td[27]//text()').extract_first())
 
-		# create another variable like rows for the player value -- batting table. we only want to extract WAR.
-		# pv_rows =
-		# for i in range(1, len(pvrows)):
-		# 	war = blahblahblah
 
-			# >>>>>>> This is not a good practice to use try statements because you don't know which one break your code. <<<<<<<<<<
 			# verify
-			try:
-				year = self.verify(year)
-				# age = self.verify(year)
-				team = self.verify(team)
-				games = self.verify(games)
-				pa = self.verify(pa)
-				ab = self.verify(ab)
-				runs = self.verify(runs)
-				hits = self.verify(hits)
-				hr = self.verify(hr)
-				rbi = self.verify(rbi)
-				sb = self.verify(sb)
-				cs = self.verify(cs)
-				bb = self.verify(bb)
-				so = self.verify(so)
-				ba = self.verify(ba)
-				obp = self.verify(obp)
-				slg = self.verify(slg)
-				ops = self.verify(ops)
-				ops_plus = self.verify(ops_plus)
-				tb = self.verify(tb)
-				ibb = self.verify(ibb)
-			except AttributeError:
-				print "None Type"
+			year = self.verify(year)
+			# age = self.verify(year)
+			team = self.verify(team)
+			games = self.verify(games)
+			pa = self.verify(pa)
+			ab = self.verify(ab)
+			runs = self.verify(runs)
+			hits = self.verify(hits)
+			hr = self.verify(hr)
+			rbi = self.verify(rbi)
+			sb = self.verify(sb)
+			cs = self.verify(cs)
+			bb = self.verify(bb)
+			so = self.verify(so)
+			ba = self.verify(ba)
+			obp = self.verify(obp)
+			slg = self.verify(slg)
+			ops = self.verify(ops)
+			ops_plus = self.verify(ops_plus)
+			tb = self.verify(tb)
+			ibb = self.verify(ibb)
+
 
 			item = HittersItem()
 			item['name'] = name
 			item['year'] = year
-			# item['age'] = age
 			item['team'] = team
 			item['position'] = position
 			item['games'] = games

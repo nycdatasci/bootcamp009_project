@@ -1,0 +1,341 @@
+---
+title: "Kaggle Macro Data EDA, Cleaning"
+author: "Wes Aull"
+date: "May 16, 2017"
+output:
+  html_document: default
+  pdf_document:
+    toc: yes
+---
+
+```{r setup, echo=FALSE, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(lubridate)
+library(xts)
+library(ggplot2)
+library(ggthemes)
+library(readr)
+library(corrplot)
+library(caret)
+library(car)
+library(fastICA)
+library(tree)
+library(randomForest)
+library(neuralnet)
+library(e1071)
+setwd("~/GoogleDrive/NYCDSA/bootcamp009_project/Project3-MachineLearning/aull_dobbins_ganemccalla_schott/aull/Modeling First Pass in R")
+macro <- read_csv("./macro.csv", 
+    col_types = cols(apartment_fund_sqm = col_number(), 
+        average_provision_of_build_contract = col_number(), 
+        average_provision_of_build_contract_moscow = col_number(), 
+        balance_trade_growth = col_number(), 
+        bandwidth_sports = col_number(), 
+        deposits_rate = col_number(), gdp_deflator = col_number(), 
+        gdp_quart = col_number(), gdp_quart_growth = col_number(), 
+        grp_growth = col_number(), hospital_bed_occupancy_per_year = col_number(), 
+        hospital_beds_available_per_cap = col_number(), 
+        incidence_population = col_number(), 
+        modern_education_share = col_number(), 
+        mortgage_growth = col_number(), net_capital_export = col_number(), 
+        oil_urals = col_number(), old_education_build_share = col_number(), 
+        population_reg_sports_share = col_number(), 
+        provision_retail_space_sqm = col_number(), 
+        rent_price_1room_bus = col_number(), 
+        rent_price_1room_eco = col_number(), 
+        rent_price_2room_bus = col_number(), 
+        rent_price_2room_eco = col_number(), 
+        rent_price_3room_bus = col_number(), 
+        rent_price_3room_eco = col_number(), 
+        `rent_price_4+room_bus` = col_number(), 
+        salary_growth = col_number(), students_state_oneshift = col_number(), 
+        timestamp = col_date(format = "%Y-%m-%d")))
+problems(macro) #0 rows - No data corruption as classes were assigned.
+for (i in seq(ncol(macro),2)) {
+  macro[,i] = as.numeric(unlist(macro[,i]))
+}
+# Import the training dat for sake of price (dependent variable) data.  
+train <- read_csv("./train.csv", 
+    col_types = cols(build_year = col_integer(), 
+        max_floor = col_integer(), timestamp = col_date(format = "%Y-%m-%d")))
+colSums(is.na(train))
+
+# Grab the best variables of train set, and join to the macro data set by date.
+train_var_chosen = c('timestamp','price_doc','full_sq','life_sq','floor',
+               'max_floor','build_year','sub_area')
+
+price = data.frame(train$timestamp,train$price_doc,train$full_sq,train$life_sq,train$floor,train$max_floor,train$build_year)
+colnames(price) = c('timestamp','price_doc','full_sq','life_sq','floor',
+                    'max_floor','build_year')
+rm(train)
+
+macro$brent_yoy[1] = c(0)
+for (i in 366:nrow(macro)) {
+  macro$brent_yoy[i] = (macro$brent[i]-macro$brent[i-365]) / macro$brent[i-365]
+}
+macro$brent_yoy = as.numeric(macro$brent_yoy)
+
+macro$usdrub_yoy[1] = c(0)
+for (i in 366:nrow(macro)) {
+  macro$usdrub_yoy[i] = (macro$usdrub[i]-macro$usdrub[i-365]) / macro$usdrub[i-365]
+} 
+macro$usdrub_yoy = as.numeric(macro$usdrub_yoy)
+
+macro$ppi_yoy[1] = c(0)
+for (i in 366:nrow(macro)) {
+  macro$ppi_yoy[i] = (macro$ppi[i]-macro$ppi[i-365]) / macro$ppi[i-365]
+} 
+macro$ppi_yoy = as.numeric(macro$ppi_yoy)
+
+macro$cpi_yoy[1] = c(0)
+for (i in 366:nrow(macro)) {
+  macro$cpi_yoy[i] = (macro$cpi[i]-macro$cpi[i-365]) / macro$cpi[i-365]
+} 
+macro$cpi_yoy = as.numeric(macro$cpi_yoy)
+
+macro$mortgage_rate_yoy[1] = c(0)
+for (i in 366:nrow(macro)) {
+  macro$mortgage_rate_yoy[i] = (macro$mortgage_rate[i]-macro$mortgage_rate[i-365]) / macro$mortgage_rate[i-365]
+} 
+macro$mortgage_rate_yoy = as.numeric(macro$mortgage_rate_yoy)
+
+```
+
+Joining the critical price data to the macro data:
+
+```{r}
+macro = left_join(price,macro, by = 'timestamp')
+rm(price)
+```
+*Initial Read in and View of Macro CSV*
+
+The macroeconomic data csv is read as a dataframe.  Variables properly classified with zero problems (using readr library). 
+
+The data set is made up of 2,484 observations (daily from 1-1-2010 to 10-19-2016) for 100 variables, spanning commodity prices, exchange rates, national demographic data, average rent for apartments of 2,3,4 BR, and others. 
+
+The numbers above do not include the key variables imported from the Kaggle training data set. I've joined these for sake of experimental modelling and dimension reduction to extract worthwhile information from the macro database.
+
+After completing one iteration of this document, it became apparent to me that I should attempt to allocate the fields for rent for a 2,3,4 BR according to the square footage of the apt.  I'm hopeful this will at least boost the linear regression.  I create a mutated field in dplyr assigning the appropriate rent by a rough heuristic for each apartment below:
+
+```{r, echo = TRUE}
+macro = macro %>%
+  mutate(rent = ifelse(full_sq <= 50,(rent_price_1room_bus+rent_price_1room_eco)/2,ifelse(full_sq <= 80,(rent_price_2room_bus+rent_price_2room_eco)/2,ifelse(full_sq <= 110,(rent_price_3room_bus+rent_price_3room_eco)/2,(rent_price_3room_bus+rent_price_3room_eco)/1.5))))
+
+price$logprice = log(price$price_doc)
+ggplot(data = price,aes(x=logprice)) + geom_histogram()
+
+```
+
+*Inspection of NA's:*
+
+Let's look at the NA count per variable.
+
+```{r, echo = FALSE}
+
+colSums(is.na(macro)) # 11 out of 100 variables have 40%+ observations that are NA.
+                      # 40 out of 100 variables have ~25%+ observations that are NA.
+
+```
+
+The macro data set has significant missing values.  9 out of 100 variables have 40%+ observations that are NA.  12 out of 100 variables have ~25%+ observations that are NA.  Inspecting these 12, I don't believe them to be critical indicators or ones that contain a great amount of data.
+
+There's a large set of variables that would seem worthwhile with 1-2 years data missing at the beginning or end of the time series (15 - 25% NA).  They tend to be quarterly data series that are simply repeated every observation until the next quarter release. 
+
+This data is difficult to impute because it is such a large portion of the observations.  The data is also time dependent and in one large cluster for most variables. 
+
+I'd like to simply impute in a way that doesn't reinforce trends in existing data but let the remaining data in the observations stand.  I duplicate data set for cleaning and throw out all variables with more than 13,606 observations missing (>40%). The full, incomplete data set can be considered at a later point for modelling.
+
+```{r, echo=TRUE}
+# For loop counting backwards to delete columns with more than 659 missing obs.
+data = macro
+for (i in seq(ncol(data),1)) {
+  if (sum(is.na(data[,i])) > 13606) {
+    data[,i] = NULL
+  }  
+}
+```
+
+*Inspection of Variables:*
+
+```{r, echo = TRUE}
+summary(data)
+```
+
+There's a good amount of variables that reflect the same data.  GDP Deflator, CPI, and PPI should have correlations very close to one.  Brent and Ural prices should correlate very close to one.  The same can be said for different economic measures of activity and income.
+
+Before making more difficult decisions on imputation, I'd like to play with a few models to see what set should obviously be pared away for a clean / low-dimension data set with collinearities removed. 
+
+I'd rather use the complete observations paired with common sense to conservatively pare any variables, which I draw below.  The complete observations for all variables are ~40% of the data set.
+
+I also standardize the data by its standard deviation and mean using the caret's preProcess function.  I had difficult implementing a YeoJohnson transformation for any variables where possible (essentially Box Cox that's allowed on negative numbers).  I will return to this.
+
+```{r, echo = TRUE}
+complete_data = data[complete.cases(data),]
+complete_data$baths_share = NULL
+complete_data$water_pipes_share = NULL
+complete_data$childbirth = NULL
+complete_data$heating_share = NULL
+complete_data$hot_water_share = NULL
+complete_data$old_house_share = NULL
+complete_data$gdp_deflator = NULL
+preProcessParameters = preProcess(complete_data, method = c('center','scale'))
+complete_stand_data = predict(preProcessParameters,complete_data)
+```
+
+
+It appears that a few variables have the same value throughout the data set.  Our model should remove these ultimately.  I implemented in the coding above.
+
+I begin modelling with a saturated linear regression model:
+
+```{r}
+saturated_linear_regression = lm(price_doc ~ ., complete_stand_data[,2:ncol(complete_stand_data)])
+summary(saturated_linear_regression)
+plot(saturated_linear_regression)
+```
+
+At face value, the entire macro set has no descriptive power in the initial saturated model.  Variance explained was 40.6%.  After I made the following changes, the model then improved to:
+
+*After I assigned apartment appropriate rent, the variance explained increased to 42% and rent became the only macro. variable with a significant p value.*
+
+*After I created trailing yoy change for a set of 5-7 important macro variables, the variance slightly diminished to 41.6%.  There also appears to be a lot of NA values in the lm model, which are odd.*
+
+There are several reasons that the macro variables were so useless:
+
+- a portion of the macro variables are nowhere near normal and may need special transformation.
+- too many highly collinear dimensions are draining any explanatory power from a smaller set.
+- the autocorrelations or time-dependent properties of the macro data could have more explanatory power
+  than its values in a given moment.
+- outside of time series, *these are quarterly and yearly data series.  Their repeated values will be analyzed*
+ *incorrectly for their variance and explanatory power in a data set filled with daily and repeated observations.*
+
+I'll next use forward and backward stepwise variable selection to see if we how much we can quickly improve the linear regression...and see if any macro variables begin to show significance.  
+
+```{r, echo = FALSE}
+model.empty = lm(price_doc ~ 1, data = complete_stand_data) #The model with an intercept ONLY.
+model.full = lm(price_doc ~ full_sq + life_sq + floor + max_floor + gdp_quart + usdrub + oil_urals + micex_rgbi_tr + rent + mortgage_rate, data = complete_stand_data) #The model with ALL variables.
+scope = list(lower = formula(model.empty), upper = formula(model.full))
+
+forwardAIC = step(model.empty, scope, direction = "forward", k = 2)
+backwardAIC = step(model.full, scope, direction = "backward", k = 2)
+#bothAIC.empty = step(model.empty, scope, direction = "both", k = 2)
+#bothAIC.full = step(model.full, scope, direction = "both", k = 2)
+```
+
+The forward stepwise regression pulls the Russian bond market index's value as the only macro variable.  Examining the regression versus our earlier saturated:
+
+```{r, echo = TRUE}
+summary(forwardAIC)
+summary(backwardAIC)
+
+```
+
+
+R-squared barely lower than the original saturated model.  After making different modifications, this selection set seems to be unstable.  I'm beginning to wonder how much dimensionality really can create sub-optimal effects on the modeling process.
+
+VIF appears to rate the micex_rgbi_tr series as an equally important factor. 
+The forward step regression failed to select rent after the variable was appropriately assigned.
+
+
+*VIF:*
+
+```{r, echo = FALSE}
+vif(forwardAIC)
+vif(backwardAIC)
+```
+
+
+And the plots for the forward stepwise model.  Take note of the Influence Plot.  Despite the standardized data, there are some *serious* outlier issues with this data set.  This has to be contributing to the serious under-performance of the regression model.  For an economic valuation time series (value of a real estate asset), 40% variance explained is rather low...even for a noisy economic process:
+
+```{r, echo = FALSE}
+plot(forwardAIC)
+influencePlot(forwardAIC)
+avPlots(forwardAIC)
+plot(backwardAIC)
+influencePlot(backwardAIC)
+avPlots(backwardAIC)
+```
+
+
+
+
+The backward stepwise regression proved computationally very inefficient (I will run later if I can for this document).  It appears that regression is failing to extract signal from the macro data as it stands.
+
+I'm going to try one linear regression of my own choosing:
+
+```{r}
+pared_linear_regression = lm(price_doc ~ full_sq, complete_stand_data[,2:ncol(complete_stand_data)])
+summary(pared_linear_regression)
+plot(pared_linear_regression)
+```
+
+
+R squared remains the same but plenty of variables show statistical significance.  
+
+I will attempt a random forest for the first, more sophisticated, non-linear learner:
+
+```{r, echo = TRUE, cache = TRUE}
+set.seed(0)
+complete_stand_data$`rent_price_4+room_bus` = NULL
+#Re-name at a later point.
+rf.complete_stand_data = randomForest(price_doc ~ full_sq + life_sq + floor + max_floor + gdp_quart + usdrub + oil_urals + micex_rgbi_tr + rent + mortgage_rate, data = complete_stand_data[,2:ncol(complete_stand_data)])
+rf.complete_stand_data
+varImpPlot(rf.complete_stand_data)
+```
+*First, we improve our var. explained from 40 to 52.66%.*  The first five factors from the training set show the same outsized importance, along with the Micex bond index.
+
+*There are other variables finally showing importance that my intuitions say should offer plenty of worhtwhile signal for explaining variance.  Oil and exchange rates are becoming considered.  As well, rent prices, mortgage rates, and other mortgage factors are coming into the picture.*
+
+*The rent price should be able to explain much more variance when it's appropriately assigned to each property based on its relevance (2 BR to a 2BR, 3 BR to a 3 BR, etc...).  This should go on our immediate to do list.*
+
+Next, I attempt to train a neural network on the data:
+
+```{r, echo = TRUE, cache = TRUE}
+train.index = sample(1:13727, 13727*.50)
+test.index = -train.index
+n <- c('full_sq','life_sq','floor','max_floor','gdp_quart','usdrub','oil_urals','micex_rgbi_tr','rent', 'mortgage_rate')
+f <- as.formula(paste("price_doc ~", paste(n[!n %in% "price_doc"], collapse = " + ")))
+nn <- neuralnet(f,data=complete_data[,2:ncol(complete_data)],hidden=c(3,2),linear.output=T)
+plot(nn)
+
+```
+Which sadly, the neural net did not converge on a regression value after training for over 45 minutes on my Macbook Pro.  This likely relates to some tuning on the neuron configuration side and further transformation or paring of the data.
+
+I'll instead attempt an SVM that allows for non-linearity, which should produce similar performance to a neural net.  Let's first look at the linear SVM performance on 50% of the data:
+
+```{r, cache = TRUE}
+train.index = sample(1:13727, 13727*.50)
+test.index = -train.index
+
+svm.mmc.linear = svm(price_doc ~ full_sq + life_sq + floor + max_floor + gdp_quart + usdrub + oil_urals + micex_rgbi_tr + rent + mortgage_rate,
+                     data = complete_data,
+                     subset = train.index,
+                     kernel = "linear",
+                     cost = 1)
+summary(svm.mmc.linear)
+SVM_predicted = predict(svm.mmc.linear, )
+```
+
+Final notes:  I attempted PCA transformation and ICA selection of variables to improve linear regression.  My variance explained actually became worse.
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
