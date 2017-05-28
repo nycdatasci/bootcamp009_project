@@ -1,0 +1,96 @@
+---
+title: "Feature Extraction"
+author: "Wes Aull"
+date: "5/24/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(caret)
+library(tree)
+library(randomForest)
+library(readr)
+library(dplyr)
+
+train <- read_csv("~/GoogleDrive/NYCDSA/bootcamp009_project/Project3-MachineLearning/aull_dobbins_ganemccalla_schott/data/imputedTrainLimitedVariables.csv", col_types = cols(timestamp = col_datetime(format = "%m/%d/%y")))
+train$timestamp = as.Date(train$timestamp)
+
+train$build_year = as.numeric(train$build_year)
+train$kitch_sq = as.numeric(train$kitch_sq)
+train$floor = as.numeric(train$floor)
+
+macro <- read_csv("./macro.csv", 
+    col_types = cols(apartment_fund_sqm = col_number(), 
+        average_provision_of_build_contract = col_number(), 
+        average_provision_of_build_contract_moscow = col_number(), 
+        balance_trade_growth = col_number(), 
+        bandwidth_sports = col_number(), 
+        deposits_rate = col_number(), gdp_deflator = col_number(), 
+        gdp_quart = col_number(), gdp_quart_growth = col_number(), 
+        grp_growth = col_number(), hospital_bed_occupancy_per_year = col_number(), 
+        hospital_beds_available_per_cap = col_number(), 
+        incidence_population = col_number(), 
+        modern_education_share = col_number(), 
+        mortgage_growth = col_number(), net_capital_export = col_number(), 
+        oil_urals = col_number(), old_education_build_share = col_number(), 
+        population_reg_sports_share = col_number(), 
+        provision_retail_space_sqm = col_number(), 
+        rent_price_1room_bus = col_number(), 
+        rent_price_1room_eco = col_number(), 
+        rent_price_2room_bus = col_number(), 
+        rent_price_2room_eco = col_number(), 
+        rent_price_3room_bus = col_number(), 
+        rent_price_3room_eco = col_number(), 
+        `rent_price_4+room_bus` = col_number(), 
+        salary_growth = col_number(), students_state_oneshift = col_number(), 
+        timestamp = col_date(format = "%Y-%m-%d")))
+
+macro_sel = macro %>%
+  select(timestamp, mortgage_growth, deposits_growth, rent_price_1room_eco, rent_price_1room_bus, rent_price_2room_eco, rent_price_2room_bus, rent_price_3room_bus, rent_price_3room_eco, `rent_price_4+room_bus`)
+
+train = left_join(train,macro_sel,by = 'timestamp')
+
+train = train %>%
+  mutate(rent = ifelse(full_sq <= 50,(rent_price_1room_bus+rent_price_1room_eco)/2,ifelse(full_sq <= 80,(rent_price_2room_bus+rent_price_2room_eco)/2,ifelse(full_sq <= 110,(rent_price_3room_bus+rent_price_3room_eco)/2,(rent_price_3room_bus+rent_price_3room_eco)/1.5))))
+
+```
+Let's factorize a set of variables to categorical:
+```{r}
+train$floor = cut(train$floor,5)
+train$material = as.factor(train$material)
+train$build_year = cut(train$build_year,12)
+train$state = as.factor(train$state)
+train$product_type = as.factor(train$product_type)
+train$museum_km = cut(train$museum_km,5)
+train$metro_min_walk = cut(train$metro_min_walk,5)
+train$kremlin_km = cut(train$kremlin_km,6)
+train$num_room = as.factor(train$num_room)
+train$sub_area = as.factor(train$sub_area)
+```
+Let's now run our initial regression:
+```{r pressure, echo=FALSE}
+
+
+saturated_linear_regression = lm(price_doc ~ full_sq+life_sq+floor+material+num_room+kitch_sq+state+product_type+kremlin_km+num_room, train, family = gaussian)
+summary(saturated_linear_regression)
+plot(saturated_linear_regression)
+
+
+
+```
+Ajeroport: Adj. R squared: .52.  Severnoe Butovo: .54  Krylatskoe: .7831
+Lefortovo: 0.5146   Izmajlovo: .5455. Mozhajskoe: .607  Chertanovo Central'noe: .6783
+Shhukino: .7616
+
+
+```{r}
+rf.complete = randomForest(price_doc ~ full_sq+life_sq+floor+material+num_room+kitch_sq+state+product_type+ecology+cafe_avg_price_1000+museum_km+metro_min_walk+kremlin_km+num_room, train[,3:ncol(train)])
+rf.complete
+```
+
+
+```{r}
+
+```
+

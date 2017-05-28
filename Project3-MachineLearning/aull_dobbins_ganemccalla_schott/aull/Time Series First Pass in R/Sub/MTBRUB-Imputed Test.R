@@ -162,3 +162,8 @@ BIC(a)
 #RE_Index = data.frame(macro$timestamp,a$fitted.values)
 #colnames(RE_Index) = c('timestamp','RE_Macro_Index')
 #write.csv(RE_Index, file = 'RE_Macro_Index',row.names = FALSE)
+
+inputedTestLimitedVariables <-
+  read_csv("~/GoogleDrive/NYCDSA/bootcamp009_project/Project3-MachineLearning/aull_dobbins_ganemccalla_schott/aull/Time Series First Pass in R/inputedTestLimitedVariables.csv",
+           col_types = cols(timestamp = col_datetime(format = "%m/%d/%y")))
+

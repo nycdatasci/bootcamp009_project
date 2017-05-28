@@ -138,10 +138,6 @@ macro = macro[complete.cases(macro),]
 price = price[complete.cases(price),]
 
 #Standardizing and transforming data for normality.
-PSQ_preProcessParameters = preProcess(price, method = c('center','scale','YeoJohnson'))
-price = predict(PSQ_preProcessParameters,price)
-qqnorm(price$price_square_meter); qqline(price$price_square_meter, col = 2)
-
 macro = as.data.frame(macro)
 macro_preProcessParameters = preProcess(macro, method = c('center','scale','YeoJohnson'))
 macro = predict(macro_preProcessParameters,macro)
@@ -185,25 +181,25 @@ train = train %>%
   mutate(p_sqm = price_doc / full_sq)
 
 ## Create 120 transaction moving average of price square foot.
-train$p_sqm = runmean(train$p_sqm,120)
+#train$p_sqm = runmean(train$p_sqm,120)
 
-## Bring forward the moving average by 400 days for to apply prediction output.
+## Bring in predictors from macro data and select down to modelling set.
 
 train_original = left_join(train,macro_predictors, by = 'timestamp')
 
 train = train_original %>%
-  select(timestamp,rent_price_2room_bus,mortgage_rate,brent_rub,psq_delt_predict,full_sq,material,product_type,sub_area)
+  select(timestamp,price_doc,psq_delt_predict,full_sq,material,product_type,sub_area,p_sqm)
 
 train = left_join(train,psqmlagged, by = 'timestamp')
 
 train = train[complete.cases(train),]
 
 train = train %>%
-  mutate()
+  mutate(pred_psqf = (1+psq_delt_predict)*p_sqm_lagged)
 
-a = lm(price_square_meter ~ brent_rub + mortgage_rate + rent_price_2room_bus, macro)
+train = train %>%
+  filter(sub_area == 'Tverskoe')
+
+a = lm(price_doc ~ full_sq + material + product_type + pred_psqf,train)
 summary(a)
 BIC(a)
-
-PSQ_preProcessParameters
-
