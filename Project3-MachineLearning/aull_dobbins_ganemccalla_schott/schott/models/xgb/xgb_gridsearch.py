@@ -41,7 +41,7 @@ test_raw = pd.read_csv(os.path.join(DIR_PATH, test_file),
                        index_col='id',
                        parse_dates=['timestamp'])
 
-#%%
+#%%{'colsample_bytree': 0.8, 'silent': 1, 'learning_rate': 0.4, 'min_child_weight': 5, 'n_estimators': 250, 'subsample': 0.8, 'objective': 'reg:linear', 'max_depth': 3}
 ## Trim down the sub_area levels to the top 25 and put all others as there
 ## own separate level
 freq_area = np.array(train_raw.loc[:, 'sub_area'].value_counts()[:25].index)
@@ -229,6 +229,16 @@ gridsearch_params = {
     'n_estimators': [250],
 }
 """
+
+gridsearch_params = {'colsample_bytree': [0.8], 
+                     'silent': [1], 
+                     'learning_rate': [0.4], 
+                     'min_child_weight': [5], 
+                     'n_estimators': [250], 
+                     'subsample': [0.8], 
+                     'objective': ['reg:linear'], 
+                     'max_depth': [3]
+                     }
 
 #Tune the model
 sub_model = xgb.train(xgb_params, 

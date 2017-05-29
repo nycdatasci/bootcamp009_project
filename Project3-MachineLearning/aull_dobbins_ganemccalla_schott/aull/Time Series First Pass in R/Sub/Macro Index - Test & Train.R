@@ -235,9 +235,7 @@ Train_Dates$x = NULL
 colnames(Train_Dates) = c('timestamp','RE_Macro_Index')
 Train_Dates = Train_Dates[1:45,]
 
-RE_Macro_Imputed = rbind(RE_Macro,Train_Dates)
+RE_Macro_Imputed = rbind(Train_Dates,RE_Macro)
 
-#RE_Index = data.frame(macro$timestamp,a$fitted.values)
-#colnames(RE_Index) = c('timestamp','RE_Macro_Index')
-#write.csv(RE_Index, file = 'RE_Macro_Index',row.names = FALSE)
+write.csv(RE_Macro_Imputed, file = 'RE_Macro_Index',row.names = FALSE)
 
