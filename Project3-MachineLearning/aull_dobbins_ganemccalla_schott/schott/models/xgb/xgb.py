@@ -13,10 +13,12 @@ import pandas as pd
 import numpy as np
 import os
 import sys
-#sys.path.append('/home/mes/venv/lib/python2.7/site-packages/')
+sys.path.append('/home/mes/venv/lib/python2.7/site-packages/')
 import xgboost as xgb
 ## label encoding
 import sklearn
+import matplotlib.pyplot as plt
+import time
 
 SUBSET = True
 
@@ -86,13 +88,29 @@ if SUBSET:
                     'max_floor', 'material', 'build_year', 'num_room',
                     'kitch_sq', 'state', 'radiation_km', 'basketball_km',
                     'museum_km', 'metro_km_walk', 'water_km',
+                    'sub_area', 'kremlin_km', 'kindergarten_km',
+                    'public_transport_station_min_walk', 'sadovoe_km',
+                    'railroad_km']
+    """ 
+    ###Best feature set so far
+    features = ['month', 'year', 'full_sq', 'life_sq', 'floor', 
+                    'max_floor', 'material', 'build_year', 'num_room',
+                    'kitch_sq', 'state', 'radiation_km', 'basketball_km',
+                    'museum_km', 'metro_km_walk', 'water_km',
                     'sub_area', 'RE_Macro_Index', 'kremlin_km', 'kindergarten_km',
                     'public_transport_station_min_walk', 'sadovoe_km',
                     'thermal_power_plant_km','railroad_km','big_road1_km',
-                    'big_market_km', ']
-    """ 
-                    'market_shop_km', 'water_treatment_km', 'brent_rub', 
-                    'rent_price_2room_bus'] 
+                    'big_market_km']
+    #maybe green_zone_km
+    
+    # Actually this is the best (2.14552e6)
+        features = ['month', 'year', 'full_sq', 'life_sq', 'floor', 
+                    'max_floor', 'material', 'build_year', 'num_room',
+                    'kitch_sq', 'state', 'radiation_km', 'basketball_km',
+                    'museum_km', 'metro_km_walk', 'water_km',
+                    'sub_area', 'kremlin_km', 'kindergarten_km',
+                    'public_transport_station_min_walk', 'sadovoe_km',
+                    'railroad_km','big_road1_km','big_market_km']
     """
     
     train = train_raw[features]
@@ -152,10 +170,48 @@ xgb_params = {
     'silent': 1
 }
 
+XGBGS = True
+
+if XGBGS:
+    from datetime import datetime
+    from sklearn.grid_search import GridSearchCV
+    xgb_params = {
+            'max_depth' : [5,6,7],
+            'min_child_weight' : [3,5],
+            'learning_rate' : [0.01,0.02,0.03],
+            'objective': ['reg:linear'],
+            }
+    print(datetime.now())
+## Now let's run a grid search:
+    global xgb_model
+    xgb_model = xgb.XGBRegressor()
+    opt_GBM = GridSearchCV(xgb_model,xgb_params, cv = 5, verbose = 1) 
+    opt_GBM.fit(X_train, Y_train)  
+    print(opt_GBM.grid_scores_)
+    print(opt_GBM.best_estimator_)
+    print(opt_GBM.best_score_)
+    print(opt_GBM.best_params_)
+    xgb_params = opt_GBM.best_params_
+
+    print(datetime.now())
+
+"""
+gridsearch_params = {'colsample_bytree': [0.8], 
+                     'silent': [1], 
+                     'learning_rate': [0.4], 
+                     'min_child_weight': [5], 
+                     'n_estimators': [250], 
+                     'subsample': [0.8], 
+                     'objective': ['reg:linear'], 
+                     'max_depth': [3]
+                     }
+
+"""
+
 # Tune the model
 sub_model = xgb.train(xgb_params, 
                       dtrain_sub, 
-                      num_boost_round=2000,
+                      num_boost_round=4000,
                       evals=[(d_val, 'val')],
                       early_stopping_rounds=20, 
                       verbose_eval=50)
@@ -171,7 +227,9 @@ full_model = xgb.train(xgb_params,
 """
 Plot importance
 """
+plt.figure(figsize=(14,14))
 xgb.plot_importance(full_model)
+plt.savefig('xgb_importance.png')
 
 #%%
 # predict the prices from the test data
