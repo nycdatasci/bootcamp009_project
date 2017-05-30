@@ -1,0 +1,71 @@
+
+20170518-180507: ClearCache Node initiated
+
+
+20170518-180507: ClearCache finished: Cache successfully cleared
+
+
+20170518-180507: TestDataPreProcessing Node initiated
+
+
+20170518-180508: TestDataPreProcessing Node finished
+
+
+20170518-180507: TrainDataPreProcessing Node initiated
+
+
+20170518-180509: TrainDataPreProcessing Node finished
+
+
+20170518-180509: Train Node initiated
+
+
+20170518-180510: Shape of split training dataset = (22853, 95)
+
+[0]	train-rmse:8.2065e+06	test-rmse:8.21161e+06
+[50]	train-rmse:2.53974e+06	test-rmse:2.89098e+06
+[100]	train-rmse:2.20286e+06	test-rmse:2.70089e+06
+[150]	train-rmse:2.07411e+06	test-rmse:2.65747e+06
+[200]	train-rmse:1.98022e+06	test-rmse:2.63322e+06
+[250]	train-rmse:1.90464e+06	test-rmse:2.62288e+06
+[300]	train-rmse:1.84187e+06	test-rmse:2.61501e+06
+[350]	train-rmse:1.78237e+06	test-rmse:2.60802e+06
+[400]	train-rmse:1.73008e+06	test-rmse:2.605e+06
+[450]	train-rmse:1.68586e+06	test-rmse:2.60207e+06
+[500]	train-rmse:1.64236e+06	test-rmse:2.59955e+06
+[0]	val-rmse:8.27903e+06
+Will train until val-rmse hasn't improved in 20 rounds.
+[20]	val-rmse:4.1183e+06
+[40]	val-rmse:3.08892e+06
+[60]	val-rmse:2.85503e+06
+[80]	val-rmse:2.78424e+06
+[100]	val-rmse:2.75235e+06
+[120]	val-rmse:2.73534e+06
+[140]	val-rmse:2.71371e+06
+[160]	val-rmse:2.70227e+06
+[180]	val-rmse:2.69255e+06
+[200]	val-rmse:2.68467e+06
+[220]	val-rmse:2.68253e+06
+[240]	val-rmse:2.67889e+06
+[260]	val-rmse:2.66748e+06
+[280]	val-rmse:2.66414e+06
+[300]	val-rmse:2.6623e+06
+[320]	val-rmse:2.66005e+06
+[340]	val-rmse:2.65903e+06
+Stopping. Best iteration:
+[325]	val-rmse:2.65865e+06
+
+Final RMSE = 2658935.93465
+Final R2 = 0.706936333317
+
+20170518-180844: Successfully trained model
+
+
+20170518-180844: Successfully wrote model to pickle
+
+
+20170518-180844: ClearCache Node initiated
+
+
+20170518-180844: ClearCache finished: Cache successfully cleared
+
