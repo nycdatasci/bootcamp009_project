@@ -12,7 +12,6 @@ library(xts)
 library(zoo)
 library(dlmodeler)
 library(vars)
-library(dplyr)
 library(tseries)
 library(prophet)
 library(dse)
@@ -21,6 +20,10 @@ library(forecast)
 library(TTR)
 library(caTools)
 library(quantmod)
+library(urca)
+library(dplyr)
+
+set.seed(0)
 
 ############### Import Macro Data and Training Data To Construct Dependent Variable ####################
 
@@ -51,67 +54,111 @@ macro <- read_csv("./macro.csv",
                                    timestamp = col_date(format = "%Y-%m-%d")))
 
 
-problems(macro) #0 rows - No data corruption classes were assigned.
-
-macro$rent_price_2room_eco <- ifelse(macro$rent_price_2room_eco == .1, 40.25, macro$rent_price_2room_eco)
-
-macro$rent_price_1room_eco <- ifelse(macro$rent_price_1room_eco == 2.31, 32.61, macro$rent_price_1room_eco)
-
-
-for (i in seq(ncol(macro),2)) {
-  macro[,i] = as.numeric(unlist(macro[,i]))
-}
 
 train <- read_csv("~/GoogleDrive/NYCDSA/bootcamp009_project/Project3-MachineLearning/aull_dobbins_ganemccalla_schott/data/imputedTrainLimitedVariables.csv", 
                   col_types = cols(timestamp = col_datetime(format = "%m/%d/%y")))
 
-## Join the data and mutate the dependent variable to be modeled (price / sq. foot).
+price = data.frame(train$timestamp,train$price_doc,train$full_sq,train$sub_area)
+colnames(price) = c('timestamp','price_doc','full_sq','sub_area')
 
-price = data.frame(train$timestamp,train$price_doc,train$full_sq)
-colnames(price) = c('timestamp','price_doc','full_sq')
+############################# Data Cleaning & Feature Extraction ################################
 
-# Log transform (Leaving it turned off right now while doing EDA).
-#price$price_doc = log(price$price_doc)
-#price$full_sq = log(price$full_sq)
+########### Clean-up of Clearly Mistaken Data
 
-#Re-frame data for better features to model at the Russian macro level.
+## Clearly incorrect values that are imputed from the prior month's value.
+macro$rent_price_2room_eco <- ifelse(macro$rent_price_2room_eco == .1, 40.25, macro$rent_price_2room_eco)
+macro$rent_price_1room_eco <- ifelse(macro$rent_price_1room_eco == '2.31', 32.61, macro$rent_price_1room_eco)
 
+########### Feature Creation
+
+## Calculate price / square foot as our dependent variable to model.
 price = price %>%
   mutate(p_sqf = price_doc / full_sq)
 price$price_doc = NULL
 price$full_sq = NULL
 
+## Calculate barrel oil in rubles.  Oil is a major source of exports (and highly correlated
+## with its other mineral/energy exports).  Revenue at the local currency level represent
+## Russia's true cash inflows for its exports that take into account both the international
+## price for oil and Russia's exchange rate.
 macro = macro %>%
   mutate(brent_rub = brent * usdrub)
 macro_brent = NULL
 
+## The metric represents the amount of profit that a bank makes on a loan.  The larger the
+## the spread, the greater incentive the bank has to lend, which is the main source of credit
+## for real estate when credit is used.
+macro = macro %>%
+  mutate(lending_spread = mortgage_rate - deposits_rate)
+
+############## Feature Extraction through Aggregation, Smoothing, and Rate of Change
+
 ## Aggregate duplicate observations for one date due to time series analysis limitation.
 price = aggregate(x=price$p_sqf, by = list(unique.timestamp = price$timestamp), FUN=mean, na.rm=TRUE)
-colnames(price) = c('timestamp','p_sqf')
+colnames(price) = c('timestamp','price_square_meter')
 price$timestamp = as.Date(price$timestamp)
 
-## Take thirty day moving average.
-price$p_sqf = runmean(price$p_sqf,25)
-macro$brent_rub = runmean(macro$brent_rub,25)
+## Take sixty day moving average.
+price$price_square_meter = runmean(price$price_square_meter,60)
+macro$brent_rub = runmean(macro$brent_rub,60)
+macro$mortgage_rate = runmean(macro$mortgage_rate,60)
+macro$lending_spread = runmean(macro$lending_spread,60)
+macro$rent_price_1room_bus = runmean(macro$rent_price_1room_bus,60)
 
-## Calculate the rates of change based on estimated lag factors.
-price$p_sqf = Delt(price$p_sqf, k = 305)
-macro$brent_rub = Delt(macro$brent_rub, k = 228)
-macro$mortgage_rate = Delt(macro$mortgage_rate, k =450)
+# Note the base lagged price / square meter for calculating rate of change.
+# This is later used to test predictions in the multi-transaction training set.
 
+for (i in seq(nrow(price),401)) {  
+  price$p_sqm_lagged[i] = price$price_square_meter[(i-400)]
+}
+
+psqmlagged = data.frame(price$timestamp,price$p_sqm_lagged)
+colnames(psqmlagged) = c('timestamp','p_sqm_lagged')
+
+price$p_sqm_lagged = NULL
+
+## Calculate the rates of change based on estimated/optimized lag in impact (in days).
+price$price_square_meter = Delt(price$price_square_meter, k = 400)
+macro$brent_rub = Delt(macro$brent_rub, k = 300)
+macro$mortgage_rate = Delt(macro$mortgage_rate, k = 300)
+macro$lending_spread = Delt(macro$lending_spread, k = 300)
+macro$rent_price_1room_bus = Delt(macro$rent_price_1room_bus, k = 300)
+
+#Delt function made this column into a matrix, odd.
+price$price_square_meter = as.numeric(price$price_square_meter)
+
+#Selecting the key variables used for our modelling.
 macro = macro %>%
-  select(timestamp,brent_rub,mortgage_rate)
+  select(timestamp,brent_rub,mortgage_rate,lending_spread, rent_price_1room_bus,
+         rent_price_1room_eco,rent_price_2room_bus,rent_price_2room_eco)
 
+#Reducing to complete observations before merger of training and macro data.
 macro = macro[complete.cases(macro),]
 price = price[complete.cases(price),]
 
+#Standardizing and transforming data for normality.
+macro = as.data.frame(macro)
+macro_preProcessParameters = preProcess(macro, method = c('center','scale','YeoJohnson'))
+macro = predict(macro_preProcessParameters,macro)
+qqnorm(macro$brent_rub); qqline(macro$brent_rub, col = 2)
+
+################################# Join Data & Model ######################################
+
+####### Join data & clean environment.
 rm(train)
-macro = left_join(macro,price, by = 'timestamp')
+macro = left_join(price,macro, by = 'timestamp')
 rm(price)
 
-ggplot(macro,aes(x=mortgage_rate,y=p_sqf)) +
-  geom_point(aes(color=mortgage_rate)) + geom_smooth(method='lm') +
-  theme_excel() + scale_color_gradient2() + ylim(-.3,.3)
+######## Potential Cointegration Test To Ensure non-Spurious Regression?
+#jotest = ca.jo(macro[2:3],type='trace',K=2)
+#summary(jotest)
 
-a = lm(p_sqf ~ brent_rub + mortgage_rate, macro)
+######## Linear Model of Relationship Between 60D-MA P/Sq. Meter &
+######## Select Rate of % / 60D-MA Macro Variables
+a = lm(price_square_meter ~ brent_rub + lending_spread + rent_price_1room_bus, macro)
 summary(a)
+BIC(a)
+
+#RE_Index = data.frame(macro$timestamp,a$fitted.values)
+#colnames(RE_Index) = c('timestamp','RE_Macro_Index')
+#write.csv(RE_Index, file = 'RE_Macro_Index',row.names = FALSE)

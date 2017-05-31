@@ -1,0 +1,165 @@
+---
+title: "Final Attempt"
+author: "Wes Aull"
+date: "5/27/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(caret)
+library(tree)
+library(randomForest)
+library(readr)
+library(dplyr)
+library(MASS)
+
+train <- read_csv("~/GoogleDrive/NYCDSA/bootcamp009_project/Project3-MachineLearning/aull_dobbins_ganemccalla_schott/data/imputed/train_total.csv", 
+    col_types = cols(id = col_skip(), timestamp = col_datetime(format = "%Y-%m-%d")))
+train$timestamp = as.Date(train$timestamp)
+
+train$build_year = as.numeric(train$build_year)
+train$kitch_sq = as.numeric(train$kitch_sq)
+train$floor = as.numeric(train$floor)
+
+macro_f <- read_csv("~/GoogleDrive/NYCDSA/bootcamp009_project/Project3-MachineLearning/aull_dobbins_ganemccalla_schott/data/raw/macro.csv",
+col_types = cols(timestamp = col_datetime(format = "%Y-%m-%d")))
+macro_f$timestamp = as.Date(macro_f$timestamp)
+
+## Incorrect values / imputing from the prior month's value.
+macro_f$rent_price_2room_eco <- ifelse(macro_f$rent_price_2room_eco == .1, 40.25, macro_f$rent_price_2room_eco)
+macro_f$rent_price_1room_eco <- ifelse(macro_f$rent_price_1room_eco == '2.31', 32.61, macro_f$rent_price_1room_eco)
+
+## Sub-Area Transformation
+train = train %>%
+  mutate(close_cheap = ifelse(sub_area == c('Tverskoe'),1,0))
+train = train %>%
+  mutate(abs_expens = ifelse(sub_area == c('Hamovniki','Meshhanskoe','Presneskoe'),1,0))
+train = train %>%
+  mutate(med_exp = ifelse(sub_area == c('Pokrovskoe Streshnevo','Krylatskoe','Severnoe Butovo'),1,0))    
+
+## Macro in Brent
+macro_f = macro_f %>%
+  mutate(brent_rub = brent * usdrub)
+macro_f$macro_brent = NULL
+
+macro = data.frame(macro_f$timestamp,macro_f$brent_rub,macro_f$rent_price_2room_bus,macro_f$rent_price_2room_eco)
+colnames(macro) = c('timestamp','brent_rub','rent_2room_bus','rent_2room_eco')
+
+RE_Macro_Index <- read_csv("~/GoogleDrive/NYCDSA/bootcamp009_project/Project3-MachineLearning/aull_dobbins_ganemccalla_schott/data/macro/RE_Macro_Index.csv")
+
+train = left_join(train,RE_Macro_Index)
+train$timestamp = as.Date(train$timestamp)
+train = left_join(train,macro)
+
+train = train %>%
+  mutate(p_sqf = price_doc / full_sq)
+
+ggplot(train,aes(x=power_transmission_line_km,y=p_sqf)) + geom_point(aes(color=kremlin_km)) + geom_smooth() + xlim(0,5)
+
+```
+Let's factorize a set of variables to categorical:
+```{r}
+train$kitch_sq = cut(train$kitch_sq, c(-1,3.5,16.75,100))
+train$material = as.factor(train$material)
+train$state = as.factor(train$state)
+train$product_type = as.factor(train$product_type)
+train$build_year = cut(train$build_year,c(-1,1899,1924,1947,1965,1975,2000,2005,2010,2013,2018))
+train$public_healthcare_km = cut(train$public_healthcare_km, c(-1,4.5,22,80))
+train$nuclear_reactor_km = cut(train$nuclear_reactor_km,c(-1,6.5,7.4,10,15,20,25,32,45,50,70))
+train$industrial_km = cut(train$industrial_km, c(-1,3.5,50))
+train$mkad_km = cut(train$mkad_km,c(-1,2.5,5,7.5,10,12.5,14.5,25,100))
+train$office_count_500 = cut(train$office_count_500, c(-1,.5,4.5,6.5,9.5,10.5,50))
+train$railroad_1line = as.factor(train$railroad_1line)
+```
+Let's now run our initial regression:
+```{r pressure, echo=FALSE}
+for (i in seq(ncol(train),1)) {
+  if (sum(is.na(train[,i])) > 6000) {
+    train[,i] = NULL
+  }  
+}
+
+complete_train = train[complete.cases(train),]
+rf = randomForest(price_doc ~ full_sq + life_sq + floor + max_floor + material + build_year + num_room + kitch_sq + state + product_type + kremlin_km + railroad_1line + mkad_km + industrial_km + basketball_km + nuclear_reactor_km + power_transmission_line_km + public_healthcare_km + green_zone_km + cafe_count_500 + office_count_500 + RE_Macro_Index + brent_rub + rent_2room_bus + market_shop_km + big_market_km + metro_min_walk + close_cheap + abs_expens + med_exp, data = complete_train)
+varImpPlot(rf)
+rf
+
+```
+Ajeroport: Adj. R squared: .52.  Severnoe Butovo: .54  Krylatskoe: .7831
+Lefortovo: 0.5146   Izmajlovo: .5455. Mozhajskoe: .607  Chertanovo Central'noe: .6783
+Shhukino: .7616
+
+
+```{r}
+
+rf.complete = randomForest(price_doc ~ full_sq + life_sq + floor + max_floor + material + build_year + num_room + kitch_sq + state + product_type + kremlin_km + RE_Macro_Index, data = complete_train)
+varImpPlot(rf.complete)
+```
+
+
+```{r}
+test <- read_csv("~/GoogleDrive/NYCDSA/bootcamp009_project/Project3-MachineLearning/aull_dobbins_ganemccalla_schott/data/imputed/test_total.csv", 
+    col_types = cols(timestamp = col_datetime(format = "%Y-%m-%d")))
+test$timestamp = as.Date(test$timestamp)
+test$public_healthcare_km = as.numeric(test$public_healthcare_km)
+
+test = left_join(test,RE_Macro_Index)
+test = left_join(test,macro)
+colSums(is.na(test))
+
+test$build_year = as.numeric(test$build_year)
+test$kitch_sq = as.numeric(test$kitch_sq)
+test$floor = as.numeric(test$floor)
+
+test$kitch_sq = cut(test$kitch_sq, c(-1,3.5,16.75,100))
+test$material = as.factor(test$material)
+test$state = as.factor(test$state)
+test$product_type = as.factor(test$product_type)
+test$build_year = cut(test$build_year,c(-1,1899,1924,1947,1965,1975,2000,2005,2010,2013,2018))
+test$public_healthcare_km = cut(test$public_healthcare_km, c(-1,4.5,22,80))
+test$nuclear_reactor_km = cut(test$nuclear_reactor_km,c(-1,6.5,7.4,10,15,20,25,32,45,50,70))
+test$industrial_km = cut(test$industrial_km, c(-1,3.5,50))
+test$mkad_km = cut(test$mkad_km,c(-1,2.5,5,7.5,10,12.5,14.5,25,100))
+test$office_count_500 = cut(test$office_count_500, c(-1,.5,4.5,6.5,9.5,10.5,50))
+test$railroad_1line = as.factor(test$railroad_1line)
+
+## Sub-Area Transformation
+test = test %>%
+  mutate(close_cheap = ifelse(sub_area == c('Tverskoe'),1,0))
+test = test %>%
+  mutate(abs_expens = ifelse(sub_area == c('Hamovniki','Meshhanskoe','Presneskoe'),1,0))
+test = test %>%
+  mutate(med_exp = ifelse(sub_area == c('Pokrovskoe Streshnevo','Krylatskoe','Severnoe Butovo'),1,0))  
+
+colSums(is.na(test))
+
+test = kNN(test, k = 10)
+
+tree.pred = predict(rf, test)
+prediction = data.frame(test$id,tree.pred)
+colnames(prediction) = c('id','price_doc')
+View(prediction)
+colSums(is.na(prediction))
+
+write.csv(prediction, file = 'prediction.csv',row.names = FALSE)
+
+```
+
+
+
+```{r}
+#Let's get aggressive:
+a = lm(price_doc ~ full_sq + life_sq + floor + max_floor + material + build_year + num_room + kitch_sq + state + product_type + kremlin_km + railroad_1line + mkad_km + basketball_km + nuclear_reactor_km + power_transmission_line_km + public_healthcare_km + green_zone_km + cafe_count_500 + office_count_500 + RE_Macro_Index + brent_rub, complete_train)
+summary(a)
+BIC(a)
+
+
+```
+
+
+
+```{r}
+
+```
+
