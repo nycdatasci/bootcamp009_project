@@ -19,9 +19,10 @@ total_full$product_type  <- factor(total_full$product_type)
 # to moscow ring distances
 city_dist <- total_full %>% 
   dplyr::select(metro_km_avto,
-                metro_km_walk,
                 railroad_station_avto_km,
-                railroad_station_walk_km)
+                zd_vokzaly_avto_km,
+                bus_terminal_avto_km
+                )
 
 #View(city_dist)
 #View(cor(city_dist))
@@ -228,19 +229,19 @@ forwardAIC_n = step(model.empty, scope, direction = "forward", k = 2)
 summary(forwardAIC_n)
 # variable included: life_sq, kitch_sq, material, cluster, num_room, floor, 
 # dis_mtreo_rail, product_type, state, sub_area, full_sq
-# R2 = 0.3818
-# AIC 41317.1
+# R2 = 0.3567
+# AIC 42515.5
 AIC(forwardAIC_n)
 predict_train <- predict(forwardAIC_n, train_1)
 sum((train_1$log_price - predict_train)^2)/nrow(train_1)
-# 0.233
+# 0.234
 
 #compare with lasso
 x = model.matrix(log_price ~ ., train_1)[, -1]
 y = train_1$log_price
 x_test = model.matrix(~.,test_1)[,-1]
 
-grid = 10^seq(5, -10, length = 100)
+grid = 10^seq(5, -20, length = 100)
 
 #80 and 20 % train and test
 set.seed(0)
@@ -270,17 +271,39 @@ lasso.models.train$beta
 summary(lasso.models.train)
 laso_predict_train <- predict(lasso.models.train, x)
 sum((train_1$log_price - laso_predict_train)^2)/nrow(train_1)
-# 0.226
+# 0.234
 
 lasso.models.train2 = glmnet(x[train_index, ], y[train_index], alpha = 1, lambda = a)
 coef(lasso.models.train2)
 laso_predict_train2 <- predict(lasso.models.train2, x)
+laso_predict_train_origin <- exp(laso_predict_train2)
+
 sum((train_1$log_price - laso_predict_train2)^2)/nrow(train_1)
-# 0.241
+# 0.237
 laso_predict_residual2 <- (train_1$log_price - laso_predict_train2)
 laso <- data.frame(fitted = laso_predict_train2, residual = laso_predict_residual2)
 View(laso)
 
+# creating a submission file
+laso_predict_cv <- predict(lasso.models.train2, x_test)
+laso_predict_origin <- exp(laso_predict_cv)
+test_2 <- total_full %>% dplyr::filter(train_or_test== "test") %>% dplyr::select(id)
+
+submission <- data.frame(id=test_2$id, price_doc = laso_predict_origin)
+names(submission) = c("id","price_doc")
+dim(submission)
+write.csv(x = submission,"./submission_lasso_5.29_test.csv",row.names = FALSE)
+
+#creating a full prediction file
+full_predict <- rbind(laso_predict_train_origin, laso_predict_origin)
+total_full$linear_predict <- full_predict
+sum(is.na(total_full$linear_predict))
+dim(total_full)
+sum(is.na(total_full))
+which(is.na(total_full))
+write.csv(total_full, "./data_with_prediction.csv",row.names= FALSE)
+
+# investigating residuals and assumptions
 plot(laso$s0, laso$s0.1)
 
 plot(forwardAIC_n$fitted.values, forwardAIC_n$residuals)
@@ -288,7 +311,7 @@ id <- total_full %>% dplyr::filter(train_or_test == "train") %>%
   dplyr::select(id)
 
 summary(forwardAIC_n)
-exp(0.0089520)
+
 invest <- data.frame(residuals = forwardAIC_n$residuals, 
                      fitted = forwardAIC_n$fitted.values,
                      ID = id) 
@@ -316,37 +339,166 @@ train_view <- total_full %>% dplyr::filter(train_or_test=="train") %>%
 train_view$log_price <- log(train_view$price_doc)
 
 i_data <- left_join(train_view, invest, by= "id")
-i_data <- i_data %>% dplyr::mutate(price_indicator = ifelse(price_doc==2000000, 1,ifelse(price_doc==1000000,2,ifelse(price_doc==6000000,3,ifelse(price_doc==3000000,4,ifelse(price_doc==6500000,5,0))))))
+i_data %>% group_by(price_doc) %>% summarise(count=n()) %>%
+  arrange(desc(count)) %>% filter(count>30) %>% summarise(total = sum(count))
 
-i_data <- i_data %>% dplyr::mutate(price_indicator = factor(price_indicator, levels= c(0,1,2,3,4,5)))
+i_data <- i_data %>% 
+  dplyr::mutate(price_indicator = ifelse(price_doc==2000000, 1,ifelse(price_doc==1000000,2,ifelse(price_doc==6000000,3,ifelse(price_doc==3000000,4,ifelse(price_doc==6500000,5,ifelse(price_doc==7000000,6,ifelse(price_doc==5500000,7,ifelse(price_doc==6300000,8,ifelse(price_doc==5000000,9,ifelse(price_doc==6200000,10,NA)))))))))))
+
+i_data <- i_data %>% dplyr::mutate(price_indicator = factor(price_indicator, levels= c(0,1,2,3,4,5,6,7,8,9,10)))
 summary(i_data$price_indicator)
 levels(i_data$price_indicator)
 install.packages("ggthemes")
 library(ggthemes)
-nos <- c(1,2,3,4,5)
+
 ggplot(data = i_data, aes(x = fitted, y = residuals)) + geom_point() +
   geom_point(data = subset(i_data, price_indicator == 1), aes(color = price_indicator)) +
   geom_point(data = subset(i_data, price_indicator == 2), aes(color = price_indicator)) +
   geom_point(data = subset(i_data, price_indicator == 3), aes(color = price_indicator)) +
   geom_point(data = subset(i_data, price_indicator == 4), aes(color = price_indicator)) +
   geom_point(data = subset(i_data, price_indicator == 5), aes(color = price_indicator)) +
+  geom_point(data = subset(i_data, price_indicator == 6), aes(color = price_indicator)) +
+  geom_point(data = subset(i_data, price_indicator == 7), aes(color = price_indicator)) +
+  geom_point(data = subset(i_data, price_indicator == 8), aes(color = price_indicator)) +
+  geom_point(data = subset(i_data, price_indicator == 9), aes(color = price_indicator)) +
+  geom_point(data = subset(i_data, price_indicator == 10), aes(color = price_indicator)) +
   ggtitle("Residual Plot") + labs(x = "Fitted Values", y = "Residuals") +
-  scale_color_manual(labels = c("2M: 756", "1M: 747","6M: 372","3M: 332","6.5M: 329"),values = c("red", "orange","yellow","green","blue")) +
-  theme_bw()
+  scale_color_manual(labels = c("2M: 756", "1M: 747","6M: 372","3M: 332","6.5M: 329", "7M: 319", "5.5M: 309","6.3M: 295","5M: 294","6.2M: 277"),values = c("red", "orange","yellow","green","blue","royalblue","purple","salmon","seagreen","khaki")) +
+  theme_bw() + theme(legend.position="bottom")
+
+ggplot(data = i_data, aes(x = log_price, y = fitted)) + geom_point() +
+  geom_point(data = subset(i_data, price_indicator == 1), aes(color=price_indicator)) +
+  geom_point(data = subset(i_data, price_indicator == 2), aes(color = price_indicator)) +
+  geom_point(data = subset(i_data, price_indicator == 3), aes(color = price_indicator)) +
+  geom_point(data = subset(i_data, price_indicator == 4), aes(color = price_indicator)) +
+  geom_point(data = subset(i_data, price_indicator == 5), aes(color = price_indicator)) +
+  geom_point(data = subset(i_data, price_indicator == 6), aes(color = price_indicator)) +
+  geom_point(data = subset(i_data, price_indicator == 7), aes(color = price_indicator)) +
+  geom_point(data = subset(i_data, price_indicator == 8), aes(color = price_indicator)) +
+  geom_point(data = subset(i_data, price_indicator == 9), aes(color = price_indicator)) +
+  geom_point(data = subset(i_data, price_indicator == 10), aes(color = price_indicator)) +
+  ggtitle("True VS. Fitted Value") + labs(x = "True Values", y = "Fitted Values") +
+  scale_color_manual(labels = c("2M: 756", "1M: 747","6M: 372","3M: 332","6.5M: 329", "7M: 319", "5.5M: 309","6.3M: 295","5M: 294","6.2M: 277"),values = c("red", "orange","yellow","green","blue","royalblue","purple","salmon","seagreen","khaki")) +
+  theme_bw() 
+
+i_data %>% dplyr(filter<)
+?cut
+
+summary(cut(i_data$log_price, breaks = 30))
 
 plot(forwardAIC_n)
 
 no_1 <- c(4850, 11456,14377,23101,16597, 18392,23333,7768)
 i_data %>% dplyr::filter(id %in% no_1)
 
-i_data_2M <- i_data %>% dplyr::filter(price_doc == 2000000)
+i_data_2M <- i_data %>% dplyr::filter(price_doc == 2000000 | price_doc == 1000000)
 ggplot(data = i_data_2M, aes(x = fitted, y = residuals, size = num_room, color = num_room)) +
   geom_point()
-ggplot(data = i_data_2M, aes(x = fitted, y = residuals, size = full_sq, color = num_room)) + 
-  geom_point() + ggtitle("Property at 2M") + labs(x = "Fitted Values", y = "Residuals") +
-  theme_bw()
+ggplot(data = i_data_2M, aes(x = fitted, y = residuals, size = c(full_sq), color = price_indicator)) + 
+  geom_point() + ggtitle("Property at 2M and 1M") + labs(x = "Fitted Values", y = "Residuals") +
+  theme_bw() + scale_color_manual(labels = c("2M: 756", "1M: 747"),values = c("red","royalblue")) +
+  scale_size(range = c(0.5, 10))
 ggplot(data = i_data_2M, aes(x = full_sq, y = price_doc)) + geom_point()
 
+# comparing with a rf residual
+rf_predict = fread("./old_data_file/rf_final.csv")
+names(rf_predict)
+rf_data <- rf_predict %>% dplyr::select(id,
+                             price_doc,
+                             full_sq,
+                             floor,
+                             num_room,
+                             kitch_sq,
+                             state,
+                             material,
+                             floor,
+                             sub_area,
+                             product_type,
+                             dis_metro_rail,
+                             cluster_no,
+                             neg_cluster,
+                             linear_predict,
+                             Stack,
+                             train_or_test) %>%
+  dplyr::filter(train_or_test == "train") %>%
+  dplyr::mutate(linear_log = log(linear_predict),
+                log_price = log(price_doc)) %>%
+  dplyr::mutate(res_linear = log_price - linear_log,
+                res_rf = log_price - Stack) %>%
+  dplyr::mutate(price_indicator = ifelse(price_doc==2000000, 1,ifelse(price_doc==1000000,2,ifelse(price_doc==6000000,3,ifelse(price_doc==3000000,4,ifelse(price_doc==6500000,5,ifelse(price_doc==7000000,6,ifelse(price_doc==5500000,7,ifelse(price_doc==6300000,8,ifelse(price_doc==5000000,9,ifelse(price_doc==6200000,10,NA))))))))))) %>%
+  dplyr::mutate(price_indicator = factor(price_indicator, levels = c(1,2,3,4,5,6,7,8,9,10)))
+str(rf_data$price_indicator)
+summary(rf_data)
 
-names(i_data_2M)
+ggplot(data = rf_data, aes(x = Stack, y = res_rf)) + geom_point() + ggtitle("Residual VS. Fitted Value") + labs(x = "Random Forest Fitted Value", y = "Residual") + 
+  theme_bw() + coord_cartesian(ylim = c(2, -6), xlim = c(14,22))
+ggplot(data = rf_data, aes(x = linear_log, y = res_linear)) + geom_point() +ggtitle("Residual VS. Fitted Value") + labs(x = "LM Fitted Value", y = "Residual") + 
+  theme_bw() + coord_cartesian(ylim = c(2, -6), xlim = c(14,22))
 
+ggplot(data = rf_data, aes(x = Stack, y = res_rf)) + geom_point() +
+  geom_point(data = subset(rf_data, price_indicator == 1), aes(color = price_indicator)) +
+  geom_point(data = subset(rf_data, price_indicator == 2), aes(color = price_indicator)) +
+  geom_point(data = subset(rf_data, price_indicator == 3), aes(color = price_indicator)) +
+  geom_point(data = subset(rf_data, price_indicator == 4), aes(color = price_indicator)) +
+  geom_point(data = subset(rf_data, price_indicator == 5), aes(color = price_indicator)) +
+  geom_point(data = subset(rf_data, price_indicator == 6), aes(color = price_indicator)) +
+  geom_point(data = subset(rf_data, price_indicator == 7), aes(color = price_indicator)) +
+  geom_point(data = subset(rf_data, price_indicator == 8), aes(color = price_indicator)) +
+  geom_point(data = subset(rf_data, price_indicator == 9), aes(color = price_indicator)) +
+  geom_point(data = subset(rf_data, price_indicator == 10), aes(color = price_indicator)) +
+  ggtitle("Residual VS. Fitted Value") + labs(x = "Random Forest Fitted Value", y = "Residual") + 
+  theme_bw()
+
+ggplot(data = rf_data, aes(x = linear_log, y = res_linear)) + geom_point() +
+  geom_point(data = subset(rf_data, price_indicator == 1), aes(color = price_indicator)) +
+  geom_point(data = subset(rf_data, price_indicator == 2), aes(color = price_indicator)) +
+  geom_point(data = subset(rf_data, price_indicator == 3), aes(color = price_indicator)) +
+  geom_point(data = subset(rf_data, price_indicator == 4), aes(color = price_indicator)) +
+  geom_point(data = subset(rf_data, price_indicator == 5), aes(color = price_indicator)) +
+  geom_point(data = subset(rf_data, price_indicator == 6), aes(color = price_indicator)) +
+  geom_point(data = subset(rf_data, price_indicator == 7), aes(color = price_indicator)) +
+  geom_point(data = subset(rf_data, price_indicator == 8), aes(color = price_indicator)) +
+  geom_point(data = subset(rf_data, price_indicator == 9), aes(color = price_indicator)) +
+  geom_point(data = subset(rf_data, price_indicator == 10), aes(color = price_indicator)) +
+  ggtitle("Residual VS. Fitted Value") + labs(x = "LM Fitted Value", y = "Residual") + 
+  theme_bw()
+
+ggplot(data = rf_data, aes(x = Stack, y = res_rf,color = "red")) + geom_point() +
+  geom_point(data = rf_data, aes(x = linear_log, y = res_linear, color = "blue"))
+
+
+
+
+
+names(rf_predict)
+
+rf_train <- rf_predict %>% 
+  dplyr::select(id, price_doc, linear_predict, Stack, train_or_test) %>%
+  dplyr::mutate(log_price = log(price_doc),
+                log_linear = log(linear_predict),
+                diff_linear = abs(log_linear - log_price),
+                diff_rf = abs(Stack - log_price)) %>%
+  dplyr::filter(train_or_test == "train")
+
+names(rf_train)
+rf_train$minimum <- 0
+rf_train[which(rf_train$diff_rf <= rf_train$diff_linear),"minimum"] <- rf_train[which(rf_train$diff_rf <= rf_train$diff_linear),"Stack"]
+rf_train[which(rf_train$diff_rf > rf_train$diff_linear),"minimum"] <- rf_train[which(rf_train$diff_rf > rf_train$diff_linear),"log_linear"]
+names(rf_train)
+View(rf_train)
+rf_train1<-rf_train %>% dplyr::select(id, minimum)
+
+
+rf_test <- rf_predict %>% 
+  dplyr::filter(train_or_test == "test") %>%
+  dplyr::select(id, Stack)
+
+names(rf_test)
+rf_test <- rf_test %>% dplyr::rename(minimum = Stack)
+
+final_data <- rbind(rf_train1,rf_test)
+
+write.csv(final_data,"id_minimum.csv")
+
+View(total_full %>% group_by(sub_area) %>% summarise(count=n()) %>% arrange(desc(count)))
+hist(total_full$full_sq, breaks = 100)
