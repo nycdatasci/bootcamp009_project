@@ -1,10 +1,11 @@
 # @author Scott Dobbins
-# @date 2017-05-24 18:30
+# @date 2017-05-24 19:00
 # @version 0.6.3
 
 
 ### import libraries ###
 library(ggplot2)
+
 
 ### global constants ###
 dpi <- 120
@@ -61,3 +62,8 @@ for(num in num_clusters) {
   ggsave(filename = paste0('images/raions_cluster_single2_cut', toString(num), '.png'), width = (image_width * scale_down), height = (image_height * scale_down), scale = scale_factor)
 }
 
+raions_extra12 <- cbind(raions_extra, data.table(cluster = raions_cluster_complete_cut[[6]]))
+raions_extra24 <- cbind(raions_extra, data.table(cluster = raions_cluster_complete_cut[[9]]))
+
+fwrite(raions_extra12, file = 'data/raions_clusters12.csv', append = FALSE)
+fwrite(raions_extra24, file = 'data/raions_clusters24.csv', append = FALSE)
