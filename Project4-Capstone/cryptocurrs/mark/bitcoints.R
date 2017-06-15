@@ -46,7 +46,7 @@ corr_gen = function(vec1, vec2, width) {
 par(mfrow=c(1,1))
 plot(return_rate(btceUSD[,1]))
 plot(moving_vol(btceUSD[,1], 10))
-plot(moving_avg(btceUSD[,1], 100))
+plot(moving_avg(btceUSD[,1], 10))
 new = merge.xts(btceUSD[,1],euro_usd)
 new = new[!apply(is.na(new), 1,any), ]
 plot(new[,2])
@@ -55,9 +55,10 @@ plot(corr_gen(new[,1], new[,2], 10))
 # Do an auto.arima on whatever
 library(forecast)
 mod = auto.arima(new[,1])
-fc = forecast(mod, h=200)
+fc = forecast(mod, h=500)
 plot(fc)
 
 mod.rr = auto.arima(return_rate(new[,1]))
 fc.rr = forecast(mod.rr, h= 200)
 plot(fc.rr)
+
