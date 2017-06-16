@@ -1,3 +1,6 @@
+setwd('/home/mes/Projects/nycdsa/communal/bootcamp009_project/Project4-Capstone/cryptocurrs/mark/')
+source('ts_functions.R')
+
 library(RMySQL)
 con = dbConnect(MySQL(),user='mes',host='127.0.0.1',dbname='bccs')
 rs <- dbSendQuery(con, "select date,avg,totalvol,trades from coinbaseUSDdaily;")
@@ -21,27 +24,6 @@ btceUSD = xts(mat, order.by = btceUSD[,1])
 curr_ex$date = as.Date(curr_ex$date)
 mat2 = data.matrix(curr_ex[,2])
 euro_usd = xts(mat2, order.by = curr_ex[,1])
-
-## Calculate return rates of data
-return_rate = function(x) {
-  return((x - lag(x))/lag(x))
-}
-
-## Compute the x day moving average
-moving_avg = function(vec, x) {
-  return(rollmean(vec, x, align='center'))
-}
-
-## Compute the x day moving volatility
-moving_vol = function(vec, x) {
-  return(rollapply(vec, width=x, FUN=sd))
-}
-
-## Correlation between two time series
-corr_gen = function(vec1, vec2, width) {
-  return(rollapply(cbind(vec1, vec2), width, FUN = function(x) {cor(x[,1],x[,2])},
-                            by.column = F))
-}
 
 par(mfrow=c(1,1))
 plot(return_rate(btceUSD[,1]))

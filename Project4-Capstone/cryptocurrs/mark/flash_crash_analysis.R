@@ -11,7 +11,7 @@ btceUSD <- fetch(rs3, n=-1)
 
 
 setwd('/home/mes/Projects/nycdsa/communal/bootcamp009_project/Project4-Capstone/cryptocurrs/mark/')
-source('bitcoints.R')
+source('ts_functions.R')
  
 # Change to xts
 cbUSD$date = as.Date(cbUSD$date)
@@ -56,17 +56,9 @@ library(dplyr)
 # Start looking at august 13, 2014 which is big_days[114]
 big_days= big_days[index(big_days) > '2014-08-01']
 
-# Don't want xts anymore, want a data frame
-prior_10 = function(big_day, xts_obj) {
-  ind = which((index(xts_obj) == big_day))
-  sub_df = xts_obj[(ind-10):ind,]
-  #sub_df
-  return(sub_df)
-}
-
 df_list = list()
 for (i in 1:length(big_days)) {
-  df_list[[i]] = prior_10(index(big_days)[i], btceUSD)
+  df_list[[i]] = prior_days(index(big_days)[i], btceUSD, 10)
 }
 
 

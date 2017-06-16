@@ -1,10 +1,15 @@
 library(RMySQL)
 library(xts)
+
+# source time series functions
+setwd('/home/mes/Projects/nycdsa/communal/bootcamp009_project/Project4-Capstone/cryptocurrs/')
+source('mark/ts_functions.R')
+
 con = dbConnect(MySQL(),user='ran',host='127.0.0.1',dbname='bccs')
 
 #Get the different currency prices
 #USD
-rs1 <- dbSendQuery(con, "select * from coinbaseUSDdaily;")
+rs1 <- dbSendQuery(con, "select * from btceUSDdaily;")
 usd <- fetch(rs1, n= -1)
 head(usd)
 dim(usd)
@@ -23,6 +28,7 @@ colnames(c2)[2] <- "btc_eur"
 colnames(c2)[3] <- "eur_vol"
 c2$date <- as.Date(c2$date)
 c2.xts<- as.xts(c2[,c(2,3)], order.by = c2$date)
+c2.xts = c2.xts[seq(1,nrow(c2.xts),by=2)]
 
 #CAD
 rs3 <- dbSendQuery(con, "select * from anxhkCADdaily;")
@@ -32,6 +38,7 @@ colnames(c3)[2] <- "btc_cad"
 colnames(c3)[3] <- "cad_vol"
 c3$date <- as.Date(c3$date)
 c3.xts<- as.xts(c3[,c(2,3)], order.by = c3$date)
+c3.xts = c3.xts[seq(1,nrow(c3.xts),by=2)]
 
 #AUD
 rs4 <- dbSendQuery(con, "select * from anxhkAUDdaily;")
@@ -41,6 +48,7 @@ colnames(c4)[2] <- "btc_aud"
 colnames(c4)[3] <- "aud_vol"
 c4$date <- as.Date(c4$date)
 c4.xts<- as.xts(c4[,c(2,3)], order.by = c4$date)
+c4.xts = c4.xts[seq(1,nrow(c4.xts),by=2)]
 
 #GBP
 rs5 <- dbSendQuery(con, "select * from localbtcGBPdaily;") 
@@ -59,6 +67,7 @@ colnames(c6)[2] <- "btc_jpy"
 colnames(c6)[3] <- "jpy_vol"
 c6$date <- as.Date(c6$date)
 c6.xts<- as.xts(c6[,c(2,3)], order.by = c6$date)
+c6.xts = c6.xts[seq(1,nrow(c6.xts),by=2)]
 
 #CNY
 rs7 <- dbSendQuery(con, "select * from okcoinCNYdaily;")
@@ -77,6 +86,8 @@ colnames(c8)[2] <- "btc_brl"
 colnames(c8)[3] <- "brl_vol"
 c8$date <- as.Date(c8$date)
 c8.xts<- as.xts(c8[,c(2,3)], order.by = c8$date)
+## For some reason there are doubles
+c8.xts = c8.xts[seq(1,nrow(c8.xts),by=2)]
 
 #RUB
 rs9 <- dbSendQuery(con, "select * from btceRURdaily;")
@@ -86,6 +97,8 @@ colnames(c9)[2] <- "btc_rub"
 colnames(c9)[3] <- "rub_vol"
 c9$date <- as.Date(c9$date)
 c9.xts<- as.xts(c9[,c(2,3)], order.by = c9$date)
+## For some reason there are doubles
+c9.xts = c9.xts[seq(1,nrow(c9.xts),by=2)]
 
 #SLL
 rs10 <- dbSendQuery(con, "select * from virwoxSLLdaily;")
@@ -179,8 +192,13 @@ getSymbols('^XCI',env=sp500, src='yahoo', from=startDate,
            to=endDate,auto.assign=T)
 XCI = sp500$"XCI"[,6]
 
-
-
+## Get bitcoin return rates
+rr = data.frame()
+lags = c(1,2,3,4,5,10,15,30)
+for i in 1:length(lags) {
+    return_rate(usd$
+}
+df$btc_usd_rr_1 = return_rate(
 
 #merge everything
 coin=merge.xts(c1.xts,
@@ -208,6 +226,8 @@ coin=merge.xts(c1.xts,
                EEM,
                EFA,
                XCI)
+
+
 head(coin)
 coin$btc_USDEUR = coin$btc_eur/coin$btc_usd
 coin$btc_USDGBP = coin$btc_gbp/coin$btc_usd
@@ -224,7 +244,7 @@ coin$CNY.X.Adjusted.1 <- NULL
 names(coin)[21:34]<-c("USDEUR","USDGBP","USDCAD","USDJPY","USDAUD","USDCNY","USDRUB","USDSLL","oil","gold","VTWSX","EEM","EFA","XCI")
 head(coin)
 
-write.csv(coin, file = "coin")
+write.csv(coin, file = "coin.csv")
 
 
 
