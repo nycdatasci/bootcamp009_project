@@ -44,3 +44,5 @@ plot(corr_gen(bind[,1], bind[,2], 100))
 acf(bind[,1])
 acf(bind[,2])
 acf(btceUSD.rr)
+
+
