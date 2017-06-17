@@ -1,0 +1,82 @@
+
+20170523-213831: TestDataPreProcessing Node initiated
+
+
+20170523-213831: TestDataPreProcessing Node finished
+
+
+20170523-213831: TrainDataPreProcessing Node initiated
+
+
+20170523-213831: TrainDataPreProcessing Node finished
+
+
+20170523-213831: Train Node initiated
+
+
+20170523-213831: Model chosen: xgb
+
+
+20170523-213831: Shape of split training dataset = (294, 4)
+
+
+20170523-213831: XGB Parameter colsample_bytree = 0.7
+
+
+20170523-213831: XGB Parameter silent = 1
+
+
+20170523-213831: XGB Parameter eval_metric = rmse
+
+
+20170523-213831: XGB Parameter subsample = 0.7
+
+
+20170523-213831: XGB Parameter eta = 0.05
+
+
+20170523-213831: XGB Parameter objective = reg:linear
+
+
+20170523-213831: XGB Parameter max_depth = 5
+
+[0]	train-rmse:0.164356	test-rmse:0.164993
+[50]	train-rmse:0.0545527	test-rmse:0.0974493
+[100]	train-rmse:0.03417	test-rmse:0.0942197
+
+20170523-213831: CV XGBoost output nround = 104
+
+[0]	val-rmse:0.160208
+Will train until val-rmse hasn't improved in 20 rounds.
+[20]	val-rmse:0.108951
+[40]	val-rmse:0.096379
+[60]	val-rmse:0.094222
+[80]	val-rmse:0.093451
+[100]	val-rmse:0.093591
+Stopping. Best iteration:
+[82]	val-rmse:0.093407
+
+
+20170523-213831: XGBoost Final RMSE = 0.093595759706
+XGBoost Final R2 = 0.677791691783
+
+          names  values
+2       totalsq     591
+3        weight     582
+0    horsepower     515
+1  acceleration     408
+
+20170523-213831: Successfully trained model
+
+
+20170523-213831: Successfully wrote model to pickle
+
+
+20170523-213831: Predict Node initiated
+
+
+20170523-213831: No (or invalid) 2nd model choice
+
+
+20170523-213831: Write of submission to csv successful
+

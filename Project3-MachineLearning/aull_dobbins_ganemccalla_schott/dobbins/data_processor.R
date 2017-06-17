@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @date 2017-05-28 19:00
-# @version 0.9
+# @date 2017-05-28 23:00
+# @version 0.9.1
 
 
 ### FUTURE IMPROVEMENTS ###
@@ -969,10 +969,12 @@ impute_data.table <- function(data, k = round(sqrt(nrow(data))), impute_bad_pric
   data_colnames <- colnames(data)
   
   # impute product_type
+  print("imputing product type")
   imputed <- kNN(data, variable = c("product_type"), k = k, dist_var = c("state", "sub_area", "material"))
   data[imputed$product_type_imp, c("product_type") := list(imputed$product_type[imputed$product_type_imp])]
   
   # impute log_fullsq or full_sq
+  print("imputing full_sq")
   if("log_fullsq" %in% data_colnames) {
     if("log_price" %in% data_colnames) {
       imputed <- kNN(data, variable = c("log_fullsq"), k = k, dist_var = c("log_price", "state", "sub_area", "product_type", "quarter"))
@@ -992,15 +994,17 @@ impute_data.table <- function(data, k = round(sqrt(nrow(data))), impute_bad_pric
   }
   
   # impute num_room
-  if("log_fullsq" %in% data_colnames) {
+  print("imputing num_room")
+  if("log_price" %in% data_colnames) {
     imputed <- kNN(data, variable = c("num_room"), k = k, dist_var = c("log_fullsq", "state", "sub_area", "product_type", "quarter"))
     data[imputed$num_room_imp, c("num_room", "log_1p_numroom", "avg_room_sq", "price_per_room", "log_price_per_10p_log_room") := list(as.integer(round(imputed$num_room[imputed$num_room_imp])), log(1+imputed$num_room[imputed$num_room_imp]), full_sq / imputed$num_room[imputed$num_room_imp], price_doc / imputed$num_room[imputed$num_room_imp], log_price / (10+log(imputed$num_room[imputed$num_room_imp])))]
   } else {
     imputed <- kNN(data, variable = c("num_room"), k = k, dist_var = c("log_fullsq", "state", "sub_area", "product_type", "quarter"))
-    data[imputed$num_room_imp, c("num_room", "price_per_room") := list(as.integer(round(imputed$num_room[imputed$num_room_imp])), price_doc / as.integer(round(imputed$num_room[imputed$num_room_imp])))]
+    data[imputed$num_room_imp, c("num_room") := list(as.integer(round(imputed$num_room[imputed$num_room_imp])), price_doc / as.integer(round(imputed$num_room[imputed$num_room_imp])))]
   }
   
   # impute bad prices
+  print("imputing price_doc")
   if("price_doc" %in% data_colnames & impute_bad_prices) {
     if("log_price" %in% data_colnames) {
       imputed <- kNN(data, variable = c("log_price"), k = k, dist_var = c("log_fullsq", "num_room", "state", "sub_area", "product_type", "quarter"))
@@ -1012,6 +1016,7 @@ impute_data.table <- function(data, k = round(sqrt(nrow(data))), impute_bad_pric
   }
   
   # impute state
+  print("imputing state")
   if("log_price" %in% data_colnames) {
     imputed <- kNN(data, variable = c("state"), k = k, dist_var = c("log_price", "log_fullsq", "num_room", "sub_area", "product_type", "quarter"))
     data[imputed$state_imp, c("state") := list(imputed$state[imputed$state_imp])]
@@ -1024,6 +1029,7 @@ impute_data.table <- function(data, k = round(sqrt(nrow(data))), impute_bad_pric
   }
   
   # impute log_kitchsq or kitch_sq
+  print("imputing kitch_sq")
   if("log_price" %in% data_colnames) {
     imputed <- kNN(data, variable = c("log_kitchsq"), k = k, dist_var = c("log_price", "log_fullsq", "num_room", "sub_area", "product_type", "quarter", "state"))
     data[imputed$log_kitchsq_imp, c("kitch_sq", "log_kitchsq", "prop_kitch") := list(exp(imputed$log_kitchsq[imputed$log_kitchsq_imp]), imputed$log_kitchsq[imputed$log_kitchsq_imp], exp(imputed$log_kitchsq[imputed$log_kitchsq_imp]) / full_sq)]
@@ -1036,6 +1042,7 @@ impute_data.table <- function(data, k = round(sqrt(nrow(data))), impute_bad_pric
   }
   
   # impute max_floor
+  print("imputing max_floor")
   if("log_price" %in% data_colnames) {
     imputed <- kNN(data, variable = c("max_floor"), k = k, dist_var = c("log_price", "log_fullsq", "num_room", "sub_area", "product_type", "quarter", "state", "log_kitchsq"))
     data[imputed$max_floor_imp, c("max_floor", "log_10p_maxfloor", "relative_floor") := list(imputed$max_floor[imputed$max_floor_imp], log(10+imputed$max_floor[imputed$max_floor_imp]), floor / imputed$max_floor[imputed$max_floor_imp])]
@@ -1048,6 +1055,7 @@ impute_data.table <- function(data, k = round(sqrt(nrow(data))), impute_bad_pric
   }
   
   # impute floor
+  print("imputing floor")
   if("log_price" %in% data_colnames) {
     imputed <- kNN(data, variable = c("floor"), k = k, dist_var = c("log_price", "log_fullsq", "num_room", "sub_area", "product_type", "quarter", "state", "log_kitchsq", "max_floor"))
     data[imputed$floor_imp, c("floor", "log_10p_floor", "relative_floor") := list(imputed$floor[imputed$floor_imp], log(10+imputed$floor[imputed$floor_imp]), imputed$floor[imputed$floor_imp] / max_floor)]
@@ -1060,6 +1068,7 @@ impute_data.table <- function(data, k = round(sqrt(nrow(data))), impute_bad_pric
   }
   
   # impute build year
+  print("imputing build_year")
   if("log_price" %in% data_colnames) {
     imputed <- kNN(data, variable = c("build_year"), k = k, dist_var = c("log_price", "log_fullsq", "num_room", "sub_area", "product_type", "quarter", "state", "log_kitchsq", "max_floor", "floor"))
     data[imputed$build_year_imp, c("build_year", "building_age", "build_year_factor") := list(imputed$build_year[imputed$build_year_imp], imputed$build_year[imputed$build_year_imp] - year, as.factor(ifelse(imputed$build_year[imputed$build_year_imp] < 1959, "pre-1959", ifelse(imputed$build_year[imputed$build_year_imp] < 2001, "pre-2001", ifelse(imputed$build_year[imputed$build_year_imp] < 2009, "pre-2009", "contemporary")))))]
@@ -1072,6 +1081,7 @@ impute_data.table <- function(data, k = round(sqrt(nrow(data))), impute_bad_pric
   }
   
   # impute material
+  print("imputing material")
   if("log_price" %in% data_colnames) {
     imputed <- kNN(data, variable = c("material"), k = k, dist_var = c("log_price", "log_fullsq", "num_room", "sub_area", "product_type", "quarter", "state", "log_kitchsq", "max_floor", "floor", "build_year"))
     data[imputed$material_imp, c("material", "material_factor") := list(as.factor(imputed$material[imputed$material_imp]), as.factor(ifelse(imputed$material[imputed$material_imp] == 1 | imputed$material[imputed$material_imp] == 5, "1/5", ifelse(imputed$material[imputed$material_imp] == 2, "2", ifelse(imputed$material[imputed$material_imp] == 4, "4", "6")))))]
@@ -1084,6 +1094,7 @@ impute_data.table <- function(data, k = round(sqrt(nrow(data))), impute_bad_pric
   }
   
   # impute log_lifesq or life_sq
+  print("imputing life_sq")
   if("log_lifesq" %in% data_colnames) {
     if("log_price" %in% data_colnames) {
       imputed <- kNN(data, variable = c("log_lifesq"), k = k, dist_var = c("log_price", "log_fullsq", "num_room", "sub_area", "product_type", "quarter", "state", "log_kitchsq", "max_floor", "floor", "build_year"))
@@ -1103,8 +1114,9 @@ impute_data.table <- function(data, k = round(sqrt(nrow(data))), impute_bad_pric
   }
   
   # impute big pca feature set
+  print("imputing big_pca")
   cols_to_impute <- c("metro_min_walk", "metro_km_walk", "railroad_station_walk_km", "railroad_station_walk_min", "ID_railroad_station_walk", "ecology", "cafe_sum_500_min_price_avg", "cafe_sum_500_max_price_avg", "cafe_avg_price_500", "cafe_sum_1000_min_price_avg", "cafe_sum_1000_max_price_avg", "cafe_avg_price_1000", "cafe_sum_1500_min_price_avg", "cafe_sum_1500_max_price_avg", "cafe_avg_price_1500", "cafe_sum_2000_min_price_avg", "cafe_sum_2000_max_price_avg", "cafe_avg_price_2000", "cafe_sum_3000_min_price_avg", "cafe_sum_3000_max_price_avg", "cafe_avg_price_3000", "prom_part_5000", "cafe_sum_5000_min_price_avg", "cafe_sum_5000_max_price_avg", "cafe_avg_price_5000")
-  cols_to_use <- c("metro_min_avto", "metro_km_avto", "school_km", "park_km", "green_zone_km", "industrial_km", "water_treatment_km", "cemetery_km", "railroad_station_avto_km", "public_transport_station_km", "water_km", "mkad_km", "kremlin_km", "big_road1_km", "big_road2_km", "railroad_km", "oil_chemistry_km", "nuclear_reactor_km", "radiation_km", "power_transmission_line_km", "thermal_power_plant_km", "ts_km", "big_market_km", "market_shop_km", "fitness_km", "swim_pool_km", "ice_rink_km", "stadium_km", "basketball_km", "hospice_morgue_km", "detention_facility_km", "public_healthcare_km", "university_km", "workplaces_km", "shopping_centers_km", "office_km", "additional_education_km", "big_church_km", "church_synagogue_km", "mosque_km", "theater_km", "museum_km", "exhibition_km", "catering_km", "green_part_500", "prom_part_500", "office_count_500", "office_sqm_500", "trc_count_500", "trc_sqm_500", "cafe_count_500", "big_church_count_500", "church_count_500", "mosque_count_500", "leisure_count_500", "sport_count_500", "market_count_500", "green_part_1000", "prom_part_1000", "office_count_1000", "office_sqm_1000", "trc_count_1000", "trc_sqm_1000", "cafe_count_1000", "big_church_count_1000", "church_count_1000", "mosque_count_1000", "leisure_count_1000", "sport_count_1000", "market_count_1000", "green_part_1500", "prom_part_1500", "office_count_1500", "office_sqm_1500", "trc_count_1500", "trc_sqm_1500", "cafe_count_1500", "big_church_count_1500", "church_count_1500", "mosque_count_1500", "leisure_count_1500", "sport_count_1500", "market_count_1500", "green_part_2000", "prom_part_2000", "office_count_2000", "office_sqm_2000", "trc_count_2000", "trc_sqm_2000", "cafe_count_2000", "big_church_count_2000", "church_count_2000", "mosque_count_2000", "leisure_count_2000", "sport_count_2000", "market_count_2000", "green_part_3000", "prom_part_3000", "office_count_3000", "office_sqm_3000", "trc_count_3000", "trc_sqm_3000", "cafe_count_3000", "big_church_count_3000", "church_count_3000", "mosque_count_3000", "leisure_count_3000", "sport_count_3000", "market_count_3000", "green_part_5000", "prom_part_5000", "office_count_5000", "office_sqm_5000", "trc_count_5000", "trc_sqm_5000", "cafe_count_5000", "big_church_count_5000", "church_count_5000", "mosque_count_5000", "leisure_count_5000", "sport_count_5000", "market_count_5000")
+  cols_to_use <- c("metro_km_avto", "school_km", "park_km", "industrial_km", "cemetery_km", "railroad_station_avto_km", "public_transport_station_km", "water_km", "mkad_km", "kremlin_km", "railroad_km", "oil_chemistry_km", "ts_km", "big_market_km", "market_shop_km", "fitness_km", "stadium_km", "basketball_km", "hospice_morgue_km", "office_km", "additional_education_km", "big_church_km", "church_synagogue_km", "mosque_km", "theater_km", "museum_km", "exhibition_km", "catering_km", "green_part_500", "prom_part_500", "office_count_500", "trc_count_500", "cafe_count_500", "big_church_count_500", "mosque_count_500", "leisure_count_500", "market_count_500", "green_part_1000", "prom_part_1000", "office_count_1000", "trc_count_1000", "cafe_count_1000", "big_church_count_1000", "mosque_count_1000", "leisure_count_1000", "market_count_1000", "green_part_1500", "prom_part_1500", "office_count_1500", "trc_count_1500", "cafe_count_1500", "big_church_count_1500", "mosque_count_1500", "leisure_count_1500", "market_count_1500", "green_part_2000", "prom_part_2000", "office_count_2000", "trc_count_2000", "cafe_count_2000", "big_church_count_2000", "mosque_count_2000", "leisure_count_2000", "market_count_2000", "green_part_3000", "prom_part_3000", "office_count_3000", "trc_count_3000", "cafe_count_3000", "big_church_count_3000", "mosque_count_3000", "leisure_count_3000", "market_count_3000", "green_part_5000", "prom_part_5000", "office_count_5000", "trc_count_5000", "cafe_count_5000", "big_church_count_5000", "mosque_count_5000", "leisure_count_5000", "market_count_5000")
   #if("log_lifesq" %in% data_colnames) {
     imputed <- kNN(data, variable = cols_to_impute, k = k , dist_var = cols_to_use)
     for(col in cols_to_impute) {
