@@ -194,12 +194,30 @@ getSymbols('^XCI',env=sp500, src='yahoo', from=startDate,
 XCI = sp500$"XCI"[,6]
 
 ## Get bitcoin return rates
+<<<<<<< HEAD
 # rr = data.frame()
 # lags = c(1,2,3,4,5,10,15,30)
 # for i in 1:length(lags) {
 #     return_rate(usd$
 # }
 # df$btc_usd_rr_1 = return_rate(
+=======
+usd$date = as.Date(usd$date)
+usdxts = xts(usd[,-1], order.by=usd$date)
+rr = data.frame(return_rate(usdxts$avg, 1))
+names(rr)[1] = 'btc_rr_1'
+lags = c(1,2,3,4,5,10,15,30)
+
+for (i in 2:length(lags)) {
+    rr[,i] = return_rate(usdxts$avg,lags[i])
+    names(rr)[i] = paste0('btc_rr_',lags[i])
+}
+
+rr = xts(rr, order.by = usd$date)
+trade_info = cbind(usd$trades, usd$totalvol,intra_day_fluc(usd$high,usd$low))
+colnames(trade_info) = c('btc_trades','btc_dailyvol','btc_in_day_fluc')
+trade_info = xts(trade_info, order.by = usd$date)
+>>>>>>> eb94113c3c075c8f7ea6cf15f9aade8637eeb3f4
 
 #merge everything
 coin=merge.xts(c1.xts,
@@ -226,10 +244,14 @@ coin=merge.xts(c1.xts,
                VTWSX,
                EEM,
                EFA,
-               XCI)
+               XCI,
+               trade_info,
+               rr)
 
+#Cut the coin dataset to start at first day of btceUSD which is 08/14/2011, FYI the earliest bitcoin data
+# is from SLL at 04/27/2011
+coin = coin[which(index(coin)=='2011-08-14'):which(index(coin)=='2017-05-31'),]
 
-head(coin)
 coin$btc_USDEUR = coin$btc_eur/coin$btc_usd
 coin$btc_USDGBP = coin$btc_gbp/coin$btc_usd
 coin$btc_USDCAD = coin$btc_cad/coin$btc_usd
@@ -240,12 +262,18 @@ coin$btc_USDRUB = coin$btc_rub/coin$btc_usd
 coin$btc_USDBRL = coin$btc_brl/coin$btc_usd
 coin$btc_USDSLL = coin$btc_sll/coin$btc_usd
 
+<<<<<<< HEAD
 #coin <- coin[!duplicated(index(x)),]
+=======
+>>>>>>> eb94113c3c075c8f7ea6cf15f9aade8637eeb3f4
 coin$CNY.X.Adjusted.1 <- NULL
 names(coin)[21:34]<-c("USDEUR","USDGBP","USDCAD","USDJPY","USDAUD","USDCNY","USDRUB","USDSLL","oil","gold","VTWSX","EEM","EFA","XCI")
-head(coin)
 
-write.csv(coin, file = "coin.csv")
+#Don't impute yet
+
+
+# Need to specify the row.names for the dates to be written
+write.csv(coin, file = "mark/coin.csv", row.names = index(coin))
 
 
 ################################plot different exchanges######################### 
