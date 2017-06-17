@@ -1,0 +1,11 @@
+coin = read.csv('mark/coin.csv')
+#coin = xts(coin[,-1], order.by = as.Date(coin$X))
+
+## Make a categorical out of the return rates
+coin = coin[!is.na(coin$btc_rr_1),]
+coin[is.na(coin)] = -999
+coin$activity = ifelse(coin$btc_rr_1 < 0, 'neg', 'pos')
+
+#library(mlr)
+#t=makeClassifTask(data = coin, target = 'activity')
+#x = oversample(task = t, rate = 3)

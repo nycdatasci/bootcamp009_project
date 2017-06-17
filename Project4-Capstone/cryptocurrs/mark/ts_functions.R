@@ -4,6 +4,10 @@ return_rate = function(vec, k=1) {
     return((vec - lag(vec,k))/lag(vec,k))
 }
 
+intra_day_fluc = function(high,low) {
+    return((high-low)/low)
+}
+
 ## Compute the x day moving average
 moving_avg = function(vec, x) {
     return(rollmean(vec, x, align='center'))
