@@ -2,7 +2,8 @@ library(RMySQL)
 library(xts)
 
 # source time series functions
-setwd('/home/mes/Projects/nycdsa/communal/bootcamp009_project/Project4-Capstone/cryptocurrs/')
+setwd("~/Desktop/data_science/bootcamp009_project/Project4-Capstone/cryptocurrs")
+#setwd('/home/mes/Projects/nycdsa/communal/bootcamp009_project/Project4-Capstone/cryptocurrs/')
 source('mark/ts_functions.R')
 
 con = dbConnect(MySQL(),user='ran',host='127.0.0.1',dbname='bccs')
@@ -193,12 +194,12 @@ getSymbols('^XCI',env=sp500, src='yahoo', from=startDate,
 XCI = sp500$"XCI"[,6]
 
 ## Get bitcoin return rates
-rr = data.frame()
-lags = c(1,2,3,4,5,10,15,30)
-for i in 1:length(lags) {
-    return_rate(usd$
-}
-df$btc_usd_rr_1 = return_rate(
+# rr = data.frame()
+# lags = c(1,2,3,4,5,10,15,30)
+# for i in 1:length(lags) {
+#     return_rate(usd$
+# }
+# df$btc_usd_rr_1 = return_rate(
 
 #merge everything
 coin=merge.xts(c1.xts,
@@ -239,13 +240,12 @@ coin$btc_USDRUB = coin$btc_rub/coin$btc_usd
 coin$btc_USDBRL = coin$btc_brl/coin$btc_usd
 coin$btc_USDSLL = coin$btc_sll/coin$btc_usd
 
-coin <- coin[!duplicated(index(x)),]
+#coin <- coin[!duplicated(index(x)),]
 coin$CNY.X.Adjusted.1 <- NULL
 names(coin)[21:34]<-c("USDEUR","USDGBP","USDCAD","USDJPY","USDAUD","USDCNY","USDRUB","USDSLL","oil","gold","VTWSX","EEM","EFA","XCI")
 head(coin)
 
 write.csv(coin, file = "coin.csv")
-
 
 
 ################################plot different exchanges######################### 
