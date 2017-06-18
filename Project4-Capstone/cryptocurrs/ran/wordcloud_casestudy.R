@@ -5,6 +5,7 @@ library(tidyr)
 library(wordcloud2) 
 library(SnowballC)
 library(tm)
+
 twitDB_partial <- read.csv("~/twitDB_partial.csv", header=FALSE, comment.char="#")
 twit_par <- separate(twitDB_partial, "V4", into=c("delete","test"), sep=":")
 t <- Corpus(VectorSource(twit_par$test))
@@ -32,8 +33,10 @@ wordcloud2(Docs2, color = "random-dark",size = 0.8, shape = "circle", background
 
 #Play with different coins
 # EUR:Almost the same pattern
-plot(coin$USDEUR)
+plot(coin$USDEUR, main = "USD/EUR")
 lines(coin$btc_USDEUR, col='red')
+abi = coin$btc_cny/(coin$btc_usd*coin$USDCNY)
+plot(abi)
 
 #btc above the real exchange all the time!
 plot(coin$USDGBP)

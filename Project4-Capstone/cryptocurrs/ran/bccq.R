@@ -201,7 +201,7 @@ XCI = sp500$"XCI"[,6]
 #     return_rate(usd$
 # }
 # df$btc_usd_rr_1 = return_rate(
-=======
+
 usd$date = as.Date(usd$date)
 usdxts = xts(usd[,-1], order.by=usd$date)
 rr = data.frame(return_rate(usdxts$avg, 1))
@@ -274,6 +274,8 @@ names(coin)[21:34]<-c("USDEUR","USDGBP","USDCAD","USDJPY","USDAUD","USDCNY","USD
 
 # Need to specify the row.names for the dates to be written
 write.csv(coin, file = "mark/coin.csv", row.names = index(coin))
+
+
 
 
 ################################plot different exchanges######################### 

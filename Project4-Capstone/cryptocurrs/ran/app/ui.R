@@ -1,28 +1,28 @@
-fluidPage(    
-  
-  # Give the page a title
-  titlePanel("Visualize Power of Test"),
-  
-  # Generate a row with a sidebar
-  sidebarLayout(      
-    
-    # Define the sidebar with one input
-    sidebarPanel(
-      sliderInput("N", "Number of Samples:", min=2000, 
-                  max=10000, value=3000, step=500),
-      sliderInput("p", "Probability:", min=0, 
-                  max=1, value=0.2, step=0.05),
-      selectInput("dmin", "dmin:", choices=c(0.01, 0.02, 0.03, 0.04, 0.05),
-                  selected = 0.02),
-      sliderInput("threshold", "Threshold:", min=0.01, 
-                  max=0.1, value=0.05, step=0.01)
-    ),
-    
-    # Create a spot for the barplot
-    mainPanel(
-      plotOutput("plot_power")  
-    )
-    
-  )
-)
+library(shiny)
+library(data.table)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(plotly)
+library(googleVis)
 
+fluidPage(
+  titlePanel("Bitcoin hahaha"),
+  sidebarLayout(
+        sidebarPanel(
+          selectInput("bitex","BTC Exchange Rate",
+                             choices =  c("btc_USDEUR", "btc_USDGBP", "btc_USDCAD", "btc_USDAUD",
+                                       "btc_USDJPY", "btc_USDCNY", "btc_USDRUB", "btc_USDBRL",
+                                       "btc_USDSLL")),
+          selectInput("ex","Exchange Rate",
+                      choices = c("USDEUR", "USDGBP", "USDCAD", "USDAUD",
+                         "USDJPY", "USDCNY", "USDRUB", "USDBRL",
+                         "USDSLL")
+                      )
+        ),
+        mainPanel(
+          plotOutput("plot1", height = "300px")
+                 )
+               ))
+      #tabPanel("Big days in Twitter", verbatimTextOutput("TW"))
+  #))
