@@ -23,8 +23,10 @@ influencePlot(logit.overall)
 plot(logit.overall)
 
 ## SVM
+library(e1071)
 
 # scale the features
+activity = coin$activity
 coin.scale = as.data.frame(scale(coin[, -ncol(coin)]))
 coin = cbind(coin.scale, activity)
 slice = floor(0.8 * nrow(coin))
@@ -46,7 +48,7 @@ plot(cv.coin.svc.linear$performances$cost,
      ylab = "Error Rate",
      type = "l")
 
-best.linear.model = cv.wine.svc.linear$best.model
+best.linear.model = cv.coin.svc.linear$best.model
 
 # Look at the confidence matrix
 summary(best.linear.model)
