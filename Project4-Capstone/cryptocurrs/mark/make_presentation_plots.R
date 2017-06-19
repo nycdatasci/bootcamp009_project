@@ -1,8 +1,27 @@
 # Create plots to be used for the presentation
+setwd('/home/mes/Projects/nycdsa/communal/bootcamp009_project/Project4-Capstone/cryptocurrs/')
+source('mark/data_clean_for_models.R')
+setwd('/home/mes/Projects/nycdsa/communal/bootcamp009_project/Project4-Capstone/cryptocurrs/')
+#Get the different currency prices will add the most recent data manually
+#USD
+mp = read.csv('blockchain_info/market-price-1year.csv')
+mp = xts(mp[,2], order.by=as.Date(mp$X2016.06.19.00.00.00))
+## Now extend the xts object
+usdxts = xts(coin$btc_usd, order.by = as.Date(coin$X))
+mp = mp[(which(index(mp) == index(usdxts[nrow(usdxts),]))+1):nrow(mp),]
+mp = rbind(usdxts, mp)
 
-setwd('/home/mes/Projects/nycdsa/communal/bootcamp009_project/Project4-Capstone/cryptocurrs/mark/')
-source('data_clean_for_models.R')
+## Create the return rate plot with the points of interest that we want to predict
+mp.rr.1 = return_rate(mp,1)
+svg('drr.svg')
+plot(mp.rr.1, ylab = '1 Day Return Rate', main = 'Days Greater than a 3% Return Rate')
+dev.off()
+svg('drr_w_bigs.svg')
+plot(mp.rr.1, ylab = '1 Day Return Rate', main = 'Days Greater than a 3% Return Rate')
+points(mp.rr.1[mp.rr.1 > 0.03], col = 'green')
+dev.off()
 
+## Create the return rate vs. the chinese volume plot to demonstrate motivation for SVM
 svg('rr_vs_cnyvol.svg')
 plot(coin$cny_vol, coin$btc_rr_1, col = coin$activity, pch = 16, cex = 0.9, 
      main = 'Previous day BTC RR vs. OK Coin Volume', ylab = '1 day Return Rate', 

@@ -25,7 +25,7 @@ coin$trade_vol = na.interp(coin$trade_vol)
 
 # Run KNN on this data frame
 library(VIM)
-coin.imputed = kNN(coin, k=ceiling(sqrt(ncol(coin))))
+coin.imputed = kNN(coin, k=ceil(sqrt(ncol(coin))))
 coin = coin.imputed[,1:ncol(coin)]
 
 # Relabel the predicted columns into an either/or scenario
@@ -38,6 +38,16 @@ coin$activity = relevel(coin$activity, ref = 'consider')
 slice = floor(0.8*nrow(coin))
 coin.train = coin[1:slice,]
 coin.test = coin[(slice+1):nrow(coin),]
+
+## Logistic Regression
+logit.overall = glm(activity ~ ., family = "binomial", data = coin.train)
+library(car)
+influencePlot(logit.overall)
+plot(logit.overall)
+
+## Do Predictions
+ypred.log = predict(logit.overall, coin.test[,-ncol(coin)])
+table("Predicted Values" = ypred.log, "True Values" = coin.test$activity)
 
 ## SVM
 library(e1071)
@@ -63,7 +73,6 @@ plot(cv.coin.svc.linear$performances$cost,
      cv.coin.svc.linear$performances$error,
      xlab = "Cost",
      ylab = "Error Rate",
-     main = "SVM Cost vs. Error for the Linear Kernel",
      type = "l")
 
 best.linear.model = cv.coin.svc.linear$best.model
@@ -71,31 +80,7 @@ best.linear.model = cv.coin.svc.linear$best.model
 # Look at the confidence matrix
 summary(best.linear.model)
 ypred = predict(best.linear.model, coin.test.svm)
-svm_table1 = table("Predicted Values" = ypred, "True Values" = coin.test.svm$activity)
-
-
-### Use the radial kernel
-cv.coin.svc.radial = tune(svm,
-                          activity ~ .,
-                          data = coin.train.svm,
-                          kernel = "radial",
-                          ranges = list(cost = 10^(seq(-5, 1, length = 50))))
-
-cv.coin.svc.radial
-
-plot(cv.coin.svc.radial$performances$cost,
-     cv.coin.svc.radial$performances$error,
-     xlab = "Cost",
-     ylab = "Error Rate",
-     main = "SVM Cost vs. Error for the Radial Kernel",
-     type = "l")
-
-best.radial.model = cv.coin.svc.radial$best.model
-
-# Look at the confidence matrix
-summary(best.radial.model)
-ypred = predict(best.radial.model, coin.test.svm)
-svm_table2 = table("Predicted Values" = ypred, "True Values" = coin.test.svm$activity)
+table("Predicted Values" = ypred, "True Values" = coin.test.svm$activity)
 
 ##########################################################################################################
 ## Random Forest
@@ -109,63 +94,30 @@ importance(rf.default)
 varImpPlot(rf.default)
 
 # Use my custom made cross validation script and then run it multiple times to create a few plots
-results = vector('list',1)
-results[[1]] = vector('list',5)
-results_gini = vector('list',1)
-results_gini[[1]] = vector('list',5)
-
-for (i in 1:1) {
-    results[[1]][[i]] = rfcv_custom(coin.train[,-ncol(coin.train)], coin.train$activity)
-    results_gini[[1]][[i]] = rfcv_custom(coin.train[,-ncol(coin.train)], coin.train$activity)
-}
-
-oobs = data.frame(results[[1]][[1]][[1]])
-oobs_gini = data.frame(results_gini[[1]][[1]][[1]])
-
-for (i in 1:5) {
-    oobs = cbind(oobs, results[[1]][[i]][[1]])
-    oobs_gini = cbind(oobs_gini, results_gini[[1]][[i]][[1]])
-}
-
-# Make the plot for the accuracy index
-par(mfrow=c(2,1))
-oobs = transpose(oobs)
+result = rfcv_custom(coin.train[,-ncol(coin.train)], coin.train$activity)
 svg('rfcv_FS.svg')
-plot(sapply(oobs,mean), main = 'Random Forest OOB Error vs. # of Variables (Accuracy Metric)',
-     ylab = 'OOB Error', xlab = 'Number of Variables Sorted by Importance')
-lines(sapply(oobs,mean))
+plot(result[[1]], type = 'l', main = 'Random Forest OOB Error for Importance Sorted Variables',
+     ylab = 'OOB Error', xlab = 'Number of Variables')
+for (i in 2:5) {
+    result = rfcv_custom(coin.train[,-ncol(coin.train)], coin.train$activity)
+    lines(result[[1]])
+}
 dev.off()
 
-# Make the plot for the gini index
-oobs_gini = transpose(oobs_gini)
-svg('rfcv_FS_gini.svg')
-plot(sapply(oobs_gini,mean), main = 'Random Forest OOB Error vs. # of Variables (Gini Metric)',
-     ylab = 'OOB Error', xlab = 'Number of Variables Sorted by Importance')
-lines(sapply(oobs_gini,mean))
-dev.off()
+### Retrieve best variable set
+result[[1]][is.na(result[[1]])] = 0
+nvars = which(result[[1]] == min(result[[1]]))
 
-### Retrieve best variable size using the accuracy metric
-results[[1]][[1]][[1]][is.na(result[[1]][[1]][[1]])] = 0
-nvars = which(result[[1]][[1]][[1]] == min(result[[1]][[1]][[1]]))
-best_subset = names(results[[1]][[1]][[2]][nvars])
+# Needs to cross validate on the training set 
+result <- rfcv(coin[,-ncol(coin)], coin$activity, recursive = T, scale = 'step', step = -1)
+#with(result, plot(n.var, error.cv, log="x", type="o", lwd=2))
+with(result, plot(n.var, error.cv, type="o", lwd=2))
 
-## Add the target to the best_subset
-best_subset[length(best_subset)+1] = 'activity'
-
-## Now subset the training and test set
-coin.train = coin.train[, best_subset]
-coin.test = coin.test[, best_subset]
-
-# # Needs to cross validate on the training set 
-# result <- rfcv(coin[,-ncol(coin)], coin$activity, recursive = T, scale = 'step', step = -1)
-# #with(result, plot(n.var, error.cv, log="x", type="o", lwd=2))
-# with(result, plot(n.var, error.cv, type="o", lwd=2))
-# 
-# # Repeat the cross validation 5 times to be sure, recursive means the importance is not recalculated
-# result2 <- replicate(5, rfcv(coin[,-ncol(coin)], coin$activity, recursive = F, step = -1), simplify=FALSE)
-# error.cv <- sapply(result2, "[[", "error.cv")
-# matplot(result2[[1]]$n.var, cbind(rowMeans(error.cv), error.cv), type="l",
-#         lwd=c(2, rep(1, ncol(error.cv))), col=1, lty=1, xlab="Number of variables", ylab="CV Error")
+# Repeat the cross validation 5 times to be sure, recursive means the importance is not recalculated
+result2 <- replicate(5, rfcv(coin[,-ncol(coin)], coin$activity, recursive = F, step = -1), simplify=FALSE)
+error.cv <- sapply(result2, "[[", "error.cv")
+matplot(result2[[1]]$n.var, cbind(rowMeans(error.cv), error.cv), type="l",
+        lwd=c(2, rep(1, ncol(error.cv))), col=1, lty=1, xlab="Number of variables", ylab="CV Error")
 
 max_mtry = ncol(coin)-1
 num_trees = 500
@@ -183,82 +135,14 @@ plot(1:max_mtry, oob.err, pch = 16, type = "b",
 
 optimal_mtry = which(oob.err == min(oob.err))
 
-trees = seq(100, 10000, by = 100)
-oob.err.trees = numeric(length(trees))
-for (i in 1:length(trees)) {
-    fit = randomForest(activity ~ ., data = coin.train, mtry = optimal_mtry, ntree = trees[i])
-    oob.err[i] = fit$err.rate[trees[i], 1]
-    cat("We're performing iteration", i, "\n")
-}
-
-plot(1:length(trees), oob.err.trees, pch = 16, type = "b",
-     xlab = "Total Number of Trees",
-     ylab = "OOB Misclassification Rate",
-     main = "Random Forest OOB Error Rates\nby # of Trees")
-
-optimal_trees = trees[which(oob.err.trees == min(oob.err.trees))]
-rf.optimal = randomForest(activity ~., data = coin.train, importance = TRUE, mtry = optimal_mtry, 
+rf.default = randomForest(activity ~., data = coin.train, importance = TRUE, mtry = optimal_mtry, 
                           ntree = num_trees)
 
-rf.optimal
-table(predict(rf.optimal, coin.test[,-ncol(coin.test)], type = "class"), coin.test$activity)
+rf.default
+table(predict(rf.default, coin.test[,-ncol(coin.test)], type = "class"), coin.test$activity)
 
-importance(rf.optimal)
-varImpPlot(rf.optimal)
-
-### SVM take two with the better features
-
-### Use the linear kernel
-coin.train.svm = coin.train.svm[, best_subset]
-coin.test.svm = coin.test.svm[, best_subset]
-
-cv.coin.svc.linear.opt = tune(svm,
-                              activity ~ .,
-                              data = coin.train.svm,
-                              kernel = "radial",
-                              ranges = list(cost = 10^(seq(-5, 1, length = 50))))
-
-cv.coin.svc.linear.opt
-
-plot(cv.coin.svc.linear.opt$performances$cost,
-     cv.coin.svc.linear.opt$performances$error,
-     xlab = "Cost",
-     ylab = "Error Rate",
-     main = "SVM Cost vs. Error for the Radial Kernel\n with Optimal Subset",
-     type = "l")
-
-best.linear.model.opt = cv.coin.svc.linear.opt$best.model
-
-# Look at the confidence matrix
-summary(best.linear.model.opt)
-ypred = predict(best.linear.model.opt, coin.test.svm)
-svm_table3 = table("Predicted Values" = ypred, "True Values" = coin.test.svm$activity)
-
-### Use the radial kernel
-coin.train.svm = coin.train.svm[, best_subset]
-coin.test.svm = coin.test.svm[, best_subset]
-
-cv.coin.svc.radial.opt = tune(svm,
-                          activity ~ .,
-                          data = coin.train.svm,
-                          kernel = "radial",
-                          ranges = list(cost = 10^(seq(-5, 1, length = 50))))
-
-cv.coin.svc.radial.opt
-
-plot(cv.coin.svc.radial.opt$performances$cost,
-     cv.coin.svc.radial.opt$performances$error,
-     xlab = "Cost",
-     ylab = "Error Rate",
-     main = "SVM Cost vs. Error for the Radial Kernel\n with Optimal Subset",
-     type = "l")
-
-best.radial.model.opt = cv.coin.svc.radial.opt$best.model
-
-# Look at the confidence matrix
-summary(best.radial.model.opt)
-ypred = predict(best.radial.model.opt, coin.test.svm)
-svm_table4 = table("Predicted Values" = ypred, "True Values" = coin.test.svm$activity)
+importance(rf.default)
+varImpPlot(rf.default)
 
 ## Boosting
 # library(gbm)

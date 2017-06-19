@@ -1,4 +1,5 @@
 library(xts)
+library(forecast)
 
 setwd('/home/mes/Projects/nycdsa/communal/bootcamp009_project/Project4-Capstone/cryptocurrs/mark/')
 coin = read.csv('coin.csv', stringsAsFactors = FALSE)

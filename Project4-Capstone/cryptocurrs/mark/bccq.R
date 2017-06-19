@@ -1,6 +1,7 @@
 library(RMySQL)
 library(xts)
 library(forecast)
+library(Hmisc)
 
 # source time series functions
 #setwd("~/Desktop/data_science/bootcamp009_project/Project4-Capstone/cryptocurrs")
@@ -176,21 +177,25 @@ gold = sp500$"GC=F"[,6]
 getSymbols('VTWSX',env=sp500, src='yahoo', from=startDate,
            to=endDate,auto.assign=T)
 VTWSX = sp500$VTWSX[,6]
+VTWSX = xts(auto.arima(VTWSX)$residuals, order.by = as.Date(index(VTWSX)))
 
 # EEM:iShares MSCI Emerging Markets ETF
 getSymbols('EEM',env=sp500, src='yahoo', from=startDate,
            to=endDate,auto.assign=T)
 EEM = sp500$EEM[,6]
+EEM = xts(auto.arima(EEM)$residuals, order.by = as.Date(index(EEM)))
 
 # EFA: iShares MSCI EAFE ETF (EFA)
 getSymbols('EFA',env=sp500, src='yahoo', from=startDate,
            to=endDate,auto.assign=T)
 EFA = sp500$EFA[,6]
+EFA = xts(auto.arima(EFA)$residuals, order.by = as.Date(index(EFA)))
 
 #NYSE ARCA COMPUTER TECH INDEX
 getSymbols('^XCI',env=sp500, src='yahoo', from=startDate,
            to=endDate,auto.assign=T)
 XCI = sp500$"XCI"[,6]
+XCI = xts(auto.arima(XCI)$residuals, order.by = as.Date(index(XCI)))
 
 ## Also add info specific to the blockchain like
     # Volume of bitcoins traded in USD
