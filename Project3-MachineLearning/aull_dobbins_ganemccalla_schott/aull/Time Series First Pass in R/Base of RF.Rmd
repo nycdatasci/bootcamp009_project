@@ -13,6 +13,7 @@ library(randomForest)
 library(readr)
 library(dplyr)
 library(MASS)
+library(pipeR)
 
 train <- read_csv("~/GoogleDrive/NYCDSA/bootcamp009_project/Project3-MachineLearning/aull_dobbins_ganemccalla_schott/data/imputed/train_total.csv", 
     col_types = cols(id = col_skip(), timestamp = col_datetime(format = "%Y-%m-%d")))
@@ -55,35 +56,55 @@ train = left_join(train,macro)
 train = train %>%
   mutate(p_sqf = price_doc / full_sq)
 
-ggplot(train,aes(x=power_transmission_line_km,y=p_sqf)) + geom_point(aes(color=kremlin_km)) + geom_smooth() + xlim(0,5)
+train$kremlin_km = as.numeric(train$kremlin_km)
+ggplot(train,aes(x=kremlin_km,y=p_sqf)) + geom_point(aes(color=kremlin_km),alpha=.05) + geom_smooth()
 
 ```
 Let's factorize a set of variables to categorical:
 ```{r}
-train$kitch_sq = cut(train$kitch_sq, c(-1,3.5,16.75,100))
+#train$kitch_sq = cut(train$kitch_sq, c(-1,3.5,16.75,100))
+train$sub_area = as.factor(train$sub_area)
 train$material = as.factor(train$material)
 train$state = as.factor(train$state)
 train$product_type = as.factor(train$product_type)
 train$build_year = cut(train$build_year,c(-1,1899,1924,1947,1965,1975,2000,2005,2010,2013,2018))
 train$public_healthcare_km = cut(train$public_healthcare_km, c(-1,4.5,22,80))
-train$nuclear_reactor_km = cut(train$nuclear_reactor_km,c(-1,6.5,7.4,10,15,20,25,32,45,50,70))
-train$industrial_km = cut(train$industrial_km, c(-1,3.5,50))
-train$mkad_km = cut(train$mkad_km,c(-1,2.5,5,7.5,10,12.5,14.5,25,100))
+#train$nuclear_reactor_km = cut(train$nuclear_reactor_km,c(-1,6.5,7.4,10,15,20,25,32,45,50,70))
+#train$industrial_km = cut(train$industrial_km, c(-1,3.5,50))
+#train$mkad_km = cut(train$mkad_km,c(-1,2.5,5,7.5,10,12.5,14.5,25,100))
 train$office_count_500 = cut(train$office_count_500, c(-1,.5,4.5,6.5,9.5,10.5,50))
 train$railroad_1line = as.factor(train$railroad_1line)
-```
-Let's now run our initial regression:
-```{r pressure, echo=FALSE}
 for (i in seq(ncol(train),1)) {
   if (sum(is.na(train[,i])) > 6000) {
     train[,i] = NULL
   }  
 }
 
+```
+Let's now run our initial regression:
+```{r pressure, echo=FALSE}
+## Even Larger Scale Model
 complete_train = train[complete.cases(train),]
-rf = randomForest(price_doc ~ full_sq + life_sq + floor + max_floor + material + build_year + num_room + kitch_sq + state + product_type + kremlin_km + railroad_1line + mkad_km + industrial_km + basketball_km + nuclear_reactor_km + power_transmission_line_km + public_healthcare_km + green_zone_km + cafe_count_500 + office_count_500 + RE_Macro_Index + brent_rub + rent_2room_bus + market_shop_km + big_market_km + metro_min_walk + close_cheap + abs_expens + med_exp, data = complete_train)
-varImpPlot(rf)
-rf
+complete_train$kremlin_class = complete_train$kremlin_km
+complete_train$kremlin_class = cut(complete_train$kremlin_class,c(-1,5,7,10,12.5,15,19,100))
+
+kremlin_class = unique(complete_train$kremlin_class)
+kremlin_class_schema = c('a','b','c','d','e','f','g')
+kremlin_rf_schema = c('rfal','rfbl','rfcl','rfdl','rfel','rffl','rfgl')
+n = 1
+
+for (i in kremlin_class) {
+  sub_set = complete_train %>%
+    filter(kremlin_class == i)
+  nam = kremlin_class_schema[n]
+  assign(nam,data.frame(sub_set))
+  rf = randomForest(price_doc ~ full_sq + life_sq + floor + max_floor + material + build_year + num_room + kitch_sq + state + product_type + kremlin_km + mkad_km + industrial_km + basketball_km + nuclear_reactor_km + power_transmission_line_km + cafe_count_500 + office_count_500 + RE_Macro_Index + market_shop_km + big_market_km + metro_min_walk + water_treatment_km + bulvar_ring_km + zd_vokzaly_avto_km + oil_chemistry_km + rent_2room_bus + rent_2room_eco + threats_factor + ts_factor + sadovoe_km + park_km + shopping_centers_km + thermal_power_plant_km + detention_facility_km + abs_expens + med_exp + close_cheap + right_by_water + shopping_centers_km + university_km + public_transport_station_km + right_by_railroad + market_count_3000 + cafe_count_5000 + sport_count_5000 + church_count_1000 + catering_km + museum_km + theater_km + big_market_km, data = sub_set)
+  rfnam = kremlin_rf_schema[n]
+  assign(rfnam,rf)
+  n = n + 1
+}
+
+rfgl
 
 ```
 Ajeroport: Adj. R squared: .52.  Severnoe Butovo: .54  Krylatskoe: .7831
@@ -92,10 +113,65 @@ Shhukino: .7616
 
 
 ```{r}
+## Larger Scale Model
+complete_train = train[complete.cases(train),]
+complete_train$kremlin_class = complete_train$kremlin_km
+complete_train$kremlin_class = cut(complete_train$kremlin_class,c(-1,5,7,10,12.5,15,19,100))
 
-rf.complete = randomForest(price_doc ~ full_sq + life_sq + floor + max_floor + material + build_year + num_room + kitch_sq + state + product_type + kremlin_km + RE_Macro_Index, data = complete_train)
-varImpPlot(rf.complete)
+kremlin_class = unique(complete_train$kremlin_class)
+kremlin_class_schema = c('a','b','c','d','e','f','g')
+kremlin_rf_schema = c('rfa','rfb','rfc','rfd','rfe','rff','rfg')
+n = 1
+
+for (i in kremlin_class) {
+  sub_set = complete_train %>%
+    filter(kremlin_class == i)
+  nam = kremlin_class_schema[n]
+  assign(nam,data.frame(sub_set))
+  rf = randomForest(price_doc ~ full_sq + life_sq + floor + max_floor + material + build_year + num_room + kitch_sq + state + product_type + kremlin_km + mkad_km + industrial_km + basketball_km + nuclear_reactor_km + power_transmission_line_km + cafe_count_500 + office_count_500 + RE_Macro_Index + market_shop_km + big_market_km + metro_min_walk + water_treatment_km + bulvar_ring_km + zd_vokzaly_avto_km + oil_chemistry_km + rent_2room_bus + rent_2room_eco + threats_factor + ts_factor + sadovoe_km + park_km + shopping_centers_km + thermal_power_plant_km + detention_facility_km, data = sub_set)
+  rfnam = kremlin_rf_schema[n]
+  assign(rfnam,rf)
+  n = n + 1
+}
+
+rfg
 ```
+
+
+```{r}
+## Trimmed Down
+complete_train = train[complete.cases(train),]
+complete_train$kremlin_class = complete_train$kremlin_km
+complete_train$kremlin_class = cut(complete_train$kremlin_class,c(-1,5,7,10,12.5,15,19,100))
+
+kremlin_class = unique(complete_train$kremlin_class)
+kremlin_class_schema = c('a','b','c','d','e','f','g')
+kremlin_rf_schema = c('rfat','rfbt','rfct','rfdt','rfet','rfft','rfgt')
+n = 1
+
+for (i in kremlin_class) {
+  sub_set = complete_train %>%
+    filter(kremlin_class == i)
+  nam = kremlin_class_schema[n]
+  assign(nam,data.frame(sub_set))
+  rf = randomForest(price_doc ~ full_sq + life_sq + floor + max_floor + material + build_year + num_room + kitch_sq + state + product_type + kremlin_km + mkad_km + industrial_km + basketball_km + nuclear_reactor_km + power_transmission_line_km + cafe_count_500 + office_count_500 + RE_Macro_Index + market_shop_km + big_market_km + metro_min_walk + water_treatment_km + bulvar_ring_km + zd_vokzaly_avto_km + oil_chemistry_km, data = sub_set)
+  rfnam = kremlin_rf_schema[n]
+  assign(rfnam,rf)
+  n = n + 1
+}
+
+```
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
 
 
 ```{r}
@@ -134,7 +210,10 @@ test = test %>%
 
 colSums(is.na(test))
 
-test = kNN(test, k = 10)
+test = kNN(test, k = 4)
+test_preProcessParameters = preProcess(test, method = c('medianImpute'))
+test = predict(test_preProcessParameters,test)
+
 
 tree.pred = predict(rf, test)
 prediction = data.frame(test$id,tree.pred)
@@ -144,22 +223,7 @@ colSums(is.na(prediction))
 
 write.csv(prediction, file = 'prediction.csv',row.names = FALSE)
 
-```
-
-
-
-```{r}
-#Let's get aggressive:
-a = lm(price_doc ~ full_sq + life_sq + floor + max_floor + material + build_year + num_room + kitch_sq + state + product_type + kremlin_km + railroad_1line + mkad_km + basketball_km + nuclear_reactor_km + power_transmission_line_km + public_healthcare_km + green_zone_km + cafe_count_500 + office_count_500 + RE_Macro_Index + brent_rub, complete_train)
-summary(a)
-BIC(a)
-
-
-```
-
-
-
-```{r}
+colSums(is.na(test))
 
 ```
 
