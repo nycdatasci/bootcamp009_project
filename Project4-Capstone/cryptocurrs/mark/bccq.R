@@ -1,5 +1,6 @@
 library(RMySQL)
 library(xts)
+library(forecast)
 
 # source time series functions
 #setwd("~/Desktop/data_science/bootcamp009_project/Project4-Capstone/cryptocurrs")
@@ -8,12 +9,10 @@ source('mark/ts_functions.R')
 
 con = dbConnect(MySQL(),user='ran',host='127.0.0.1',dbname='bccs')
 
-#Get the different currency prices
+#Get the different currency prices will add the most recent data manually
 #USD
 rs1 <- dbSendQuery(con, "select * from btceUSDdaily;")
 usd <- fetch(rs1, n= -1)
-head(usd)
-dim(usd)
 c1 <- usd[,c(1,4,5)]
 colnames(c1)[2] <- "btc_usd"
 colnames(c1)[3] <- "usd_vol"
@@ -193,15 +192,36 @@ getSymbols('^XCI',env=sp500, src='yahoo', from=startDate,
            to=endDate,auto.assign=T)
 XCI = sp500$"XCI"[,6]
 
-## Get bitcoin return rates
-# rr = data.frame()
-# lags = c(1,2,3,4,5,10,15,30)
-# for i in 1:length(lags) {
-#     return_rate(usd$
-# }
-# df$btc_usd_rr_1 = return_rate(
+## Also add info specific to the blockchain like
+    # Volume of bitcoins traded in USD
+    # Transactions per block
+    # estimated transaction volume
+    # number of transactions
+    # transactions per second
+etv = read.csv('blockchain_info/estimated-transaction-volume.csv')
+etv = xts(etv[,2], order.by=as.Date(etv$X2009.01.03.00.00.00))
+n.trans = read.csv('blockchain_info/n-transactions.csv')
+n.trans = xts(n.trans[,2], order.by=as.Date(n.trans$X2009.01.03.00.00.00))
+n.trans.model = auto.arima(n.trans)
+n.trans[,1] = n.trans.model$residuals
+mct = read.csv('blockchain_info/median-confirmation-time.csv')
+mct = xts(mct[,2], order.by=as.Date(mct$X2009.01.03.00.00.00))
+mct = mct[550:1543,]
+tv = read.csv('blockchain_info/trade-volume.csv')
+tv = xts(tv[,2], order.by=as.Date(tv$X2009.01.03.00.00.00))
+tv.model = auto.arima(tv)
+tv[,1] = tv.model$residuals
+
+bc_info = cbind(etv, n.trans, mct, tv)
+names(bc_info) = c('est_trans_vol','num_trans','median-conf-time','trade_vol')
+
+## Get bitcoin return rates but will also extend the usd market price manually with data from blockchain.info
+#mp = read.csv('blockchain_info/market-price-1year.csv')
+#mp = xts(mp[,2], order.by=as.Date(mp$X2016.06.19.00.00.00))
 usd$date = as.Date(usd$date)
 usdxts = xts(usd[,-1], order.by=usd$date)
+## Now extend the xts object
+#mp = mp[(which(index(mp) == index(usdxts[nrow(usd),]))+1):nrow(mp),]
 rr = data.frame(return_rate(usdxts$avg, 1))
 names(rr)[1] = 'btc_rr_1'
 lags = c(1,2,3,4,5,10,15,30)
@@ -212,6 +232,7 @@ for (i in 2:length(lags)) {
 }
 
 rr = xts(rr, order.by = usd$date)
+
 ## This is the max return rate for a day which uses the max price for a day and the average 
 ## price for the previous day
 btc_max_rr_1 = (usd$high - lag(usd$avg))/usd$avg
@@ -248,7 +269,8 @@ coin=merge.xts(c1.xts,
                EFA,
                XCI,
                trade_info,
-               rr)
+               rr,
+               bc_info)
 
 #Cut the coin dataset to start at first day of btceUSD which is 08/14/2011, FYI the earliest bitcoin data
 # is from SLL at 04/27/2011
