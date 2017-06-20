@@ -36,4 +36,4 @@ https://databricks-prod-cloudfront.cloud.databricks.com/public/4027ec902e239c93e
 ### This is a cleaner version of the social approach 6/16
 https://databricks-prod-cloudfront.cloud.databricks.com/public/4027ec902e239c93eaaa8714f173bcfc/5289125420080101/3690050097713108/8301330479757772/latest.html
 
-https://docs.google.com/presentation/d/1aqcTMfv03hlVKTiEKJH9-lnVY-Eldm5Kz9MJQiOJ1pQ/edit?usp=sharing
+https://docs.google.com/presentation/d/1ruy7PkACoA0D5f6NekhuMxy5Klw2il0WBNnjcvYPLKo/edit?usp=sharing
