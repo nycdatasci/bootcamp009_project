@@ -1,6 +1,9 @@
+library(RMySQL)
+library(dygraphs)
 # Create plots to be used for the presentation
 setwd('/home/mes/Projects/nycdsa/communal/bootcamp009_project/Project4-Capstone/cryptocurrs/')
 source('mark/data_clean_for_models.R')
+source('ts_functions.R')
 setwd('/home/mes/Projects/nycdsa/communal/bootcamp009_project/Project4-Capstone/cryptocurrs/')
 #Get the different currency prices will add the most recent data manually
 #USD
@@ -11,10 +14,27 @@ usdxts = xts(coin$btc_usd, order.by = as.Date(coin$X))
 mp = mp[(which(index(mp) == index(usdxts[nrow(usdxts),]))+1):nrow(mp),]
 mp = rbind(usdxts, mp)
 
+## Create the "since we last spoke" plots
+dygraph(mp[537:nrow(mp),], main = 'Bitcoin Price History', ylab = 'Price (USD)')
+
+con = dbConnect(MySQL(),user='mes',host='127.0.0.1',dbname='bccs')
+
+#Get the different currency prices will add the most recent data manually
+#USD
+rs1 <- dbSendQuery(con, "select * from coinbaseUSDdaily;")
+usd <- fetch(rs1, n= -1)
+c1 <- usd[,c(1,4)]
+colnames(c1)[2] <- "btc_usd"
+c1$date <- as.Date(c1$date)
+class(c1$btc_usd)
+c1.xts<- as.xts(c1[,2], order.by = c1$date)
+
+dygraph(c1.xts[1458:nrow(c1.xts),], main = 'Bitcoin Price Since 1/1/17', ylab = 'Price (USD)')
+
 ## Create the return rate plot with the points of interest that we want to predict
 mp.rr.1 = return_rate(mp,1)
 svg('drr.svg')
-plot(mp.rr.1, ylab = '1 Day Return Rate', main = 'Days Greater than a 3% Return Rate')
+dygraph(mp.rr.1, ylab = '1 Day Return Rate', main = 'Days Greater than a 3% Return Rate')
 dev.off()
 svg('drr_w_bigs.svg')
 plot(mp.rr.1, ylab = '1 Day Return Rate', main = 'Days Greater than a 3% Return Rate')
