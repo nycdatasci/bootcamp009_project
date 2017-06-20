@@ -17,8 +17,7 @@ rfcv_custom = function(X, y, ntrees = 500, metric = 'accuracy') {
     result[[2]] = vector('list', max_vars)
 
     for (i in max_vars:2) {
-        print('starting iteration ')
-        print(max_vars - i + 1)
+        print(paste('starting iteration', max_vars - i + 1))
         fit = randomForest(y ~ ., data = df[,var_names], importance = TRUE, n.trees = ntrees)
         # Save OOB error
         result[[1]][i] = fit$err.rate[ntrees,1]
