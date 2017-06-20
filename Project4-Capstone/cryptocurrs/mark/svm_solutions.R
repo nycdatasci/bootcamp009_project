@@ -54,14 +54,6 @@ plot(cv.wine.svc.linear$performances$cost,
 #is plausible we have checked enough parameter values.
 
 #5
-best.linear.model = cv.wine.svc.linear$best.model
-summary(best.linear.model)
-
-#There are 767 support vectors.
-
-#6
-ypred = predict(best.linear.model, wine.test)
-table("Predicted Values" = ypred, "True Values" = wine.test$quality)
 (38 + 44)/320
 
 #The test error is approximately 0.256.
