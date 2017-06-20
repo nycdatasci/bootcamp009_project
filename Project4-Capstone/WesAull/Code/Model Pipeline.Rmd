@@ -66,13 +66,13 @@ i.: long-term interest rates for highly-secure bonds from a long-constructed his
 i.: stock index price divided by the average of ten years of earnings (moving average), adjusted for inflation, from a long-constructed historical series.  See Market Volatility for details of construction.
 
 ```{r}
-#shiller <- read_csv("C:/Users/Wes Aull/GoogleDrive/Capstone/Data/shiller.csv", 
-#    col_types = cols(CAPE = col_number(), 
-#        Date = col_date(format = "%m/%d/%Y")))
-
-shiller <- read_csv("~/GoogleDrive/Capstone/Data/shiller.csv", 
+shiller <- read_csv("C:/Users/Wes Aull/GoogleDrive/Capstone/Data/shiller.csv", 
     col_types = cols(CAPE = col_number(), 
         Date = col_date(format = "%m/%d/%Y")))
+
+#shiller <- read_csv("~/GoogleDrive/Capstone/Data/shiller.csv", 
+#    col_types = cols(CAPE = col_number(), 
+#        Date = col_date(format = "%m/%d/%Y")))
 
 shiller = as.xts(shiller[,2:4], order.by=as.yearmon(shiller$Date))
 ```
@@ -200,13 +200,13 @@ data = merge(shiller,data,join='left',fill='NA')
 CSV import of daily OHLC and volume of S&P 500 since 1950 to facilitate more accurate return metrics than the monthly average date in the CAPE csv.
 
 ```{r}
-#GSPC <- read_csv("C:/Users/Wes Aull/GoogleDrive/Capstone/Data/^GSPC.csv", 
-#                 col_types = cols(Date = col_date(format = "%m/%d/%Y"), 
-#                                  Volume = col_number()))
+GSPC <- read_csv("C:/Users/Wes Aull/GoogleDrive/Capstone/Data/^GSPC.csv", 
+                 col_types = cols(Date = col_date(format = "%m/%d/%Y"), 
+                                  Volume = col_number()))
 
-GSPC <- read_csv("~/GoogleDrive/Capstone/Data/^GSPC.csv", 
-    col_types = cols(Date = col_date(format = "%m/%d/%Y"), 
-        Volume = col_number()))
+#GSPC <- read_csv("~/GoogleDrive/Capstone/Data/^GSPC.csv", 
+#    col_types = cols(Date = col_date(format = "%m/%d/%Y"), 
+#        Volume = col_number()))
 
 GSPC = as.xts(GSPC[,2:7], order.by=GSPC$Date)
 GSPC$RSI = RSI(as.vector(GSPC$Close), n = 100)
@@ -255,28 +255,40 @@ GSPC_RSI$RSI_8M = GSPC$RSI_8M
 
 plot(GSPC_RSI$RSI_8M)
 
+## Slightly smooth returns.
+GSPC_18M_Ret$GSPC.Close = rollmean(GSPC_18M_Ret$GSPC.Close,2,fill=NA)
+GSPC_18M_Ret = GSPC_18M_Ret[complete.cases(GSPC_18M_Ret),]
+
+GSPC_12M_Ret$GSPC.Close = rollmean(GSPC_12M_Ret$GSPC.Close,2,fill=NA)
+GSPC_12M_Ret = GSPC_12M_Ret[complete.cases(GSPC_12M_Ret),]
+
+GSPC_6M_Ret$GSPC.Close = rollmean(GSPC_6M_Ret$GSPC.Close,2,fill=NA)
+GSPC_6M_Ret = GSPC_6M_Ret[complete.cases(GSPC_6M_Ret),]
+
 ```
 
 
 ```{r}
-window_length = 72
-exp_decay <- 0.95 ^ (window_length:1)
+window_length = 60
+#exp_decay <- 0.98 ^ (window_length:1)
 a = data$LADCB[complete.cases(data$LADCB),]
-a = ROC(a$LADCB,3,type='discrete')
+a = ROC(a$LADCB,6,type='discrete')
 data$LADCB = NULL
 a = a$LADCB[complete.cases(a$LADCB),]
 a = roll_scale(a$LADCB[complete.cases(a$LADCB),],width=window_length,min_obs = 12)
-plot(exp(a))
-plot(1.3^a)
-a=1.3^a
-data = merge(data,a,join='left',fill='NA')
+plot(a)
+plot(1.2^a)
+b=1.2^a
+data = merge(data,b,join='left',fill='NA')
 ```
 
 
 ```{r}
-window_length = 72
+window_length = 120
 exp_decay <- 0.95 ^ (window_length:1)
 a = data$ICSA[complete.cases(data$ICSA),]
+a = rollmeanr(a$ICSA,36,fill=NA)
+a = a$ICSA[complete.cases(a$ICSA),]
 a = ROC(a$ICSA,3,type='discrete')
 data$ICSA = NULL
 a = a$ICSA[complete.cases(a$ICSA),]
@@ -287,13 +299,29 @@ data = merge(data,a,join='left',fill='NA')
 
 
 ```{r}
-window_length = 120
+window_length = 160
 exp_decay <- 0.95 ^ (window_length:1)
 a = data$NYX_MD[complete.cases(data$NYX_MD),]
-a = ROC(a$NYX_MD,60,type='discrete')
+a = rollmeanr(a$NYX_MD,12,fill=NA)
+a = a$NYX_MD[complete.cases(a$NYX_MD),]
+a = ROC(a$NYX_MD,12,type='discrete')
 data$NYX_MD = NULL
 a = a$NYX_MD[complete.cases(a$NYX_MD),]
 a = roll_scale(a$NYX_MD[complete.cases(a$NYX_MD),],width=window_length,min_obs = 12)
+plot(a)
+data = merge(data,a,join='left',fill='NA')
+```
+
+
+```{r}
+window_length = 120
+exp_decay <- 0.95 ^ (window_length:1)
+a = data$NYX_CB[complete.cases(data$NYX_CB),]
+a = rollmeanr(a$NYX_CB,12,fill=NA)
+a = a$NYX_CB[complete.cases(a$NYX_CB),]
+data$NYX_CB = NULL
+a = a$NYX_CB[complete.cases(a$NYX_CB),]
+a = roll_scale(a$NYX_CB[complete.cases(a$NYX_CB),],width=window_length,min_obs = 12)
 plot(a)
 data = merge(data,a,join='left',fill='NA')
 ```
@@ -313,8 +341,10 @@ data = merge(data,a,join='left',fill='NA')
 
 
 ```{r}
-window_length = 48
+window_length = 100
 exp_decay <- 0.95 ^ (window_length:1)
+a = data$T10[complete.cases(data$T10),]
+a = rollmeanr(a$T10,6,fill=NA)
 a = data$T10[complete.cases(data$T10),]
 data$T10 = NULL
 a = a$T10[complete.cases(a$T10),]
@@ -327,9 +357,11 @@ data = merge(data,a,join='left',fill='NA')
 
 
 ```{r}
-window_length = 24
+window_length = 60
 exp_decay <- 0.95 ^ (window_length:1)
 a = data$WKH_MAN[complete.cases(data$WKH_MAN),]
+a = data$WKH_MAN[complete.cases(data$WKH_MAN),]
+a = rollmeanr(a$WKH_MAN,24,fill=NA)
 a = ROC(a$WKH_MAN,6,type='discrete')
 data$WKH_MAN = NULL
 a = a$WKH_MAN[complete.cases(a$WKH_MAN),]
@@ -340,7 +372,7 @@ data = merge(data,a,join='left',fill='NA')
 
 
 ```{r}
-window_length = 24
+window_length_m = 60
 exp_decay <- 0.95 ^ (window_length:1)
 a = data$Soc32_Up14[complete.cases(data$Soc32_Up14),]
 a = rollmeanr(a$Soc32_Up14,12,fill=NA)
@@ -356,7 +388,7 @@ data = merge(data,a,join='left',fill='NA')
 
 
 ```{r}
-window_length = 24
+window_length = 60
 exp_decay <- 0.95 ^ (window_length:1)
 a = data$Soc32_Mean[complete.cases(data$Soc32_Mean),]
 a = rollmeanr(a$Soc32_Mean,12,fill=NA)
@@ -371,7 +403,7 @@ data = merge(data,a,join='left',fill='NA')
 
 
 ```{r}
-window_length = 24
+window_length_m = 60
 exp_decay <- 0.95 ^ (window_length:1)
 a = data$CPI[complete.cases(data$CPI),]
 a = rollmeanr(a$CPI,12,fill=NA)
@@ -386,10 +418,10 @@ data = merge(data,a,join='left',fill='NA')
 
 
 ```{r}
-window_length = 48
+window_length = 120
 exp_decay <- 0.95 ^ (window_length:1)
 a = GSPC_RSI$RSI_8M[complete.cases(GSPC_RSI$RSI_8M),]
-a = rollmeanr(a$RSI_8M,12,fill=NA)
+a = rollmeanr(a$RSI_8M,3,fill=NA)
 a = a$RSI_8M[complete.cases(a$RSI_8M),]
 a = ROC(a$RSI_8M,24,type='discrete')
 GSPC_RSI$RSI_8M = NULL
@@ -398,6 +430,70 @@ a = roll_scale(a$RSI_8M[complete.cases(a$RSI_8M),],width=window_length,min_obs =
 plot(a)
 data = merge(data,a,join='left',fill='NA')
 ```
+
+
+```{r}
+window_length = 60
+exp_decay <- 0.95 ^ (window_length:1)
+a = data$Soc28_Bad[complete.cases(data$Soc28_Bad),]
+a = rollmeanr(a$Soc28_Bad,6,fill=NA)
+a = a$Soc28_Bad[complete.cases(a$Soc28_Bad),]
+#b = ROC(a$Soc28_Bad,24,type='discrete')
+data$Soc28_Bad = NULL
+b = a$Soc28_Bad[complete.cases(a$Soc28_Bad),]
+c = roll_scale(b$Soc28_Bad[complete.cases(b$Soc28_Bad),],width=window_length,min_obs = 12)
+plot(a)
+plot(c)
+data = merge(data,c,join='left',fill='NA')
+```
+
+
+
+```{r}
+window_length = 60
+exp_decay <- 0.95 ^ (window_length:1)
+a = data$Soc25_Better[complete.cases(data$Soc25_Better),]
+b = rollmeanr(a$Soc25_Better,24,fill=NA)
+b = b$Soc25_Better[complete.cases(b$Soc25_Better),]
+#b = ROC(a$Soc25_Better,24,type='discrete')
+data$Soc25_Better = NULL
+b = b$Soc25_Better[complete.cases(b$Soc25_Better),]
+c = roll_scale(b$Soc25_Better[complete.cases(b$Soc25_Better),],width=window_length,min_obs = 12)
+plot(a)
+plot(c)
+data = merge(data,c,join='left',fill='NA')
+```
+
+
+```{r}
+window_length = 60
+exp_decay <- 0.95 ^ (window_length:1)
+a = data$Soc28_Relative[complete.cases(data$Soc28_Relative),]
+b = rollmeanr(a$Soc28_Relative,24,fill=NA)
+b = b$Soc28_Relative[complete.cases(b$Soc28_Relative),]
+#b = ROC(a$Soc28_Relative,24,type='discrete')
+data$Soc28_Relative = NULL
+b = b$Soc28_Relative[complete.cases(b$Soc28_Relative),]
+c = roll_scale(b$Soc28_Relative[complete.cases(b$Soc28_Relative),],width=window_length,min_obs = 12)
+plot(a)
+plot(c)
+data = merge(data,c,join='left',fill='NA')
+```
+
+
+```{r}
+#window_length = 240
+#exp_decay <- 0.95 ^ (window_length:1)
+a = data$T10YFF[complete.cases(data$T10YFF),]
+b = rollmeanr(a$T10YFF,12,fill=NA)
+#c = roll_scale(b$T10YFF[complete.cases(b$T10YF),],width=window_length,min_obs = 12)
+#data$T10YFF = NULL
+plot(a)
+plot(b)
+plot(c)
+#data = merge(data,b,join='left',fill='NA')
+```
+
 
 
 ```{r}
@@ -464,6 +560,7 @@ complete_data$ISM_MAN_NEWORD = NULL
 #complete_data$Soc32_75thP = NULL
 #complete_data$AAII_Bullish = NULL
 #complete_data$T10 = NULL
+#complete_data$NYX_CB = NULL
 
 #complete_data$
 #complete_data$Res_Permit = NULL
@@ -485,23 +582,29 @@ complete_data = complete_data[complete.cases(complete_data),]
 #complete_data = roll_scale(complete_data,width=window_length,min_obs = 12)
 #complete_data = complete_data[complete.cases(complete_data),]
 
-complete_data = merge(complete_data,GSPC_6M_Ret,join='left',fill='NA')
+complete_data = merge(complete_data,GSPC_12M_Ret,join='left',fill='NA')
 complete_data = complete_data[complete.cases(complete_data),]
-complete_data$GSPC.Close = scale(complete_data$GSPC.Close)
+
+
+#Scales data by the complete data, which is inappropriate.
+#complete_data$GSPC.Close = scale(complete_data$GSPC.Close)
 
 ```
 
 Set out of sample.  I use 1/3 of the data set as out of sample to contain an entire cycle for testing results.
 
 ```{r}
-L <- nrow(complete_data)-120
+L <- nrow(complete_data)-108
 train.index = seq(1,L,by=1)
 test.index = seq((L+1),nrow(complete_data),by=1)
+
+preProcessParameters = preProcess(coredata(complete_data[train.index,1:(ncol(complete_data))]), method = c('center','scale'))
+complete_stand_data = as.xts(predict(preProcessParameters,coredata(complete_data)),order.by=index(complete_data))
 ```
 
 
-```{r}
-preProcessParameters = preProcess(coredata(complete_data[,1:(ncol(complete_data)-1)]), method = c('center','scale','pca'))
+```{r, echo=FALSE}
+preProcessParameters = preProcess(coredata(complete_data[train.index,1:(ncol(complete_data)-1)]), method = c('center','scale','pca'))
 complete_PCA_data = as.xts(predict(preProcessParameters,coredata(complete_data)),order.by=index(complete_data))
 
 ## Create model and assess accuracy on train/test set.
@@ -521,16 +624,13 @@ ggplot(resid_lrpca,aes(x=fitted,y=actual,colour=residual)) + geom_point() + scal
 
 resid_lrpca_test = data.frame(complete_PCA_data[test.index,1],test_pred_PCA,(complete_PCA_data[test.index,1]-test_pred_PCA),row.names = index(complete_data[test.index]))
 colnames(resid_lrpca_test) = c('actual','fitted','residual')
-ggplot(resid_lrpca_test,aes(x=fitted,y=actual,colour=residual)) + geom_point() + scale_colour_gradientn(colours=rainbow(4)) +
-  ggtitle(label = 'Test Residual Plot') + theme_dark()
+ggplot(resid_lrpca_test,aes(x=fitted,y=actual,colour=residual)) + geom_point() + scale_colour_gradientn(colours=rainbow(4)) + ggtitle(label = 'Test Residual Plot') + theme_dark()
 ```
 PCA results underperform in all model testing to this point.  It appears that variables with small variance (but significant signal) could be getting drowned out.
 
 ```{r}
-preProcessParameters = preProcess(coredata(complete_data[,1:(ncol(complete_data)-1)]), method = c('center','scale'))
-complete_stand_data = as.xts(predict(preProcessParameters,coredata(complete_data)),order.by=index(complete_data))
-
-lr = lm(GSPC.Close ~ ., complete_stand_data[train.index])
+lr = lm(GSPC.Close ~ LADCB + CAPE + NYX_MD
+        , complete_stand_data[train.index])
 summary(lr)
 train_pred_lr = predict(lr,complete_stand_data[train.index,1:(ncol(complete_stand_data)-1)])
 test_pred_lr = predict(lr,complete_stand_data[test.index,1:(ncol(complete_stand_data)-1)])
@@ -553,13 +653,41 @@ c_lr = cor(complete_stand_data)
 corrplot(c_lr)
 mean(complete_data$GSPC.Close)
 sd(complete_data$GSPC.Close)
+
+plot(complete_stand_data$T10YFF)
 ```
 The linear regression model is one of the very few models capable of extrapolating for this large of an out of sample (and for one of the more heteregenous periods compared to the training set).
 
 
 ```{r}
+class_data = complete_stand_data
+class_data$GSPC.Close = cut(class_data$GSPC.Close,c(-10,-1,10))
+logr = glm(GSPC.Close ~ LADCB, class_data[train.index],family = 'gaussian')
+summary(logr)
+train_pred_logr = predict(logr,class_data[train.index,1:(ncol(complete_stand_data)-1)])
+test_pred_logr = predict(logr,class_data[test.index,1:(ncol(complete_stand_data)-1)])
+accuracy(as.vector(train_pred_logr),class_data[train.index,ncol(complete_stand_data)])
+accuracy(as.vector(test_pred_logr),class_data[test.index,ncol(complete_stand_data)])
+plot(logr)
+
+scatter.smooth(logr$fit,
+               residuals(logr, type = "deviance"),
+               lpars = list(col = "red"),
+               xlab = "Fitted Probabilities",
+               ylab = "Deviance Residual Values",
+               main = "Residual Plot for\nLogistic Regression of Admission Data")
+abline(h = 0, lty = 2)
+
+plot(logr)
+library(car)
+influencePlot(logr)
+
+```
+
+
+```{r}
 model.empty = lm(GSPC.Close ~ 1, data = complete_stand_data[train.index]) #The model with an intercept ONLY.
-model.full = lm(GSPC.Close ~ . - Soc5_ExpIndex, data = complete_stand_data[train.index]) #The model with ALL variables.
+model.full = lm(GSPC.Close ~ ., data = complete_stand_data[train.index]) #The model with ALL variables.
 scope = list(lower = formula(model.empty), upper = formula(model.full))
 
 forwardAIC = step(model.empty, scope, direction = "forward", k = 2, verbose = FALSE, trace = 0)
@@ -589,9 +717,9 @@ ggplot(resid_forwlr_test,aes(x=fitted,y=actual,colour=residual)) + geom_point() 
 
 
 ```{r}
-glm_alph = .7
+glm_alph = .5
 grid = 10^seq(5, -2, length = 100)
-x_stand = sparse.model.matrix(GSPC.Close ~ ., data = complete_stand_data)
+x_stand = sparse.model.matrix(GSPC.Close ~ LADCB, data = complete_stand_data)
 y_stand = as.matrix(complete_stand_data[,ncol(complete_stand_data)], rownames.force = index(complete_stand_data))
 
 ridge.models = glmnet(x_stand[train.index, ], y_stand[train.index], alpha = glm_alph, lambda = grid)
@@ -646,7 +774,7 @@ print(accuracy(as.vector(test_pred_nn$net.result), complete_data[test.index,ncol
 
 ```{r}
 ## Create model and assess accuracy on train/test set.
-rf = randomForest(GSPC.Close ~ ., complete_data[train.index])
+rf = randomForest(GSPC.Close ~ LADCB + T10YFF + CAPE + NYX_MD, complete_data[train.index])
 varImpPlot(rf)
 rf
 train_pred_rf = predict(rf, complete_data[train.index,1:(ncol(complete_data)-1)])
@@ -669,7 +797,7 @@ In the test chart, it's even more obvious how bad Random Forest is at predicting
 
 ```{r}
 ## Create model and assess accuracy on train/test set.
-svr = svm(GSPC.Close ~ .,complete_data[train.index],epsilon=.1,type='eps-regression',cross=5)
+svr = svm(GSPC.Close ~ LADCB + CAPE + T10YFF + NYX_MD,complete_data[train.index],epsilon=.1,type='eps-regression',cross=5)
 svr
 train_pred_svr = predict(svr, complete_data[train.index,1:(ncol(complete_data)-1)])
 test_pred_svr = predict(svr, complete_data[test.index,1:(ncol(complete_data)-1)])
@@ -743,7 +871,7 @@ ggplot(krls_test_resid,aes(x=fitted,y=actual,colour=residual)) + geom_point() + 
 
 
 ```{r}
-quant_reg = rq(GSPC.Close ~ .,tau=.53,complete_stand_data[train.index,])
+quant_reg = rq(GSPC.Close ~ LADCB + CAPE + T10YFF,tau=.53,complete_stand_data[train.index,])
 quant_reg_pred_test = predict(quant_reg,complete_stand_data[test.index,1:(ncol(complete_stand_data)-1)])
 print(accuracy(quant_reg$fitted.values,quant_reg$y))
 print(accuracy(quant_reg_pred_test,complete_stand_data[test.index,ncol(complete_stand_data)]))
@@ -764,7 +892,7 @@ ggplot(qr_test_resid,aes(x=fitted,y=actual,colour=residual)) + geom_point() + sc
 
 ```{r}
 ## Create model and assess accuracy on train/test set.
-rf = randomForest(GSPC.Close ~ LADCB + CAPE + NYX_MD + T10YFF + UNRATE + AAII_Bullish + OVT_MAN + Soc32_Up14 + Soc28_Bad + RSI_6M + Res_Permit + BAA + CPI + WKH_MAN, complete_data[train.index])
+rf = randomForest(GSPC.Close ~ LADCB + CAPE + NYX_MD + T10YFF, complete_data[train.index])
 varImpPlot(rf)
 rf
 train_pred_rf = predict(rf, complete_data[train.index,1:(ncol(complete_data)-1)])
@@ -785,7 +913,7 @@ ggplot(resid_rf_test,aes(x=fitted,y=actual,colour=residual)) + geom_point() + sc
 
 
 ```{r}
-ct = ctree(GSPC.Close ~ .,complete_data[train.index], controls = ctree_control(maxsurrogate = 0, mtry = 0))
+ct = ctree(GSPC.Close ~ UNRATE,complete_data[train.index], controls = ctree_control(maxsurrogate = 0, mtry = 0))
 ct
 plot(ct)
 
@@ -793,7 +921,40 @@ train_pred_ct = predict(ct, complete_data[train.index,1:(ncol(complete_data)-1)]
 test_pred_ct = predict(ct, complete_data[test.index,1:(ncol(complete_data)-1)])
 accuracy(as.vector(train_pred_ct), complete_data[train.index,ncol(complete_data)])
 accuracy(as.vector(test_pred_ct), complete_data[test.index,ncol(complete_data)])
+
+## Collect and visualize residuals from the train and test sets for analysis.
+resid_ct = data.frame(complete_data[train.index,ncol(complete_data)],train_pred_ct,(complete_data[train.index,ncol(complete_data)] - train_pred_ct),row.names = index(complete_data[train.index]))
+colnames(resid_ct) = c('actual','fitted','residual')
+ggplot(resid_ct,aes(x=fitted,y=actual,colour=residual)) + geom_point() + scale_colour_gradientn(colours=rainbow(4)) + ggtitle(label = 'Train Residual Plot') + theme_dark()
+
+resid_ct_test = data.frame(complete_data[test.index,ncol(complete_data)],test_pred_ct,(complete_data[test.index,ncol(complete_data)]-test_pred_ct),row.names = index(complete_data[test.index]))
+colnames(resid_ct_test) = c('actual','fitted','residual')
+ggplot(resid_ct_test,aes(x=fitted,y=actual,colour=residual)) + geom_point() + geom_jitter(width = .003,height = .003) + scale_colour_gradientn(colours=rainbow(4)) + ggtitle(label = 'Test Residual Plot') + theme_dark() + xlab('Fitted Standardized Return')
+#Look at the 6- and 9- month rate of change for LADBC.  Both interesting.
 ```
+
+
+```{r}
+ct = rpart(GSPC.Close ~ .,complete_stand_data[train.index])
+ct
+plot(ct)
+
+train_pred_ct = predict(ct, complete_stand_data[train.index,1:(ncol(complete_stand_data)-1)])
+test_pred_ct = predict(ct, complete_stand_data[test.index,1:(ncol(complete_stand_data)-1)])
+accuracy(as.vector(train_pred_ct), complete_stand_data[train.index,ncol(complete_stand_data)])
+accuracy(as.vector(test_pred_ct), complete_stand_data[test.index,ncol(complete_stand_data)])
+
+## Collect and visualize residuals from the train and test sets for analysis.
+resid_ct = data.frame(complete_stand_data[train.index,ncol(complete_stand_data)],train_pred_ct,(complete_stand_data[train.index,ncol(complete_stand_data)] - train_pred_ct),row.names = index(complete_stand_data[train.index]))
+colnames(resid_ct) = c('actual','fitted','residual')
+ggplot(resid_ct,aes(x=fitted,y=actual,colour=residual)) + geom_point() + scale_colour_gradientn(colours=rainbow(4)) + ggtitle(label = 'Train Residual Plot') + theme_dark()
+
+resid_ct_test = data.frame(complete_stand_data[test.index,ncol(complete_stand_data)],test_pred_ct,(complete_stand_data[test.index,ncol(complete_stand_data)]-test_pred_ct),row.names = index(complete_stand_data[test.index]))
+colnames(resid_ct_test) = c('actual','fitted','residual')
+ggplot(resid_ct_test,aes(x=fitted,y=actual,colour=residual)) + geom_point() + scale_colour_gradientn(colours=rainbow(4)) + ggtitle(label = 'Test Residual Plot') + theme_dark()
+
+```
+
 
 
 
@@ -804,7 +965,7 @@ fviz_cluster(knn_clust, data = df, ellipse.type = "norm",
              ellipse.level = 0.8,ggtheme= theme_economist_white(),main = 'KNN Clustering')
 
 df = data.frame(complete_stand_data[,1:(ncol(complete_stand_data)-1)])
-knn_clust = kmeans(df, centers =4, algorithm = 'MacQueen')
+knn_clust = kmeans(df, centers =5, algorithm = 'MacQueen')
 fviz_cluster(knn_clust, data = df, ellipse.type = "norm",
              ellipse.level = 0.8,ggtheme= theme_economist_white(),main = 'KNN Clustering')
 
@@ -859,7 +1020,7 @@ output<-forecast(arima_1m,h=2)
 plot(output)
 
 L <- length(GSPC_Yearly_Ret)-9  # shrink the length to avoid row index error
-x <- GSPC_Yearly_Ret[1:L]
+x <- GSPC_Yearly_Ret[30:L]
 fit2<-auto.arima(x)
 fc <- forecast(fit2, h = 2)  # the output would have error if the number of row > 1e4
 plot(fc)
@@ -1026,9 +1187,7 @@ plot(z[1:(L+12),1]
 Excellent results that are directionally well-fit with rare divergence/heavy error.  The nnetar seems to outperform in examining the smoothed and then differentiated curve.
 
 ```{r}
-z = complete_data$RSI_6M
-z = z[complete.cases(z),]
-z = rollmeanr(z$RSI_6M,36,fill=NA)
+z = complete_data$LADCB
 z = z[complete.cases(z),]
 mean(z)
 adf.test(z)
@@ -1039,12 +1198,12 @@ acf(z,lag.max = 140)
 pacf(z, lag.max = 140)
 
 
-L <- length(z)-120  # shrink the length to avoid row index error
+L <- length(z)- 112  # shrink the length to avoid row index error
 x <- z[1:L]
 fit2<-auto.arima(x)
-fc <- forecast(fit2, h = 12)  # the output would have error if the number of row > 1e4
+fc <- forecast(fit2, h = 6)  # the output would have error if the number of row > 1e4
 plot(fc)
-accuracy(fc, z[(L+1):(L+12)])
+accuracy(fc, z[(L+1):(L+6)])
 
 nn_model <- nnetar(z[2:L,1])
 nn_model$p     # 33
@@ -1054,10 +1213,11 @@ fitted.nn<-fitted.nnetar(nn_model)
 residuals.nnetar<-residuals.nnetar(nn_model)
 sqrt(mean(residuals.nnetar**2,na.rm=T))  # 0.007213
 accuracy(nn_model)
-fc_nn <- forecast(nn_model, h=12)
-accuracy(fc_nn, z[(L+1):(L+12), 1])
+fc_nn <- forecast(nn_model, h=6)
+accuracy(fc_nn, z[(L+1):(L+6), 1])
 plot(fc_nn)
-plot(z[1:(L+12),1])
+plot(z[1:(L+6),1])
+sd(z)
 ```
 
 
@@ -1106,6 +1266,7 @@ plot(z[1:(L+12),1])
 NNAR(27,1,14)[12]
 NNAR(5,1,4)[12] II
 ```{r}
+plot(GSPC_12M_Ret,plot.type = "functions", plotlegend = TRUE)
 
 ```
 
