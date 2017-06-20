@@ -9,7 +9,7 @@ coin = label_volatile_days(0.03)
 sum(is.na(coin))/(nrow(coin)*ncol(coin))
 
 # Find the missingness of each column
-sapply(coin, function(x) sum(is.na(x))/length(x))
+missingness = sapply(coin, function(x) sum(is.na(x))/length(x))
 
 # Make a general cut on the columns to include
 general_cols = c(seq(3,21,by=2), 32:50, 60)
