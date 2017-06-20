@@ -9,7 +9,7 @@ coin = label_volatile_days(0.03)
 sum(is.na(coin))/(nrow(coin)*ncol(coin))
 
 # Find the missingness of each column
-sapply(coin, function(x) sum(is.na(x))/length(x))
+missingness = sapply(coin, function(x) sum(is.na(x))/length(x))
 
 # Make a general cut on the columns to include
 general_cols = c(seq(3,21,by=2), 32:50, 60)
@@ -109,12 +109,12 @@ importance(rf.default)
 varImpPlot(rf.default)
 
 # Use my custom made cross validation script and then run it multiple times to create a few plots
+total = 1
 results = vector('list',1)
-results[[1]] = vector('list',5)
+results[[1]] = vector('list', total)
 results_gini = vector('list',1)
-results_gini[[1]] = vector('list',5)
-
-for (i in 1:1) {
+results_gini[[1]] = vector('list', total)
+for (i in 1:total) {
     results[[1]][[i]] = rfcv_custom(coin.train[,-ncol(coin.train)], coin.train$activity)
     results_gini[[1]][[i]] = rfcv_custom(coin.train[,-ncol(coin.train)], coin.train$activity)
 }
@@ -122,7 +122,7 @@ for (i in 1:1) {
 oobs = data.frame(results[[1]][[1]][[1]])
 oobs_gini = data.frame(results_gini[[1]][[1]][[1]])
 
-for (i in 1:5) {
+for (i in 1:total) {
     oobs = cbind(oobs, results[[1]][[i]][[1]])
     oobs_gini = cbind(oobs_gini, results_gini[[1]][[i]][[1]])
 }
@@ -145,9 +145,9 @@ lines(sapply(oobs_gini,mean))
 dev.off()
 
 ### Retrieve best variable size using the accuracy metric
-results[[1]][[1]][[1]][is.na(result[[1]][[1]][[1]])] = 0
-nvars = which(result[[1]][[1]][[1]] == min(result[[1]][[1]][[1]]))
-best_subset = names(results[[1]][[1]][[2]][nvars])
+results[[1]][[1]][[1]][is.na(results[[1]][[1]][[1]])] = 1
+nvars = which(results[[1]][[1]][[1]] == min(results[[1]][[1]][[1]]))
+best_subset = row.names(results[[1]][[1]][[2]][[nvars]])
 
 ## Add the target to the best_subset
 best_subset[length(best_subset)+1] = 'activity'
@@ -167,7 +167,7 @@ coin.test = coin.test[, best_subset]
 # matplot(result2[[1]]$n.var, cbind(rowMeans(error.cv), error.cv), type="l",
 #         lwd=c(2, rep(1, ncol(error.cv))), col=1, lty=1, xlab="Number of variables", ylab="CV Error")
 
-max_mtry = ncol(coin)-1
+max_mtry = ncol(coin.train)-1
 num_trees = 500
 oob.err = numeric(max_mtry)
 for (mtry in 1:max_mtry) {
@@ -176,35 +176,44 @@ for (mtry in 1:max_mtry) {
     cat("We're performing iteration", mtry, "\n")
 }
 
+svg('rf_mtry_opt.svg')
 plot(1:max_mtry, oob.err, pch = 16, type = "b",
      xlab = "Variables Considered at Each Split",
      ylab = "OOB Misclassification Rate",
      main = "Random Forest OOB Error Rates\nby # of Variables")
+dev.off()
 
 optimal_mtry = which(oob.err == min(oob.err))
 
-trees = seq(100, 10000, by = 100)
+trees = seq(100, 3500, by = 100)
 oob.err.trees = numeric(length(trees))
 for (i in 1:length(trees)) {
     fit = randomForest(activity ~ ., data = coin.train, mtry = optimal_mtry, ntree = trees[i])
-    oob.err[i] = fit$err.rate[trees[i], 1]
+    oob.err.trees[i] = fit$err.rate[trees[i], 1]
     cat("We're performing iteration", i, "\n")
 }
 
-plot(1:length(trees), oob.err.trees, pch = 16, type = "b",
+svg('rf_num_of_trees.svg')
+plot(trees, oob.err.trees, pch = 16, type = "b",
      xlab = "Total Number of Trees",
      ylab = "OOB Misclassification Rate",
      main = "Random Forest OOB Error Rates\nby # of Trees")
+dev.off()
 
 optimal_trees = trees[which(oob.err.trees == min(oob.err.trees))]
-rf.optimal = randomForest(activity ~., data = coin.train, importance = TRUE, mtry = optimal_mtry, 
-                          ntree = num_trees)
+if (length(optimal_trees) > 1) {
+    optimal_trees = min(optimal_trees)
+}
 
-rf.optimal
-table(predict(rf.optimal, coin.test[,-ncol(coin.test)], type = "class"), coin.test$activity)
+rf.optimal = randomForest(activity ~., data = coin.train, importance = TRUE, mtry = optimal_mtry, 
+                          ntree = optimal_trees)
+
+rf.optimal.table = table(predict(rf.optimal, coin.test[,-ncol(coin.test)], type = "class"), coin.test$activity)
 
 importance(rf.optimal)
+svg('rf_optimal_importance.svg')
 varImpPlot(rf.optimal)
+dev.off()
 
 ### SVM take two with the better features
 
@@ -215,17 +224,19 @@ coin.test.svm = coin.test.svm[, best_subset]
 cv.coin.svc.linear.opt = tune(svm,
                               activity ~ .,
                               data = coin.train.svm,
-                              kernel = "radial",
+                              kernel = "linear",
                               ranges = list(cost = 10^(seq(-5, 1, length = 50))))
 
 cv.coin.svc.linear.opt
 
+svg('svm_optimal_linear.svg')
 plot(cv.coin.svc.linear.opt$performances$cost,
      cv.coin.svc.linear.opt$performances$error,
      xlab = "Cost",
      ylab = "Error Rate",
-     main = "SVM Cost vs. Error for the Radial Kernel\n with Optimal Subset",
+     main = "SVM Cost vs. Error for the Linear Kernel\n with Optimal Subset",
      type = "l")
+dev.off()
 
 best.linear.model.opt = cv.coin.svc.linear.opt$best.model
 
@@ -246,12 +257,14 @@ cv.coin.svc.radial.opt = tune(svm,
 
 cv.coin.svc.radial.opt
 
+svg('svm_optimal_radial.svg')
 plot(cv.coin.svc.radial.opt$performances$cost,
      cv.coin.svc.radial.opt$performances$error,
      xlab = "Cost",
      ylab = "Error Rate",
      main = "SVM Cost vs. Error for the Radial Kernel\n with Optimal Subset",
      type = "l")
+dev.off()
 
 best.radial.model.opt = cv.coin.svc.radial.opt$best.model
 
@@ -328,7 +341,9 @@ wssplot = function(data, nc = 15, seed = 0) {
          main = "Scree Plot for the K-Means Procedure")
 }
 
-wssplot(coin.scale)
+svg('kmeans_result.svg')
+wssplot(coin.scale, nc = 25, seed = 100)
+dev.off()
 
 # Just checking the screeplot but still there is no apparent minimum although I would expect there to be 3
 km.coin = kmeans(coin.scale, centers = 4, nstart = 100)
