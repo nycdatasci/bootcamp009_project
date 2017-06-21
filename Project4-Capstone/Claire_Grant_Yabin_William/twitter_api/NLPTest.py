@@ -3,11 +3,11 @@
 import urllib
 import unirest
 
-mar_Auth = '53aa50aee4b0596140340719' 
+mar_Auth = 'xxx' 
 
 def sentimentAnalysis(text):
 	response = unirest.post("https://twinword-sentiment-analysis.p.mashape.com/analyze/",
-		headers={ "X-Mashape-Key": "Ip3HFhr1pVmshpdpFSywwimMdye8p1D7tvijsnYxr40IJIta6I", 
+		headers={ "X-Mashape-Key": "xxx", 
 		"Content-Type": "application/x-www-form-urlencoded",
         "Accept": "application/json"
         },
