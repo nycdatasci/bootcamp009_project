@@ -36,10 +36,10 @@ def stopword(i):
 def main(): 
     conf = SparkConf().setAppName("first")
     sc = SparkContext(conf=conf)
-    sc._jsc.hadoopConfiguration().set("fs.s3n.awsAccessKeyId",'AKIAI3V4KTCTOD4CF7IQ')
-    sc._jsc.hadoopConfiguration().set("fs.s3n.awsSecretAccessKey",'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')
-    config_dict = {"fs.s3n.awsAccessKeyId":"AKIAI3V4KTCTOD4CF7IQ",
-               "fs.s3n.awsSecretAccessKey":"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"}
+    sc._jsc.hadoopConfiguration().set("fs.s3n.awsAccessKeyId",'xxx')
+    sc._jsc.hadoopConfiguration().set("fs.s3n.awsSecretAccessKey",'xxx')
+    config_dict = {"fs.s3n.awsAccessKeyId":"xxx",
+               "fs.s3n.awsSecretAccessKey":"xxx"}
     bucket = "project4capstones3"
     prefix = "/2017/06/*/*/project*"
     filename = "s3n://{}/{}".format(bucket, prefix)
