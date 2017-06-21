@@ -247,8 +247,8 @@ class StreamListener(tweepy.StreamListener):
 def main():
     stream_name = 'project4_capstone_stream_3'
     client = boto3.client('firehose', region_name='us-east-1',
-                          aws_access_key_id='AKIAI3V4KTCTOD4CF7IQ',
-                          aws_secret_access_key='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'
+                          aws_access_key_id='xxx',
+                          aws_secret_access_key='xxx'
                           ) # the region may not be needed
     stream_status = client.describe_delivery_stream(DeliveryStreamName=stream_name)
     if stream_status['DeliveryStreamDescription']['DeliveryStreamStatus'] == 'ACTIVE':
