@@ -14,15 +14,10 @@ import uuid
 
 
 #Grant Twitter Keys
-consumer_key = 'zxPN8eBNb55u2yaK5RzU9VcJ4'
-consumer_secret = 'VmfESVhtva3xse7s9LRPNSSwsPbvs7tVJ2sN9jhUDfNsrxqz4s'
-access_token = '871546878801960960-WdQT3jDnr5atbyWHZXyKE38fu1psYZR'
-access_token_secret = 'yihVO9XG5dF89j8TrI0Zd8XwcEAVYJBeDjSaMb5jkj44L'
-#William Twitter Keys
-# consumer_key = 'eKzbqiUoppO2qO3bwEjgEmNts'
-# consumer_secret = 'Yx2cWUk9Zv39OnxFWrDbaWj6QZzuuCzL5Y1LSAXOzbpFyafiqA'
-# access_token = '785303015364423680-W4ynhsj4wXLaolCOLs1tm2WYIO9IwHQ'
-# access_token_secret = '5WfcVF7QYcANtJMkIiJcWNizcbIxmUCoGVEmxWZ7Immqz'
+consumer_key = 'xxx'
+consumer_secret = 'xxx'
+access_token = 'xxx'
+access_token_secret = 'xxx'
 #
 
 
