@@ -6,6 +6,7 @@ library(tm)
 library(igraph)
 library(RColorBrewer)
 
+<<<<<<< HEAD
 #coin <- read.csv("~/Desktop/data_science/bootcamp009_project/Project4-Capstone/cryptocurrs/ran/app/coin.csv")
 coin <- read.csv("./coin.csv")
 coin = as.xts(coin[,c(2:55)], order.by = as.Date(coin$X))
@@ -15,6 +16,12 @@ btc_choix = c("btc_USDEUR", "btc_USDGBP", "btc_USDCAD", "btc_USDAUD",
 choix = c("USDEUR", "USDGBP", "USDCAD", "USDAUD",
                            "USDJPY", "USDCNY", "USDRUB", "USDBRL",
                            "USDSLL")
+=======
+#coin <- read.csv("~/Desktop/data_science/bootcamp009_project/Project4-Capstone/cryptocurrs/mark/coin.csv")
+coin <- read.csv('~/Projects/nycdsa/communal/bootcamp009_project/Project4-Capstone/cryptocurrs/mark/coin.csv')
+coin = fortify.zoo(coin)
+coin$Index <- as.Date(coin$Index)
+>>>>>>> 06b1c952eab162b03220ccf144d0525137fe3533
 
 
 
@@ -23,6 +30,7 @@ function(input, output){
       btc_choix[which(choix == input$ex)]
   })
   
+<<<<<<< HEAD
 output$plot1 <- renderDygraph({dygraph(cbind(coin[,input$ex],coin[,bitex()]),
                                         main = "Real Exhange Rate and Bitcoin Exchange Rate")%>%
     dyHighlight(highlightSeriesOpts = list(strokeWidth = 1)%>%dyLegend(show = "always", hideOnMouseOut = FALSE)
@@ -67,6 +75,15 @@ text_word<-eventReactive(input$update,{
   m<-as.matrix(tdm)
   v<-sort(rowSums(m),decreasing = TRUE)
   Docs2<-data.frame(word=names(v),freq =v)
+=======
+  output$plot1 <- renderPlotly({
+    
+    plot_ly(mtcars, x = ~mpg, y = ~wt)
+    #ggplotly(ggplot(coin, aes(x=Index,y=coin[,input$ex])) + geom_line() + geom_line(aes(x=Index,y=coin[,input$bitex]),col="red"))
+    #plot_ly(coin, x = ~Index, y = ~input$ex)
+     
+      
+>>>>>>> 06b1c952eab162b03220ccf144d0525137fe3533
   })
 
 output$wordcloud<-renderWordcloud2({

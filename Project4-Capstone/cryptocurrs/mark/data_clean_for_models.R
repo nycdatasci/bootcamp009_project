@@ -1,7 +1,8 @@
 library(xts)
+library(forecast)
 
 setwd('/home/mes/Projects/nycdsa/communal/bootcamp009_project/Project4-Capstone/cryptocurrs/mark/')
-coin = read.csv('coin.csv')
+coin = read.csv('coin.csv', stringsAsFactors = FALSE)
 coin = coin[!is.na(coin$btc_rr_1),]
 #coin[is.na(coin)] = -999
 #coin = xts(coin[,-1], order.by = as.Date(coin$X))

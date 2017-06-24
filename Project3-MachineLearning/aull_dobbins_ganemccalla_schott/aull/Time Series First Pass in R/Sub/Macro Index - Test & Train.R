@@ -27,7 +27,7 @@ set.seed(0)
 
 ############### Import Macro Data and Training Data To Construct Dependent Variable ####################
 
-macro_f <- read_csv("./macro.csv", 
+macro_f <- read_csv("~/GoogleDrive/NYCDSA/bootcamp009_project/Project3-MachineLearning/aull_dobbins_ganemccalla_schott/data/raw/macro.csv", 
                   col_types = cols(apartment_fund_sqm = col_number(), 
                                    average_provision_of_build_contract = col_number(), 
                                    average_provision_of_build_contract_moscow = col_number(), 
@@ -52,6 +52,7 @@ macro_f <- read_csv("./macro.csv",
                                    `rent_price_4+room_bus` = col_number(), 
                                    salary_growth = col_number(), students_state_oneshift = col_number(), 
                                    timestamp = col_date(format = "%Y-%m-%d")))
+
 
 
 train <- read_csv("~/GoogleDrive/NYCDSA/bootcamp009_project/Project3-MachineLearning/aull_dobbins_ganemccalla_schott/data/imputed/train_total.csv", 
@@ -101,14 +102,14 @@ colnames(price) = c('timestamp','price_square_meter')
 price$timestamp = as.Date(price$timestamp)
 
 ## Take sixty day moving average.
-price$price_square_meter = runmean(price$price_square_meter,90)
-macro_f$brent_rub = runmean(macro_f$brent_rub,200)
-macro_f$mortgage_rate = runmean(macro_f$mortgage_rate,200)
-macro_f$lending_spread = runmean(macro_f$lending_spread,200)
-macro_f$rent_price_1room_bus = runmean(macro_f$rent_price_1room_bus,90)
-macro_f$rent_price_2room_bus = runmean(macro_f$rent_price_2room_bus,90)
-macro_f$rent_price_1room_eco = runmean(macro_f$rent_price_1room_eco,90)
-macro_f$rent_price_2room_eco = runmean(macro_f$rent_price_2room_eco,90)
+price$price_square_meter = runmean(price$price_square_meter,60)
+macro_f$brent_rub = runmean(macro_f$brent_rub,60)
+macro_f$mortgage_rate = runmean(macro_f$mortgage_rate,60)
+macro_f$lending_spread = runmean(macro_f$lending_spread,60)
+macro_f$rent_price_1room_bus = runmean(macro_f$rent_price_1room_bus,60)
+macro_f$rent_price_2room_bus = runmean(macro_f$rent_price_2room_bus,60)
+macro_f$rent_price_1room_eco = runmean(macro_f$rent_price_1room_eco,60)
+macro_f$rent_price_2room_eco = runmean(macro_f$rent_price_2room_eco,60)
 
 # Note the base lagged price / square meter for calculating rate of change.
 # This is later used to test predictions in the multi-transaction training set.
@@ -160,9 +161,13 @@ rm(train)
 macro = left_join(price,macro, by = 'timestamp')
 rm(price)
 
+######## Test for stationary series.
+adf.test(macro[,3],)
+plot(macro$rent_price_2room_bus)
+
 ######## Cointegration Test To Ensure non-Spurious Regression With Brent
-#jotest = ca.jo(macro[2:3],type='trace',K=2)
-#summary(jotest)
+jotest = ca.jo(macro[2:8],type='trace',K=2)
+summary(jotest)
 
 ######## Ridge and Linear Regression Model of Relationship Between Price / Square Meter Pricing Environment &
 ######## Select Rate of YOY % / 60D-MA Macro Variables
@@ -190,6 +195,7 @@ coef(ridge.models)
 # Coefficients across Lambda Parameter space.
 plot(ridge.models, xvar = "lambda", label = TRUE, main = "Ridge Regression")
 
+
 # Cross Validation To Optimize Lambda.
 set.seed(0)
 cv.ridge.out = cv.glmnet(x[train, ], y[train], alpha = 0, nfolds = 10, lambda = grid)
@@ -213,8 +219,22 @@ predict(ridge.out, type = "coefficients", s = bestlambda.ridge)
 # Model as Linear Regression (simply for inspection)
 a = lm(price_square_meter ~ mortgage_rate + lending_spread, macro)
 summary(a)
-BIC(a)
+AIC(a)
 plot(a$fitted.values)
+fitted_reg = data.frame((a$fitted.values*100),(macro$price_square_meter*100),macro$timestamp)
+colnames(fitted_reg) = c('Pred_Rate_Change_P_Sqm','Rate_Change_P_Sqm', 'Date')
+ggplot(fitted_reg,aes(Date)) + geom_line(aes(y = Rate_Change_P_Sqm, colour= 'Actual Rate of Change')) +
+  geom_line(aes(y = Pred_Rate_Change_P_Sqm, colour = 'Predicted Rate of Change')) + theme_bw() +
+  ggtitle('Actual vs. Predicted Rate of Change in Price / Square Meter') + 
+  theme(plot.title = element_text(hjust = 0.5,face='bold',size=22)) +
+  ylab('400-Day Rate of Change') + xlab('Date') +
+  theme(axis.title = element_text(size = 17, face='bold')) +
+  theme(axis.text = element_text(size = 11, face = 'bold')) +
+  scale_colour_manual(values = c('black','brown2')) +
+  labs(colour='Time Series') +
+  theme(legend.text = element_text(size = 14)) +
+  theme(legend.title = element_text(size = 16))
+
 mean(a$residuals^2)
 # The linear regression MSE is about .0036.
 
@@ -237,5 +257,7 @@ Train_Dates = Train_Dates[1:45,]
 
 RE_Macro_Imputed = rbind(Train_Dates,RE_Macro)
 
-write.csv(RE_Macro_Imputed, file = 'RE_Macro_Index',row.names = FALSE)
+#write.csv(RE_Macro_Imputed, file = 'RE_Macro_Index',row.names = FALSE)
+
+ggplot(macro,aes(x=timestamp,y=price_square_meter)) + geom_line(aes(color='brown2'))
 
