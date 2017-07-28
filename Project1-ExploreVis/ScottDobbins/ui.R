@@ -1,41 +1,32 @@
 # @author Scott Dobbins
-# @version 0.9.3
-# @date 2017-05-01 01:30
-
-### import useful packages ###
-library(shiny)            # app formation
-library(shinydashboard)   # web display
-library(leaflet)          # map source
+# @version 0.9.7
+# @date 2017-07-28 17:30
 
 
-### constants ###
+### UI Component ------------------------------------------------------------
 
-# appearance
-sidebar_width = 240
-title_width = 360
-
-
-### UI component ###
 shinyUI(dashboardPage(
   
-  # Title Panel
+
+### Header and Sidebar ------------------------------------------------------
+
   dashboardHeader(title = "Aerial Bombing Operations", titleWidth = title_width), 
   
   dashboardSidebar(width = sidebar_width, 
                    
                    # Sidebar Panel
                    sidebarUserPanel("Scott Dobbins", 
-                                    image = "https://yt3.ggpht.com/-04uuTMHfDz4/AAAAAAAAAAI/AAAAAAAAAAA/Kjeupp-eNNg/s100-c-k-no-rj-c0xffffff/photo.jpg"), 
+                                    image = sidebar_image), 
                    
                    sidebarMenu(id = "tabs", 
-                               menuItem("Overview", tabName = "overview", icon = icon("map")), 
-                               # menuItem("Data", tabName = "data", icon = icon("database")), 
+                               menuItem("Overview", tabName = "overview", icon = icon('map')), 
+                               menuItem("Data", tabName = "data", icon = icon('database')),
                                menuItem("WW I", tabName = "WW1", icon = icon('bar-chart', lib = 'font-awesome')), 
                                menuItem("WW II", tabName = "WW2", icon = icon('bar-chart', lib = 'font-awesome')), 
                                menuItem("Korea", tabName = "Korea", icon = icon('bar-chart', lib = 'font-awesome')), 
                                menuItem("Vietnam", tabName = "Vietnam", icon = icon('bar-chart', lib = 'font-awesome')), 
-                               # menuItem("Be a pilot", tabName = "pilot", icon = icon('fighter-jet', lib = 'font-awesome')), 
-                               # menuItem("Be a commander", tabName = "commander", icon = icon('map-o', lib = 'font-awesome')), 
+                               menuItem("Be a pilot", tabName = "pilot", icon = icon('fighter-jet', lib = 'font-awesome')),
+                               menuItem("Be a commander", tabName = "commander", icon = icon('map-o', lib = 'font-awesome')),
                                menuItem("Be a civilian", tabName = "civilian", icon = icon('life-ring', lib = 'font-awesome'))
                    ), 
                    
@@ -50,57 +41,67 @@ shinyUI(dashboardPage(
                    # date picker
                    dateRangeInput(inputId = "dateRange", 
                                   label = "Select which dates to show", 
-                                  start = "1914-07-28", 
-                                  end = "1975-04-30", 
-                                  min = "1914-07-28", 
-                                  max = "1975-04-30", 
+                                  start = earliest_date, 
+                                  end = latest_date, 
+                                  min = earliest_date, 
+                                  max = latest_date, 
                                   startview = "year", 
                                   width = sidebar_width), 
                    
-                   # selectizeInput(inputId = "country", 
-                   #                label = "Which country's air force?", 
-                   #                choices = c("one"), 
-                   #                selected = c(), 
-                   #                width = sidebar_width), 
-                   # 
-                   # selectizeInput(inputId = "aircraft", 
-                   #                label = "Which types of aircraft?", 
-                   #                choices = c("one"), 
-                   #                selected = c(), 
-                   #                width = sidebar_width), 
-                   # 
-                   # selectizeInput(inputId = "weapon", 
-                   #                label = "Which types of bombs?", 
-                   #                choices = c("one"), 
-                   #                selected = c(), 
-                   #                width = sidebar_width), 
+                   # country picker
+                   selectizeInput(inputId = "country", 
+                                  label = "Which country's air force?", 
+                                  choices = c("All"), 
+                                  selected = "All", 
+                                  multiple = TRUE, 
+                                  width = sidebar_width),
                    
-                   numericInput(inputId = "sample_num", 
-                                label = "Sample size = ?", 
-                                value = 1024, 
-                                min = 1, 
-                                max = 4096)
+                   # aircraft picker
+                   selectizeInput(inputId = "aircraft", 
+                                  label = "Which types of aircraft?", 
+                                  choices = c("All"), 
+                                  selected = "All", 
+                                  multiple = TRUE, 
+                                  width = sidebar_width),
+                   
+                   # weapon picker
+                   selectizeInput(inputId = "weapon", 
+                                  label = "Which types of bombs?", 
+                                  choices = c("All"), 
+                                  selected = "All", 
+                                  multiple = TRUE, 
+                                  width = sidebar_width)
                    
   ),
+  
+
+### Body --------------------------------------------------------------------
   
   dashboardBody(
     tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")), #***really wish this would also apply my desired formatting to the sidebar, but it seems not
     
     tabItems(
       
-      # main panel with map and simple stats
+
+### Overview (Main) ---------------------------------------------------------
+
       tabItem(tabName = "overview", 
               
               # some stats
               fluidRow(
-                infoBoxOutput(outputId = "num_missions"),
-                infoBoxOutput(outputId = "num_bombs"),
-                infoBoxOutput(outputId = "total_weight")
+                infoBoxOutput(outputId = "num_missions", width = 3),
+                infoBoxOutput(outputId = "num_aircraft", width = 3), 
+                infoBoxOutput(outputId = "num_bombs", width = 3),
+                infoBoxOutput(outputId = "total_weight", width = 3)
               ), 
               
               # map
               fluidRow(
-                box(leafletOutput("overview_map", width = "100%", height = 640), width = 1024, height = 640)
+                box(leafletOutput("overview_map", 
+                                  width = "100%", 
+                                  height = map_height), 
+                    width = map_width, 
+                    height = map_height)
               ), 
               
               # selection widgets
@@ -124,20 +125,33 @@ shinyUI(dashboardPage(
                 
               ), 
               
-              # text box whose sole purpose is actually just to add spacing to the bottom of the window
               fluidRow(
+                
+                # text box whose sole purpose is actually just to add spacing to the bottom of the window
                 box(htmlOutput(outputId = "overview_text", 
                                inline = FALSE), 
-                    width = 12)
+                    width = 6), 
+                
+                # select number of points to graph on the map
+                box(numericInput(inputId = "sample_num", 
+                                 label = "Maximum number of points to display on map", 
+                                 value = init_sample_size, 
+                                 min = min_sample_size, 
+                                 max = max_sample_size), 
+                    width = 6)
               )
       ), 
       
-      # # a closer look at the data
-      # tabItem(tabName = "data", 
-      #   fluidRow(box(DT::dataTableOutput("table"), width = 12))
-      # ), 
+
+### DataTable ---------------------------------------------------------------
+
+      tabItem(tabName = "data",
+              fluidRow(box(DT::dataTableOutput("table"), width = 12))
+      ),
       
-      # WW1-specific stats
+
+### WW1 ---------------------------------------------------------------------
+
       tabItem(tabName = "WW1",
               
               fluidRow(
@@ -146,17 +160,42 @@ shinyUI(dashboardPage(
               ), 
               
               fluidRow(
-                box(sliderInput(inputId = "WW1_hist_slider", label = "# of bins", min = 4, value = 30, max = 48, step = 1), width = 6), 
-                box(selectizeInput(inputId = "WW1_sandbox_ind", label = "Which independent variable?", choices = c("Year", WW1_all_choices), selected = c("Year"), multiple = FALSE), width = 6)
+                box(sliderInput(inputId = "WW1_hist_slider", 
+                                label = "# of bins", 
+                                min = WW1_min_bins, 
+                                value = WW1_init_bins, 
+                                max = WW1_max_bins, 
+                                step = 1), 
+                    width = 6), 
+                
+                box(selectizeInput(inputId = "WW1_sandbox_ind", 
+                                   label = "Which independent variable?", 
+                                   choices = c("Year", WW1_all_choices), 
+                                   selected = c("Year"), 
+                                   multiple = FALSE), 
+                    width = 6)
               ), 
               
               fluidRow(
-                box(selectizeInput(inputId = "WW1_sandbox_group", label = "Group by what?", choices = c("None", WW1_categorical_choices), selected = c("None"), multiple = FALSE), width = 6), 
-                box(selectizeInput(inputId = "WW1_sandbox_dep", label = "Which dependent variable?", choices = WW1_continuous_choices, selected = c("Number of Attacking Aircraft"), multiple = FALSE), width = 6)
+                box(selectizeInput(inputId = "WW1_sandbox_group", 
+                                   label = "Group by what?", 
+                                   choices = c("None", WW1_categorical_choices), 
+                                   selected = c("None"), 
+                                   multiple = FALSE), 
+                    width = 6), 
+                
+                box(selectizeInput(inputId = "WW1_sandbox_dep", 
+                                   label = "Which dependent variable?", 
+                                   choices = WW1_continuous_choices, 
+                                   selected = c("Number of Attacking Aircraft"), 
+                                   multiple = FALSE), 
+                    width = 6)
               )
       ),
       
-      # WW2-specific stats
+
+### WW2 ---------------------------------------------------------------------
+
       tabItem(tabName = "WW2",
               
               fluidRow(
@@ -165,17 +204,42 @@ shinyUI(dashboardPage(
               ), 
               
               fluidRow(
-                box(sliderInput(inputId = "WW2_hist_slider", label = "# of bins", min = 7, value = 30, max = 84, step = 1), width = 6), 
-                box(selectizeInput(inputId = "WW2_sandbox_ind", label = "Which independent variable?", choices = c("Year", WW2_all_choices), selected = c("Year"), multiple = FALSE), width = 6)
+                box(sliderInput(inputId = "WW2_hist_slider", 
+                                label = "# of bins", 
+                                min = WW2_min_bins, 
+                                value = WW2_init_bins, 
+                                max = WW2_max_bins, 
+                                step = 1), 
+                    width = 6), 
+                
+                box(selectizeInput(inputId = "WW2_sandbox_ind", 
+                                   label = "Which independent variable?", 
+                                   choices = c("Year", WW2_all_choices), 
+                                   selected = c("Year"), 
+                                   multiple = FALSE), 
+                    width = 6)
               ), 
               
               fluidRow(
-                box(selectizeInput(inputId = "WW2_sandbox_group", label = "Group by what?", choices = c("None", WW2_categorical_choices), selected = c("None"), multiple = FALSE), width = 6), 
-                box(selectizeInput(inputId = "WW2_sandbox_dep", label = "Which dependent variable?", choices = WW2_continuous_choices, selected = c("Number of Attacking Aircraft"), multiple = FALSE), width = 6)
+                box(selectizeInput(inputId = "WW2_sandbox_group", 
+                                   label = "Group by what?", 
+                                   choices = c("None", WW2_categorical_choices), 
+                                   selected = c("None"), 
+                                   multiple = FALSE), 
+                    width = 6), 
+                
+                box(selectizeInput(inputId = "WW2_sandbox_dep", 
+                                   label = "Which dependent variable?", 
+                                   choices = WW2_continuous_choices, 
+                                   selected = c("Number of Attacking Aircraft"), 
+                                   multiple = FALSE), 
+                    width = 6)
               )
       ),
       
-      # Korea-specific stats
+
+### Korea -------------------------------------------------------------------
+
       tabItem(tabName = "Korea",
               
               fluidRow(
@@ -184,17 +248,42 @@ shinyUI(dashboardPage(
               ), 
               
               fluidRow(
-                box(sliderInput(inputId = "Korea_hist_slider", label = "# of bins", min = 4, value = 30, max = 48, step = 1), width = 6), 
-                box(selectizeInput(inputId = "Korea_sandbox_ind", label = "Which independent variable?", choices = c("Year", Korea_all_choices), selected = c("Year"), multiple = FALSE), width = 6)
+                box(sliderInput(inputId = "Korea_hist_slider", 
+                                label = "# of bins", 
+                                min = Korea_min_bins, 
+                                value = Korea_init_bins, 
+                                max = Korea_max_bins, 
+                                step = 1), 
+                    width = 6), 
+                
+                box(selectizeInput(inputId = "Korea_sandbox_ind", 
+                                   label = "Which independent variable?", 
+                                   choices = c("Year", Korea_all_choices), 
+                                   selected = c("Year"), 
+                                   multiple = FALSE), 
+                    width = 6)
               ), 
               
               fluidRow(
-                box(selectizeInput(inputId = "Korea_sandbox_group", label = "Group by what?", choices = c("None", Korea_categorical_choices), selected = c("None"), multiple = FALSE), width = 6), 
-                box(selectizeInput(inputId = "Korea_sandbox_dep", label = "Which dependent variable?", choices = Korea_continuous_choices, selected = c("Number of Attacking Aircraft"), multiple = FALSE), width = 6)
+                box(selectizeInput(inputId = "Korea_sandbox_group", 
+                                   label = "Group by what?", 
+                                   choices = c("None", Korea_categorical_choices), 
+                                   selected = c("None"), 
+                                   multiple = FALSE), 
+                    width = 6), 
+                
+                box(selectizeInput(inputId = "Korea_sandbox_dep", 
+                                   label = "Which dependent variable?", 
+                                   choices = Korea_continuous_choices, 
+                                   selected = c("Number of Attacking Aircraft"), 
+                                   multiple = FALSE), 
+                    width = 6)
               )
       ),
       
-      # Vietnam-specific stats
+
+### Vietnam -----------------------------------------------------------------
+
       tabItem(tabName = "Vietnam",
               
               fluidRow(
@@ -203,34 +292,95 @@ shinyUI(dashboardPage(
               ), 
               
               fluidRow(
-                box(sliderInput(inputId = "Vietnam_hist_slider", label = "# of bins", min = 4, value = 30, max = 240, step = 1), width = 6), 
-                box(selectizeInput(inputId = "Vietnam_sandbox_ind", label = "Which independent variable?", choices = c("Year", Vietnam_all_choices), selected = c("Year"), multiple = FALSE), width = 6)
+                box(sliderInput(inputId = "Vietnam_hist_slider", 
+                                label = "# of bins", 
+                                min = Vietnam_min_bins, 
+                                value = Vietnam_init_bins, 
+                                max = Vietnam_max_bins, 
+                                step = 1), 
+                    width = 6), 
+                
+                box(selectizeInput(inputId = "Vietnam_sandbox_ind", 
+                                   label = "Which independent variable?", 
+                                   choices = c("Year", Vietnam_all_choices), 
+                                   selected = c("Year"), 
+                                   multiple = FALSE), 
+                    width = 6)
               ), 
               
               fluidRow(
-                box(selectizeInput(inputId = "Vietnam_sandbox_group", label = "Group by what?", choices = c("None", Vietnam_categorical_choices), selected = c("None"), multiple = FALSE), width = 6), 
-                box(selectizeInput(inputId = "Vietnam_sandbox_dep", label = "Which dependent variable?", choices = Vietnam_continuous_choices, selected = c("Number of Attacking Aircraft"), multiple = FALSE), width = 6)
+                box(selectizeInput(inputId = "Vietnam_sandbox_group", 
+                                   label = "Group by what?", 
+                                   choices = c("None", Vietnam_categorical_choices), 
+                                   selected = c("None"), 
+                                   multiple = FALSE), 
+                    width = 6), 
+                
+                box(selectizeInput(inputId = "Vietnam_sandbox_dep", 
+                                   label = "Which dependent variable?", 
+                                   choices = Vietnam_continuous_choices, 
+                                   selected = c("Number of Attacking Aircraft"), 
+                                   multiple = FALSE), 
+                    width = 6)
               )
       ),
       
-      # # pilot stats
-      # tabItem(tabName = "pilot", 
-      #         fluidRow()
-      # ), 
-      # 
-      # # commander stats
-      # tabItem(tabName = "commander", 
-      #         fluidRow()
-      # ), 
+
+### Pilot -------------------------------------------------------------------
+
+      tabItem(tabName = "pilot",
+              
+              # title
+              fluidRow(
+                box(htmlOutput(outputId = "pilot_title", 
+                               inline = FALSE), 
+                    width = 12)
+              )
+      ),
       
-      # civilian stats
+
+### Commander ---------------------------------------------------------------
+
+      tabItem(tabName = "commander",
+              
+              # title
+              fluidRow(
+                box(htmlOutput(outputId = "commander_title", 
+                               inline = FALSE), 
+                    width = 12)
+              )
+      ),
+      
+
+### Civilian ----------------------------------------------------------------
+
       tabItem(tabName = "civilian",
+              
+              # title
+              fluidRow(
+                box(htmlOutput(outputId = "civilian_title", 
+                               inline = FALSE), 
+                    width = 12)
+              ),
               
               # map
               fluidRow(
-                box(leafletOutput("civilian_map", width = "100%", height = 640), width = 1024, height = 640)
+                box(leafletOutput("civilian_map", 
+                                  width = "100%", 
+                                  height = map_height), 
+                    width = map_width, 
+                    height = map_height)
+              ), 
+              
+              # priority picker
+              fluidRow(
+                box(selectizeInput(inputId = "civilian_priority",
+                                   label = "I am most concerned about:",
+                                   choices = c("The number of planes flying", "The number of bombs dropped", "The intensity of the bombing"),
+                                   selected = c("The intensity of the bombing"), 
+                                   multiple = FALSE), 
+                    width = 12)
               )
-              # box(plotOutput("civilian_density", width = "100%"), width = 12)#, height = 768)
       )
     )
   )

@@ -1,6 +1,6 @@
 # @author Scott Dobbins
 # @version 0.51
-# @date 2017-05-04 20:00
+# @date 2017-07-06 20:00
 
 
 ### next steps ###
@@ -40,7 +40,7 @@ include_legend = False
 time_period = "1 year"
 page_index_max = 100
 initial_delay = 10
-product_category = "Electronics"
+product_category = "Personal+Computers"
 start_page = 1
 data_rewrite = False
 

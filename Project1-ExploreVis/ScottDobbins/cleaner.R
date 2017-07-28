@@ -1,760 +1,365 @@
 # @author Scott Dobbins
-# @version 0.9.3
-# @date 2017-05-01 01:30
+# @version 0.9.7
+# @date 2017-07-28 17:30
 
-### import useful packages ###
+
+### Import Packages ---------------------------------------------------------
 
 # import data analytic extensions
-library(data.table) # helps with data input
-library(dplyr)      # helps with data cleaning
-library(tidyr)      # helps with data tidying
-library(lubridate)  # helps with dates
+library(tidyr)
+library(purrr)
+library(forcats)
+#library(chron)
+library(lubridate)
 
-# source helper functions
-source(file = 'helper.R')
-
-
-### file path setup
-
-# conflict directories
-WW1_directory <- './THOR/WW1/'
-WW2_directory <- './THOR/WW2/'
-Korea_directory <- './THOR/Korea/'
-Vietnam_directory <- './THOR/Vietnam/'
-
-# directory structure
-data_infix <- 'data/'
-glossary_infix <- 'glossary/'
-
-# standard file names
-aircraft_glossary_name <- 'aircraft.csv'
-weapons_glossary_name <- 'weapons.csv'
-
-# specific file names
-WW1_bombs_filename <- 'WW1_bombs.csv'
-WW2_bombs_filename <- 'WW2_bombs.csv'
-Korea_bombs1_filename <- 'Korea_bombs1.csv'
-Korea_bombs2_filename <- 'Korea_bombs2.csv'
-Vietnam_bombs_filename <- 'Vietnam_bombs.csv'
-
-# total file paths
-WW1_bombs_filepath <- paste0(WW1_directory, data_infix, WW1_bombs_filename)
-WW2_bombs_filepath <- paste0(WW2_directory, data_infix, WW2_bombs_filename)
-Korea_bombs1_filepath <- paste0(Korea_directory, data_infix, Korea_bombs1_filename)
-Korea_bombs2_filepath <- paste0(Korea_directory, data_infix, Korea_bombs2_filename)
-Vietnam_bombs_filepath <- paste0(Vietnam_directory, data_infix, Vietnam_bombs_filename)
-
-WW1_aircraft_glossary_filepath <- paste0(WW1_directory, glossary_infix, aircraft_glossary_name)
-WW1_weapons_glossary_filepath <- paste0(WW1_directory, glossary_infix, weapons_glossary_name)
-WW2_aircraft_glossary_filepath <- paste0(WW2_directory, glossary_infix, aircraft_glossary_name)
-WW2_weapons_glossary_filepath <- paste0(WW2_directory, glossary_infix, weapons_glossary_name)
-Korea_aircraft_glossary_filepath <- paste0(Korea_directory, glossary_infix, aircraft_glossary_name)
-#Korea weapons glossary doesn't exist#
-Vietnam_aircraft_glossary_filepath <- paste0(Vietnam_directory, glossary_infix, aircraft_glossary_name)
-Vietnam_weapons_glossary_filepath <- paste0(Vietnam_directory, glossary_infix, weapons_glossary_name)
+# helper functions
+source('helper.R')
 
 
-### set column names ###
+### Fix Dates ---------------------------------------------------------------
 
-WW1_col_names <- c("ID",                           # integer
-                   "Mission.Date",                 # character
-                   "Operation",                    # character
-                   "Unit.Country",                 # character
-                   "Unit.Service",                 # character
-                   "Unit.Aircraft.Unit",           # character
-                   "Aircraft.Type",                # character
-                   "Mission.Num",                  # integer
-                   "Takeoff.Day.Period",           # character
-                   "Takeoff.Time",                 # character
-                   "Aircraft.Attacking.Num",       # integer
-                   "Callsign",                     # character
-                   "Weapons.Expended",             # integer
-                   "Weapons.Type",                 # character
-                   "Weapons.Weight",               # double
-                   "Aircraft.Bombload",            # double
-                   "Target.Latitude",              # double
-                   "Target.Longitude",             # double
-                   "Target.City",                  # character
-                   "Target.Country",               # character
-                   "Target.Type",                  # character
-                   "Takeoff.Base",                 # character
-                   "Takeoff.Latitude",             # double
-                   "Takeoff.Longitude",            # double
-                   "Bomb.Damage.Assessment",       # character
-                   "Enemy.Action",                 # character
-                   "Route.Details",                # character
-                   "Intel.Collected",              # character
-                   "Casualties.Friendly",          # integer
-                   "Casualties.Friendly.Verbose",  # character
-                   "Target.Weather",               # character
-                   "Bomb.Altitude")                # integer
-
-WW2_col_names <- c("ID",                             # integer
-                   "Index.Number",                   # integer
-                   "Mission.Date",                   # character
-                   "Mission.Theater",                # character
-                   "Unit.Service",                   # character
-                   "Unit.Country",                   # character
-                   "Target.Country.Code",            # integer
-                   "Target.Country",                 # character
-                   "Target.City",                    # character
-                   "Target.Type",                    # character
-                   "Target.Code",                    # integer
-                   "Target.Industry.Code",           # integer
-                   "Target.Industry",                # character
-                   #"Target.Latitude.Nonconverted",  # character   # dropped while reading
-                   #"Target.Longitude.Nonconverted", # character   # dropped while reading
-                   "Target.Latitude",                # double
-                   "Target.Longitude",               # double
-                   "Unit.ID",                        # character
-                   "Aircraft.Model",                 # character
-                   "Aircraft.Name",                  # character
-                   "Mission.Type",                   # integer
-                   "Target.Priority.Code",           # integer
-                   "Target.Priority.Explanation",    # character
-                   "Aircraft.Attacking.Num",         # integer
-                   "Bomb.Altitude",                  # integer
-                   "Bomb.Altitude.Feet",             # integer
-                   "Bomb.HE.Num",                    # integer
-                   "Bomb.HE.Type",                   # character
-                   "Bomb.HE.Pounds",                 # integer
-                   "Bomb.HE.Tons",                   # double
-                   "Bomb.IC.Num",                    # integer
-                   "Bomb.IC.Type",                   # character
-                   "Bomb.IC.Pounds",                 # integer
-                   "Bomb.IC.Tons",                   # double
-                   "Bomb.Frag.Num",                  # integer
-                   "Bomb.Frag.Type",                 # character
-                   "Bomb.Frag.Pounds",               # integer
-                   "Bomb.Frag.Tons",                 # double                
-                   "Bomb.Total.Pounds",              # integer
-                   "Bomb.Total.Tons",                # double
-                   "Takeoff.Base",                   # character
-                   "Takeoff.Country",                # character
-                   "Takeoff.Latitude",               # double
-                   "Takeoff.Longitude",              # double
-                   "Aircraft.Lost.Num",              # integer
-                   "Aircraft.Damaged.Num",           # integer
-                   "Aircraft.Airborne.Num",          # integer
-                   "Aircraft.Dropping.Num",          # integer
-                   "Bomb.Time",                      # character
-                   "Sighting.Method.Code",           # integer
-                   "Sighting.Method.Explanation",    # character
-                   "Bomb.Damage.Assessment",         # character
-                   "Callsign",                       # character
-                   "Ammo.Rounds",                    # integer
-                   "Aircraft.Spares.Num",            # integer
-                   "Aircraft.Fail.WX.Num",           # integer
-                   "Aircraft.Fail.Mech.Num",         # integer
-                   "Aircraft.Fail.Misc.Num",         # integer
-                   "Target.Comment",                 # character
-                   "Mission.Comments",               # character
-                   "Reference.Source",               # character
-                   "Database.Edit.Comments")         # character
-
-Korea_col_names1 <- c("ID",#                                  # integer
-                      "Mission.Date",#                        # character
-                      "Unit.ID",#                             # character
-                      "Unit.ID2",#                            # character
-                      "Unit.ID.Long",#                        # character
-                      "Group.Unit.ID",#                       # character
-                      "Squadron.ID",#                         # character
-                      "Airfield.ID",#                         # character
-                      "Takeoff.Base",#                        # character
-                      "Takeoff.Country",#                     # character
-                      "Takeoff.Latitude",#                    # double
-                      "Takeoff.Longitude",#                   # double
-                      "Aircraft.Type",#                       # character
-                      "Aircraft.Dispatched.Num",#             # integer
-                      "Aircraft.Attacking.Num",#              # integer
-                      "Aircraft.Aborted.Num",#                # integer
-                      "Aircraft.Lost.Enemy.Air.Num",#         # integer
-                      "Aircraft.Lost.Enemy.Ground.Num",#      # integer
-                      "Aircraft.Lost.Enemy.Unknown.Num",#     # integer
-                      "Aircraft.Lost.Other.Num",#             # integer
-                      "Aircraft.Damaged.Num",#                # integer
-                      "KIA",#                                 # integer
-                      "WIA",#                                 # integer
-                      "MIA",#                                 # integer
-                      "Enemy.Aircraft.Destroyed.Confirmed",#  # integer
-                      "Enemy.Aircraft.Destroyed.Probable",#   # integer
-                      "Bomb.Total.Tons",#                     # double
-                      "Rockets.Num",#                         # integer
-                      "Bullets.Rounds")#                      # integer
-
-Korea_col_names2 <- c("Row.Number",                          # integer
-                      "Mission.Number",                      # integer
-                      "Unit.Order",                          # character
-                      "Unit.Group",                          # character
-                      "Mission.Date",                        # character
-                      "Aircraft.Type",                       # character
-                      "Aircraft.Attacking.Num",              # integer
-                      "Sortie.Duplicates",                   # integer
-                      "Aircraft.Aborted.Num",                # integer
-                      "Aircraft.Lost.Num",                   # integer
-                      "Target.Name",                         # character
-                      "Target.Type",                         # character
-                      #"Target.JapanB",                      # character   # dropped while reading
-                      #"Target.UTM",                         # character   # dropped while reading
-                      #"Target.MGRS",                        # character   # dropped while reading
-                      "Target.Latitude",                     # character
-                      "Target.Longitude",                    # character
-                      #"Target.Latitude.Source",             # character   # dropped while reading
-                      #"Target.Longitude.Source",            # character   # dropped while reading
-                      "Weapons.Num",                         # integer
-                      "Weapons.Type",                        # character
-                      "Bomb.Sighting.Method",                # character
-                      "Aircraft.Bombload.Pounds",            # integer
-                      #"Aircraft.Total.Weight",              # character   # dropped while reading
-                      "Mission.Type",                        # character
-                      "Bomb.Altitude.Feet.Range",            # character
-                      "Callsign",                            # character
-                      "Bomb.Damage.Assessment",              # character
-                      "Nose.Fuze",                           # character
-                      "Tail.Fuze",                           # character
-                      "Aircraft.Bombload.Calculated.Pounds", # integer
-                      "Reference.Source")                    # character
-
-Vietnam_col_names <- c("ID",                               # integer
-                       "Unit.Country",                     # character
-                       "Unit.Service",                     # character
-                       "Mission.Date",                     # character
-                       "Reference.Source.ID",              # integer
-                       "Reference.Source.Record",          # character
-                       "Aircraft.Root.Valid",              # character
-                       "Takeoff.Location",                 # character
-                       "Target.Latitude",                  # double
-                       "Target.Longitude",                 # double
-                       "Target.Type",                      # character
-                       "Weapons.Delivered.Num",            # integer
-                       "Bomb.Time",                        # character
-                       "Weapon.Type",                      # character
-                       "Weapon.Type.Class",                # character
-                       "Weapon.Type.Weight",               # integer
-                       "Aircraft.Original",                # character
-                       "Aircraft.Root",                    # character
-                       "Unit.Group",                       # character
-                       "Unit.Squadron",                    # character
-                       "Callsign",                         # character
-                       "Flight.Hours",                     # integer
-                       "Mission.Function.Code",            # integer
-                       "Mission.Function.Description",     # character
-                       "Mission.ID",                       # character
-                       "Aircraft.Num",                     # integer
-                       "Operation.Supported",              # character
-                       "Mission.Day.Period",               # character
-                       "Unit",                             # character
-                       "Target.CloudCover",                # character
-                       "Target.Control",                   # character
-                       "Target.Country",                   # character
-                       "Target.ID",                        # character
-                       #"Target.Origin.Coordinates",       # character   # dropped while reading
-                       #"Target.Origin.Coordinates.Format",# character   # dropped while reading
-                       "Target.Weather",                   # character
-                       "Additional.Info",                  # character
-                       "Target.Geozone",                   # character
-                       "ID2",                              # integer
-                       "Weapons.Class",                    # character
-                       "Weapons.Jettisoned.Num",           # integer
-                       "Weapons.Returned.Num",             # integer
-                       "Bomb.Altitude",                    # integer
-                       "Bomb.Speed",                       # integer
-                       "Bomb.Damage.Assessment",           # character
-                       "Target.Time.Off",                  # integer
-                       "Weapons.Weight.Loaded")            # integer
-
-
-### set data column classes ###
-
-WW1_col_classes <- list(integer = c("WWI_ID", "MISSIONNUM", "NUMBEROFPLANESATTACKING", "WEAPONSEXPENDED", "FRIENDLYCASUALTIES", "ALTITUDE"), 
-                        double = c("WEAPONWEIGHT", "BOMBLOAD", "LATITUDE", "LONGITUDE", "TAKEOFFLATITUDE", "TAKEOFFLONGITUDE"), 
-                        character = c("MSNDATE", "OPERATION", "COUNTRY", "SERVICE", "UNIT", "MDS", "DEPARTURE", "TAKEOFFTIME", "CALLSIGN", "WEAPONTYPE", "TGTLOCATION", "TGTCOUNTRY", "TGTTYPE", "TAKEOFFBASE", "BDA", "ENEMYACTION", "ROUTEDETAILS", "ISRCOLLECTED", "FRIENDLYCASUALTIES_VERBOSE", "WEATHER"))
-
-WW2_col_classes <- list(integer = c("WWII_ID", "MASTER_INDEX_NUMBER", "TGT_COUNTRY_CODE", "TGT_ID", "TGT_INDUSTRY_CODE", "MSN_TYPE", "TGT_PRIORITY", "AC_ATTACKING", "ALTITUDE", "ALTITUDE_FEET", "NUMBER_OF_HE", "LBS_HE", "NUMBER_OF_IC", "LBS_IC", "NUMBER_OF_FRAG", "LBS_FRAG", "TOTAL_LBS", "AC_LOST", "AC_DAMAGED", "AC_AIRBORNE", "AC_DROPPING", "SIGHTING_METHOD_CODE", "ROUNDS_AMMO", "SPARES_RETURN_AC", "WX_FAIL_AC", "MECH_FAIL_AC", "MISC_FAIL_AC"), 
-                        double = c("LATITUDE", "LONGITUDE", "TONS_OF_HE", "TONS_OF_IC", "TONS_OF_FRAG", "TOTAL_TONS", "TAKEOFF_LATITUDE", "TAKEOFF_LONGITUDE"), 
-                        character = c("MSNDATE", "THEATER", "NAF", "COUNTRY_FLYING_MISSION", "TGT_COUNTRY", "TGT_LOCATION", "TGT_TYPE", "TGT_INDUSTRY", "UNIT_ID", "MDS", "AIRCRAFT_NAME", "TGT_PRIORITY_EXPLANATION", "TYPE_OF_HE", "TYPE_OF_IC", "TYPE_OF_FRAG", "TAKEOFF_BASE", "TAKEOFF_COUNTRY", "TIME_OVER_TARGET", "SIGHTING_EXPLANATION", "BDA", "CALLSIGN", "TARGET_COMMENT", "MISSION_COMMENTS", "SOURCE", "DATABASE_EDIT_COMMENTS"), 
-                        NULL = c("SOURCE_LATITUDE", "SOURCE_LONGITUDE"))
-
-Korea_col_classes1 <- list(integer = c("KOREAN_ID", "AC_DISPATCHED", "AC_EFFECTIVE", "AC_ABORT", "AC_LOST_TO_EAC", "AC_LOST_TO_AAA", "AC_LOST_TO_UNKNOWN_EA", "AC_LOST_TO_OTHER", "AC_DAMAGED", "KIA", "WIA", "MIA", "EAC_CONFIRMED_DESTROYED", "EAC_PROB_DESTROYED", "ROCKETS", "BULLETS"), 
-                           double = c("LAUNCH_LAT", "LAUNCH_LONG", "TOTAL_TONS"), 
-                           character = c("MSN_DATE", "UNIT_ID", "UNIT_ID_2", "UNIT_ID_CODE", "GROUP_OR_HIGHER_UNIT_ID", "SQUADRON_ID", "AIRFIELD_ID", "LAUNCH_BASE", "LAUNCH_COUNTRY", "AC_TYPE"))
-
-Korea_col_classes2 <- list(integer = c("ROW_NUMBER", "MISSION_NUMBER", "NBR_ATTACK_EFFEC_AIRCRAFT", "SORTIE_DUPE", "NBR_ABORT_AIRCRAFT", "NBR_LOST_AIRCRAFT", "NBR_OF_WEAPONS", "TOTAL_BOMBLOAD_IN_LBS", "CALCULATED_BOMBLOAD_LBS"), 
-                           character = c("OP_ORDER", "UNIT", "MISSION_DATE", "AIRCRAFT_TYPE_MDS", "TARGET_NAME", "TGT_TYPE", "TGT_LATITUDE_WGS84", "TGT_LONGITUDE_WGS84", "WEAPONS_TYPE", "BOMB_SIGHTING_METHOD", "MISSION_TYPE", "ALTITUDE_FT", "CALLSIGN", "BDA", "NOSE_FUZE", "TAIL_FUZE", "RECORD_SOURCE"), 
-                           NULL = c("SOURCE_UTM_JAPAN_B", "SOURCE_TGT_UTM", "TGT_MGRS", "SOURCE_TGT_LAT", "SOURCE_TGT_LONG", "TOT"))
-
-Vietnam_col_classes <- list(integer = c("THOR_DATA_VIET_ID", "SOURCEID", "NUMWEAPONSDELIVERED", "WEAPONTYPEWEIGHT", "FLTHOURS", "MFUNC", "NUMOFACFT", "ID", "NUMWEAPONSJETTISONED", "NUMWEAPONSRETURNED", "RELEASEALTITUDE", "RELEASEFLTSPEED", "TIMEOFFTARGET", "WEAPONSLOADEDWEIGHT"), 
-                            double = c("TGTLATDD_DDD_WGS84", "TGTLONDDD_DDD_WGS84"), 
-                            character = c("COUNTRYFLYINGMISSION", "MILSERVICE", "MSNDATE", "SOURCERECORD", "VALID_AIRCRAFT_ROOT", "TAKEOFFLOCATION", "TGTTYPE", "TIMEONTARGET", "WEAPONTYPE", "WEAPONTYPECLASS", "AIRCRAFT_ORIGINAL", "AIRCRAFT_ROOT", "AIRFORCEGROUP", "AIRFORCESQDN", "CALLSIGN", "MFUNC_DESC", "MISSIONID", "OPERATIONSUPPORTED", "PERIODOFDAY", "UNIT", "TGTCLOUDCOVER", "TGTCONTROL", "TGTCOUNTRY", "TGTID", "TGTWEATHER", "ADDITIONALINFO", "GEOZONE", "MFUNC_DESC_CLASS", "RESULTSBDA"), 
-                            NULL = c("TGTORIGCOORDS", "TGTORIGCOORDSFORMAT"))
-
-
-### read raw data ###
-
-if(debug_mode_on) print("reading WW1")
-WW1_bombs <- fread(file =  WW1_bombs_filepath, 
-                   sep = ',', 
-                   sep2 = '\n', 
-                   header = TRUE, 
-                   stringsAsFactors = FALSE, 
-                   blank.lines.skip = TRUE, 
-                   colClasses = WW1_col_classes, 
-                   col.names = WW1_col_names)
-
-if(debug_mode_on) print("reading WW2")
-WW2_bombs <- fread(file =  WW2_bombs_filepath, 
-                   sep = ',', 
-                   sep2 = '\n', 
-                   header = TRUE, 
-                   stringsAsFactors = FALSE, 
-                   blank.lines.skip = TRUE, 
-                   colClasses = WW2_col_classes, 
-                   col.names = WW2_col_names)
-
-if(debug_mode_on) print("reading Korea1")
-Korea_bombs1 <- fread(file =  Korea_bombs1_filepath, 
-                      sep = ',',
-                      sep2 = '\n', 
-                      header = TRUE, 
-                      stringsAsFactors = FALSE, 
-                      blank.lines.skip = TRUE, 
-                      colClasses = Korea_col_classes1, 
-                      col.names = Korea_col_names1)
-
-if(debug_mode_on) print("reading Korea2")
-Korea_bombs2 <- fread(file =  Korea_bombs2_filepath, 
-                      sep = ',',
-                      sep2 = '\n', 
-                      header = TRUE, 
-                      stringsAsFactors = FALSE, 
-                      blank.lines.skip = TRUE, 
-                      colClasses = Korea_col_classes2, 
-                      col.names = Korea_col_names2)
-
-if(debug_mode_on) print("reading Vietnam")
-Vietnam_bombs <- fread(file =  Vietnam_bombs_filepath, 
-                       sep = ',', 
-                       sep2 = '\n', 
-                       header = TRUE, 
-                       stringsAsFactors = FALSE, 
-                       blank.lines.skip = TRUE, 
-                       colClasses = Vietnam_col_classes, 
-                       col.names = Vietnam_col_names)
-
-
-### fix dates and set keys ###
-
-# fix mission date columns
 if(debug_mode_on) print("fixing date columns")
-WW1_bombs[, Mission.Date := .(ymd(Mission.Date))]
-WW2_bombs[, Mission.Date := .(mdy(Mission.Date))]
-Korea_bombs1[, Mission.Date := .(mdy(Mission.Date) - years(100))]
-Korea_bombs2[, Mission.Date := .(mdy(Mission.Date) - years(100))]
-Vietnam_bombs[, Mission.Date := .(ymd(Mission.Date))]
+WW1_bombs[, c("Year", "Month", "Day") := tstrsplit(Mission_Date, '-', fixed = TRUE)]
+WW1_bombs[, Month_name := month_num_padded_to_name(Month)]
+WW2_bombs[, c("Month", "Day", "Year") := tstrsplit(Mission_Date, '/', fixed = TRUE)]
+WW2_bombs[, Month_name := month_num_to_name(Month)]
+Korea_bombs1[, c("Month", "Day", "Year") := tstrsplit(Mission_Date, '/', fixed = TRUE)]
+Korea_bombs1[, Year := paste0("19", Year)]
+Korea_bombs1[, Month_name := month_num_to_name(Month)]
+Korea_bombs2[, c("Month", "Day", "Year") := tstrsplit(Mission_Date, '/', fixed = TRUE)]
+Korea_bombs2[, Year := paste0("19", Year)]
+Korea_bombs2[, Month_name := month_num_to_name(Month)]
+Vietnam_bombs[, c("Year", "Month", "Day") := tstrsplit(Mission_Date, '-', fixed = TRUE)]
+Vietnam_bombs[nchar(Year) == 8, 
+              `:=`(Day = substr(Year, 7, 8),
+                   Month = substr(Year, 5, 6), 
+                   Year = substr(Year, 1, 4))]
+Vietnam_bombs[is.na(Mission_Date), 
+              `:=`(Mission_Date = paste(Year, Month, Day, sep = '-'))]
+Vietnam_bombs[, Month_name := month_num_padded_to_name(Month)]
 
-# sort by mission date for efficient searching
+WW1_bombs[, Mission_Date := ymd(Mission_Date)]
+WW2_bombs[, Mission_Date := mdy(Mission_Date)]
+Korea_bombs1[, Mission_Date := mdy(Mission_Date) - years(100)]
+Korea_bombs2[, Mission_Date := mdy(Mission_Date) - years(100)]
+Vietnam_bombs[, Mission_Date := ymd(Mission_Date)]
+
+
+### Set Keys ----------------------------------------------------------------
+
 if(debug_mode_on) print("setting keys")
-setkey(WW1_bombs, Mission.Date)
-setkey(WW2_bombs, Mission.Date)
-setkey(Korea_bombs1, Mission.Date)
-setkey(Korea_bombs2, Mission.Date)
-setkey(Vietnam_bombs, Mission.Date)
+setkey(WW1_bombs, Mission_Date)
+setkey(WW2_bombs, Mission_Date)
+setkey(Korea_bombs1, Mission_Date)
+setkey(Korea_bombs2, Mission_Date)
+setkey(Vietnam_bombs, Mission_Date)
 
-### fix actual data where necessary ###
 
-# WW1
+### WW1 Edits ---------------------------------------------------------------
+
 if(debug_mode_on) print("fixing WW1")
-WW1_bombs[, ID := .(as.integer(ID))] # gets forced to character somehow
-if(debug_mode_on) print("1")
-WW1_bombs[Operation == "WW I", c("Operation")] <- ""
-if(debug_mode_on) print("2")
-WW1_bombs[, Unit.Country := sapply(Unit.Country, proper_noun_phrase)]
-if(debug_mode_on) print("3")
-WW1_bombs[, Unit.Aircraft.Unit := sapply(Unit.Aircraft.Unit, proper_noun_phrase)]
-if(debug_mode_on) print("4")
-WW1_bombs[, Mission.Num := .(as.integer(Mission.Num))] # gets forced to character somehow
-if(debug_mode_on) print("5")
-WW1_bombs[, Takeoff.Day.Period := .(tolower(Takeoff.Day.Period))]
-if(debug_mode_on) print("6")
-WW1_bombs[, Takeoff.Time := .(format(strptime(Takeoff.Time, format = "%Y-%m-%d %H:%M:%S"), format = "%H:%M"))]
-if(debug_mode_on) print("7")
-WW1_bombs[, Weapons.Expended := .(as.integer(Weapons.Expended))] # gets forced to character somehow
-if(debug_mode_on) print("8")
-WW1_bombs[, Weapons.Type := .(tolower(Weapons.Type))]
-if(debug_mode_on) print("9")
-WW1_bombs[, Weapons.Weight := .(round(Weapons.Weight))] # round away needless precision
-if(debug_mode_on) print("10")
-WW1_bombs[, Aircraft.Bombload := .(as.integer(round(Aircraft.Bombload)))] # round away needless precision
-if(debug_mode_on) print("11")
-WW1_bombs[, Target.City := sapply(remove_nonASCII_chars(Target.City), proper_noun_phrase)]
-if(debug_mode_on) print("12")
-WW1_bombs[, Target.Country := .(capitalize_from_caps(Target.Country))]
-if(debug_mode_on) print("13")
-WW1_bombs[, Target.Type := .(tolower(Target.Type))]
-if(debug_mode_on) print("14")
-WW1_bombs[, Takeoff.Base := sapply(remove_nonASCII_chars(Takeoff.Base), proper_noun_phrase)]
-if(debug_mode_on) print("15")
-WW1_bombs[, Route.Details := sapply(Route.Details, proper_noun_phrase)]
-if(debug_mode_on) print("16")
-WW1_bombs[, Target.Weather := .(tolower(Target.Weather))]
-if(debug_mode_on) print("17")
 
-# WW2
+# general fixes, numerics
+WW1_bombs[, ID := as.integer(ID)]
+WW1_bombs[, Mission_Num := as.integer(Mission_Num)]
+WW1_bombs[, Weapon_Expended_Num := as.integer(Weapon_Expended_Num)]
+WW1_bombs[, Aircraft_Bombload_Pounds := as.integer(round(Aircraft_Bombload_Pounds))]
+WW1_bombs[, Weapon_Weight_Pounds := as.integer(round(Weapon_Weight_Pounds))]
+
+# specific fixes, strings
+WW1_bombs[, Operation := fct_other(Operation, drop = c("WW I"), other_level = "")]
+WW1_bombs[, Target_City := fct_other(Target_City, drop = c("OTHER"), other_level = "")]
+WW1_bombs[, Target_Type := fct_other(Target_Type, drop = c("UNKNOWN", "UNKNOWN (ABORTED RAID)"), other_level = "")]
+WW1_bombs[, Route_Details := fct_other(Route_Details, drop = c("NONE"), other_level = "")]
+
+WW1_bombs$Unit_Squadron %>% setattr("levels", gsub(pattern = "GRP", replacement = "GROUP", fixed = TRUE, levels(.)))
+WW1_bombs$Unit_Squadron %>% setattr("levels", gsub(pattern = "SQDN", replacement = "SQUADRON", fixed = TRUE, levels(.)))
+WW1_bombs$Weapon_Type %>% setattr("levels", gsub(pattern = " KILO", replacement = " KG", fixed = TRUE, levels(.)))
+WW1_bombs$Target_City %>% setattr("levels", gsub(pattern = "; ", replacement = " OF ", fixed = TRUE, levels(.)))
+
+# general fixes, strings
+WW1_bombs$Operation %>% setattr("levels", proper_noun_phrase_vectorized(levels(.)))
+WW1_bombs$Unit_Country %>% setattr("levels", proper_noun_from_caps_vectorized(levels(.)))
+WW1_bombs$Unit_Service %>% setattr("levels", proper_noun_from_caps_vectorized(levels(.)))
+WW1_bombs$Unit_Squadron %>% setattr("levels", proper_noun_phrase_vectorized(levels(.)))
+WW1_bombs$Aircraft_Type %>% setattr("levels", proper_noun_phrase_aircraft_vectorized(format_aircraft_types(levels(.))))
+WW1_bombs$Takeoff_Day_Period %>% setattr("levels", tolower(levels(.)))
+WW1_bombs$Weapon_Type %>% setattr("levels", tolower(levels(.)))
+WW1_bombs$Target_City %>% setattr("levels", proper_noun_phrase_vectorized(remove_nonASCII_chars(levels(.))))
+WW1_bombs$Target_Country %>% setattr("levels", capitalize_from_caps(levels(.)))
+WW1_bombs$Target_Type %>% setattr("levels", tolower(cleanup_targets(remove_parentheticals(levels(.)))))
+WW1_bombs$Takeoff_Base %>% setattr("levels", proper_noun_phrase_vectorized(remove_nonASCII_chars(levels(.))))
+WW1_bombs$Route_Details %>% setattr("levels", proper_noun_phrase_vectorized(levels(.)))
+WW1_bombs$Target_Weather %>% setattr("levels", tolower(levels(.)))
+
+
+### WW2 Edits ---------------------------------------------------------------
+
 if(debug_mode_on) print("fixing WW2")
-WW2_bombs[, Unit.Country := sapply(Unit.Country, proper_noun_phrase)]
-if(debug_mode_on) print("1")
-WW2_bombs[, Target.Country := sapply(Target.Country, proper_noun_phrase)]
-if(debug_mode_on) print("2")
-WW2_bombs[, Target.City := .(sapply(remove_nonASCII_chars(remove_quotes(Target.City)), proper_noun_phrase))]
-if(debug_mode_on) print("3")
-WW2_bombs[!is.na(as.integer(substring(Target.City, 1, 1))), c("Target.City")] <- ""
-if(debug_mode_on) print("4")
-WW2_bombs[, Target.Type := .(tolower(Target.Type))]
-if(debug_mode_on) print("5")
-WW2_bombs[, Target.Industry := .(tolower(remove_quotes(Target.Industry)))]
-if(debug_mode_on) print("6")
-WW2_bombs[, Target.Priority.Code := .(as.integer(Target.Priority.Code))] # gets forced to character somehow
-if(debug_mode_on) print("7")
-WW2_bombs[, Bomb.Altitude.Feet := .(as.integer(round(Bomb.Altitude*100)))]
-if(debug_mode_on) print("8")
-WW2_bombs[, Bomb.Altitude := NULL]
-if(debug_mode_on) print("9")
 
-WW2_bombs[, Bomb.HE.Num := .(as.integer(Bomb.HE.Num))] # gets forced to double somehow
-if(debug_mode_on) print("10")
-WW2_bombs[, Bomb.Frag.Num := .(as.integer(Bomb.Frag.Num))] # gets forced to double somehow
-if(debug_mode_on) print("11")
+# new columns
+WW2_bombs[, Weapon_Expl_Unit_Weight := as.integer(gsub(pattern = " [ -~]*", replacement = '', Weapon_Expl_Type))]
+WW2_bombs[, Weapon_Incd_Unit_Weight := as.integer(gsub(pattern = " [ -~]*", replacement = '', Weapon_Incd_Type))]
+WW2_bombs[, Weapon_Frag_Unit_Weight := as.integer(gsub(pattern = " [ -~]*", replacement = '', Weapon_Frag_Type))]
 
-WW2_bombs[, Bomb.Total.Tons := Bomb.HE.Tons + Bomb.IC.Tons + Bomb.Frag.Tons]
-if(debug_mode_on) print("12")
-WW2_bombs[, Bomb.Total.Pounds := .(as.integer(Bomb.Total.Tons*2000))]
-if(debug_mode_on) print("13")
+# column error fixes
+WW2_bombs[regexpr(pattern = ':', Unit_Squadron) > 0, 
+          `:=`(Bomb_Time = Unit_Squadron, 
+               Unit_Squadron = "")]
 
-WW2_bombs[is.na(Bomb.HE.Tons), c("Bomb.HE.Tons")] <- 0
-if(debug_mode_on) print("14")
-WW2_bombs[, Bomb.HE.Pounds := .(as.integer(Bomb.HE.Tons*2000))]
-if(debug_mode_on) print("15")
+WW2_bombs[Sighting_Method_Code == "PFF", 
+          `:=`(Sighting_Method_Code = "", 
+               Sighting_Method_Explanation = "PFF")]
+WW2_bombs[Sighting_Method_Code == "VISUAL", 
+          `:=`(Sighting_Method_Code = "1", 
+               Sighting_Method_Explanation = "VISUAL")]
+WW2_bombs[Sighting_Method_Code == "" & 
+            Sighting_Method_Explanation == "VISUAL", 
+          `:=`(Sighting_Method_Code = "1")]
+WW2_bombs[Sighting_Method_Code == "0" | 
+            Sighting_Method_Code == "7" | 
+            Sighting_Method_Code == "9", 
+          `:=`(Sighting_Method_Explanation = "", 
+               Sighting_Method_Code = "")]
 
-WW2_bombs[is.na(Bomb.IC.Tons), c("Bomb.IC.Tons")] <- 0
-if(debug_mode_on) print("16")
-WW2_bombs[, Bomb.IC.Pounds := .(as.integer(Bomb.IC.Tons*2000))]
-if(debug_mode_on) print("17")
+WW2_bombs[(!near(Bomb_Altitude * 100, Bomb_Altitude_Feet) | (is.na(Bomb_Altitude) & !is.na(Bomb_Altitude_Feet))) & 
+            is.na(Weapon_Expl_Num) & 
+            !is.na(Weapon_Expl_Tons), 
+          `:=`(Weapon_Expl_Num = Bomb_Altitude_Feet, 
+               Bomb_Altitude_Feet = NA)]
 
-WW2_bombs[is.na(Bomb.Frag.Tons), c("Bomb.Frag.Tons")] <- 0
-if(debug_mode_on) print("18")
-WW2_bombs[, Bomb.Frag.Pounds := .(as.integer(Bomb.Frag.Tons*2000))]
-if(debug_mode_on) print("19")
+# specific fixes, numerics
+WW2_bombs[!near(Bomb_Altitude * 100, Bomb_Altitude_Feet) & 
+            Weapon_Expl_Num == 0, 
+          `:=`(Bomb_Altitude = Bomb_Altitude_Feet / 100)]
+WW2_bombs[!near(Bomb_Altitude * 100, Bomb_Altitude_Feet) & 
+            !is.na(Weapon_Expl_Num) & 
+            Weapon_Expl_Num != 0, 
+          `:=`(Bomb_Altitude_Feet = Bomb_Altitude * 100)]
+WW2_bombs[Bomb_Altitude > 0 & 
+            Bomb_Altitude < 1, 
+          `:=`(Bomb_Altitude = Bomb_Altitude * 100, 
+               Bomb_Altitude_Feet = Bomb_Altitude_Feet * 100)]
+WW2_bombs[Bomb_Altitude == 1, 
+          `:=`(Bomb_Altitude = 10, 
+               Bomb_Altitude_Feet = 1000)]
+WW2_bombs[Bomb_Altitude >= 1000, 
+          `:=`(Bomb_Altitude = Bomb_Altitude / 100, 
+               Bomb_Altitude_Feet = Bomb_Altitude)]
+WW2_bombs[Bomb_Altitude >= 350, 
+          `:=`(Bomb_Altitude = Bomb_Altitude / 10, 
+               Bomb_Altitude_Feet = Bomb_Altitude * 10)]
+WW2_bombs[!is.na(Bomb_Altitude) & 
+            is.na(Bomb_Altitude_Feet), 
+          `:=`(Bomb_Altitude_Feet = Bomb_Altitude * 100)]
+WW2_bombs[is.na(Bomb_Altitude) & 
+            !is.na(Bomb_Altitude_Feet), 
+          `:=`(Bomb_Altitude = Bomb_Altitude_Feet / 100)]
 
-WW2_bombs[, Takeoff.Base := sapply(Takeoff.Base, proper_noun_phrase)]
-if(debug_mode_on) print("20")
-WW2_bombs[, Takeoff.Country := sapply(Takeoff.Country, proper_noun_phrase)]
-if(debug_mode_on) print("21")
-WW2_bombs[, Aircraft.Airborne.Num := .(as.integer(Aircraft.Airborne.Num))] # gets forced to double somehow
-if(debug_mode_on) print("22")
-WW2_bombs[, Bomb.Time := .(format(strptime(Bomb.Time, format = "%H%M"), format = "%H:%M"))]
-if(debug_mode_on) print("23")
-WW2_bombs[, Sighting.Method.Code := .(as.integer(Sighting.Method.Code))] # gets forced to character somehow
-if(debug_mode_on) print("24")
-WW2_bombs[, Sighting.Method.Explanation := .(tolower(Sighting.Method.Explanation))]
-if(debug_mode_on) print("25")
+WW2_bombs[Weapon_Incd_Type == "10 LB INCENDIARY", 
+          `:=`(Weapon_Incd_Tons = Weapon_Incd_Tons * 2.5, 
+               Weapon_Incd_Pounds = Weapon_Incd_Pounds * 2.5)]
 
-# Korea
+WW2_bombs[Weapon_Incd_Type == "100 LB WP (WHITE PHOSPHROUS)" & 
+            is.na(Weapon_Incd_Tons), 
+          `:=`(Weapon_Incd_Tons = 1)]
+
+WW2_bombs[regexpr(pattern = ' KG', Weapon_Expl_Unit_Weight) > 0, 
+          `:=`(Weapon_Expl_Unit_Weight = Weapon_Expl_Unit_Weight * 2.2)]
+WW2_bombs[regexpr(pattern = ' KG', Weapon_Incd_Unit_Weight) > 0, 
+          `:=`(Weapon_Incd_Unit_Weight = Weapon_Incd_Unit_Weight * 2.2)]
+WW2_bombs[regexpr(pattern = ' KG', Weapon_Frag_Unit_Weight) > 0, 
+          `:=`(Weapon_Frag_Unit_Weight = Weapon_Frag_Unit_Weight * 2.2)]
+
+# general fixes, numerics
+WW2_bombs[, Aircraft_Airborne_Num := as.integer(Aircraft_Airborne_Num)] # gets forced to double somehow
+WW2_bombs[, Weapon_Expl_Num := as.integer(round(Weapon_Expl_Num))]
+WW2_bombs[, Weapon_Incd_Num := as.integer(round(Weapon_Incd_Num))]
+WW2_bombs[, Weapon_Frag_Num := as.integer(round(Weapon_Frag_Num))]
+WW2_bombs[, Weapon_Weight_Pounds := as.integer(round(Weapon_Weight_Pounds))]
+WW2_bombs[, Weapon_Expl_Pounds := as.integer(round(Weapon_Expl_Pounds))]
+WW2_bombs[, Weapon_Incd_Pounds := as.integer(round(Weapon_Incd_Pounds))]
+WW2_bombs[, Weapon_Frag_Pounds := as.integer(round(Weapon_Frag_Pounds))]
+
+# general fixes, times
+WW2_bombs[, Bomb_Time := format_military_times(Bomb_Time)]
+
+# specific fixes, strings
+WW2_bombs[regexpr(pattern = 'UNID', Target_Type) > 0, 
+          `:=`(Target_Type = "")]
+
+WW2_bombs[, Unit_Service := fct_recode(Unit_Service, `RAAF` = "RAAF/NEI")]
+WW2_bombs[, Unit_Country := fct_recode(Unit_Country, `UK` = "GREAT BRITAIN")]
+WW2_bombs[, Target_Country := fct_other(Target_Country, drop = c("UNKNOWN", "UNKNOWN OR NOT INDICATED"), other_level = "")]
+WW2_bombs[, Target_City := fct_other(Target_City, drop = c("UNKNOWN", "UNIDENTIFIED"), other_level = "")]
+WW2_bombs[, Target_Type := fct_other(Target_Type, drop = c("UNIDENTIFIED", "UNIDENTIFIED TARGET"), other_level = "")]
+
+WW2_bombs[!is.na(as.integer(gsub(pattern = "[ NSEW]+", replacement = "", Target_City))), 
+          `:=`(Target_City = "")]
+
+WW2_bombs[, Target_Industry := fct_other(Target_Industry, drop = c("UNIDENTIFIED TARGETS"), other_level = "")]
+WW2_bombs[, Unit_Squadron := fct_other(Unit_Squadron, drop = c("0.458333333"), other_level = "")]
+WW2_bombs[, Aircraft_Type := fct_recode(Aircraft_Type, `A-31 Vengeance` = "VENGEANCE (A31)", `A-31 Vengeance` = "VENGEANCE(A-31)")]
+WW2_bombs[, Weapon_Expl_Type := fct_other(Weapon_Expl_Type, drop = c("0"), other_level = "")]
+WW2_bombs[, Weapon_Expl_Type := fct_recode(Weapon_Expl_Type, TORPEDO = "TORPEDOES", TORPEDO = "TORPEDOES MISC", `40 LB EXPLOSIVE` = "UNK CODE 20 110 LB EXPLOSIVE", `250 LB BAP` = "250 BAP")]
+WW2_bombs[, Weapon_Incd_Type := fct_other(Weapon_Incd_Type, drop = c("X"), other_level = "")]
+WW2_bombs[, Weapon_Incd_Type := fct_recode(Weapon_Incd_Type, `110 LB INCENDIARY` = "110 LB  INCENDIARY")]
+WW2_bombs[, Weapon_Frag_Type := fct_other(Weapon_Frag_Type, drop = c("0", "UNK CODE 15"), other_level = "")]
+WW2_bombs[, Weapon_Frag_Type := fct_recode(Weapon_Frag_Type, `138 LB FRAG (6X23 CLUSTERS)` = "23 LB FRAG CLUSTERS (6 X23 PER CLUSTER)", `23 LB PARA FRAG` = "23 LB PARAFRAG")]
+
+WW2_bombs$Unit_Squadron %>% setattr("levels", gsub(pattern = "SQDN", replacement = 'SQUADRON', fixed = TRUE, levels(.)))
+WW2_bombs$Unit_Squadron %>% setattr("levels", gsub(pattern = " (SQ?)\\b", replacement = " SQUADRON", levels(.)))
+WW2_bombs$Unit_Squadron %>% setattr("levels", gsub(pattern = "IATF", replacement = "INDIA AIR TASK FORCE", fixed = TRUE, levels(.)))
+WW2_bombs$Unit_Squadron %>% setattr("levels", gsub(pattern = "CATF", replacement = "CHINA AIR TASK FORCE", fixed = TRUE, levels(.)))
+WW2_bombs$Unit_Squadron %>% setattr("levels", gsub(pattern = "SFTS", replacement = "SERVICE FLYING TRAINING SCHOOL", fixed = TRUE, levels(.)))
+WW2_bombs$Unit_Squadron %>% setattr("levels", gsub(pattern = "FG", replacement = "FLIGHT GROUP", fixed = TRUE, levels(.)))
+WW2_bombs$Unit_Squadron %>% setattr("levels", gsub(pattern = "FS", replacement = "FLIGHT SQUADRON", fixed = TRUE, levels(.)))
+WW2_bombs$Unit_Squadron %>% setattr("levels", gsub(pattern = "BG", replacement = "BOMBARDMENT GROUP", fixed = TRUE, levels(.)))
+WW2_bombs$Unit_Squadron %>% setattr("levels", gsub(pattern = "BS", replacement = "BOMBARDMENT SQUADRON", fixed = TRUE, levels(.)))
+WW2_bombs$Weapon_Expl_Type %>% setattr("levels", gsub(pattern = "0 GP", replacement = "0 LB GP", fixed = TRUE, levels(.)))
+
+# general fixes, strings
+WW2_bombs$Unit_Country %>% setattr("levels", proper_noun_phrase_vectorized(levels(.)))
+WW2_bombs$Target_Country %>% setattr("levels", proper_noun_phrase_vectorized(remove_quotes(levels(.))))
+WW2_bombs$Target_City %>% setattr("levels", proper_noun_phrase_vectorized(remove_nonASCII_chars(remove_quotes(levels(.)))))
+WW2_bombs$Target_Type %>% setattr("levels", tolower(cleanup_targets(levels(.))))
+WW2_bombs$Target_Industry %>% setattr("levels", tolower(remove_quotes(levels(.))))
+WW2_bombs$Unit_Squadron %>% setattr("levels", proper_noun_phrase_vectorized(remove_quotes(levels(.))))
+WW2_bombs$Aircraft_Type %>% setattr("levels", proper_noun_phrase_aircraft_vectorized(format_aircraft_types(levels(.))))
+WW2_bombs$Target_Priority_Explanation %>% setattr("levels", tolower(levels(.)))
+WW2_bombs$Takeoff_Base %>% setattr("levels", proper_noun_phrase_vectorized(levels(.)))
+WW2_bombs$Takeoff_Country %>% setattr("levels", proper_noun_phrase_vectorized(levels(.)))
+WW2_bombs$Sighting_Method_Explanation %>% setattr("levels", tolower(levels(.)))
+WW2_bombs$Bomb_Damage_Assessment %>% setattr("levels", remove_quotes(levels(.)))
+WW2_bombs$Target_Comment %>% setattr("levels", remove_quotes(levels(.)))
+WW2_bombs$Database_Edit_Comments %>% setattr("levels", remove_quotes(levels(.)))
+
+# type fixes
+WW2_bombs[, Target_Priority_Code := as.integer(Target_Priority_Code)] # gets forced to character somehow
+WW2_bombs[, Sighting_Method_Code := as.integer(Sighting_Method_Code)] # fixing data type due to bad data
+
+# long weapons types and numbers cleaning script
+source('WW2_weapon_cleaning.R')
+
+
+### Korea 1 Edits -------------------------------------------------------------
+
+if(debug_mode_on) print("fixing Korea1")
+
+# specific fixes, strings
+Korea_bombs1[, Unit_ID := fct_recode(Unit_ID, GAF = "G AF")]
+Korea_bombs1[, Unit_ID := fct_other(Unit_ID, drop = c("NONE", "N0NE", "NONE0", "NONE6", "NQNE"), other_level = "")]
+Korea_bombs1[, Aircraft_Type := fct_recode(Aircraft_Type, `C-54` = "O54")]
+Korea_bombs1[, Aircraft_Type := fct_recode(Aircraft_Type, `L-05` = "LO5")]
+Korea_bombs1[, Aircraft_Type := fct_recode(Aircraft_Type, `RB-29` = "R829")]
+Korea_bombs1[, Aircraft_Type := fct_recode(Aircraft_Type, `T-06` = "TO6", `T-06` = "TQ6")]
+
+# general fixes, strings
+Korea_bombs1$Aircraft_Type %>% setattr("levels", format_aircraft_types(levels(.)))
+
+
+### Korea 2 Edits -----------------------------------------------------------
+
 if(debug_mode_on) print("fixing Korea2")
-Korea_bombs2[, Row.Number := .(as.integer(Row.Number))] # gets forced to character somehow
-if(debug_mode_on) print("1")
-Korea_bombs2[, Mission.Number := .(as.integer(Mission.Number))] # gets forced to character somehow
-if(debug_mode_on) print("2")
-Korea_bombs2[, Aircraft.Lost.Num := .(as.integer(Aircraft.Lost.Num))] # gets forced to character somehow
-if(debug_mode_on) print("3")
-Korea_bombs2[, Target.Latitude := .(as.numeric(substr(Target.Latitude, 1, nchar(Target.Latitude)-1)))]
-if(debug_mode_on) print("4")
-Korea_bombs2[, Target.Longitude := .(as.numeric(substr(Target.Longitude, 1, nchar(Target.Longitude)-1)))]
-if(debug_mode_on) print("5")
-Korea_bombs2[, Weapons.Num := .(as.integer(Weapons.Num))] # gets forced to character somehow
-if(debug_mode_on) print("6")
-Korea_bombs2 <- separate(data = Korea_bombs2,
-                         col = Bomb.Altitude.Feet.Range,
-                         into = c("Bomb.Altitude.Feet.Low", "Bomb.Altitude.Feet.High"),
+
+# new columns
+Korea_bombs2 <- separate(data = Korea_bombs2, # maybe change this to a tstrsplit in data.table form
+                         col = Bomb_Altitude_Feet_Range,
+                         into = c("Bomb_Altitude_Feet_Low", "Bomb_Altitude_Feet_High"),
                          sep = '-',
                          extra = 'merge',
                          fill = 'right')
-if(debug_mode_on) print("7")
-Korea_bombs2[, Bomb.Altitude.Feet.Low := .(as.integer(Bomb.Altitude.Feet.Low))]
-if(debug_mode_on) print("8")
-Korea_bombs2[, Bomb.Altitude.Feet.High := .(as.integer(Bomb.Altitude.Feet.High))]
-if(debug_mode_on) print("9")
 
-# Vietnam
+# general fixes, numerics
+Korea_bombs2[, Target_Latitude := as.numeric(substr(Target_Latitude, 1, nchar(Target_Latitude)-1))]
+Korea_bombs2[, Target_Longitude := as.numeric(substr(Target_Longitude, 1, nchar(Target_Longitude)-1))]
+Korea_bombs2[, Bomb_Altitude_Feet_Low := as.integer(Bomb_Altitude_Feet_Low)]
+Korea_bombs2[, Bomb_Altitude_Feet_High := as.integer(Bomb_Altitude_Feet_High)]
+
+# specific fixes, strings
+#KB-29 technically exists, and is modified B-29 available in 1948, so theoretically possible, but it's just a refueling aircraft--probably an OCR error for RB-29, but I'm not sure
+Korea_bombs2[regexpr(pattern = 'UNKNK?OWN', Target_Type) > 0, 
+          `:=`(Target_Type = "")]
+
+Korea_bombs2[, Unit_Squadron := gsub(pattern = "Sq\\b", replacement = "Squadron", Unit_Squadron)]
+
+Korea_bombs2[, Aircraft_Type := fct_recode(Aircraft_Type, `RB-45` = "RB 45")]
+Korea_bombs2[, Aircraft_Lost_Num := fct_other(Aircraft_Lost_Num, keep = c("1", "2", "3"), other_level = "")]
+Korea_bombs2[, Weapon_Type := fct_other(Weapon_Type, drop = c("UNKNOWN"), other_level = "")]
+Korea_bombs2[, Mission_Type := fct_recode(Mission_Type, Interdiction = "Interdcition", Interdiction = "Interdiciton", Interdiction = "Interdicton", Interdiction = "Interduction")]
+Korea_bombs2[, Nose_Fuze := fct_recode(Nose_Fuze, Instantaneous = "instantaneous")]
+Korea_bombs2[, Nose_Fuze := fct_other(Nose_Fuze, drop = c("Unknown to poor results."), other_level = "")]
+
+Korea_bombs2$Weapon_Type %>% setattr("levels", gsub(pattern = " GP\\b", replacement = " LB GP", levels(.)))
+Korea_bombs2$Unit_Squadron %>% setattr("levels", gsub(pattern = " SQ\\b", replacement = " SQUADRON", levels(.)))
+
+# general fixes, strings
+Korea_bombs2$Aircraft_Type %>% setattr("levels", proper_noun_phrase_aircraft_vectorized(levels(.)))
+Korea_bombs2$Target_Type %>% setattr("levels", tolower(cleanup_targets(toupper(levels(.)))))
+Korea_bombs2$Target_Name %>% setattr("levels", remove_quotes(levels(.)))
+Korea_bombs2$Bomb_Sighting_Method %>% setattr("levels", tolower(levels(.)))
+Korea_bombs2$Bomb_Damage_Assessment %>% setattr("levels", remove_quotes(levels(.)))
+Korea_bombs2$Nose_Fuze %>% setattr("levels", remove_quotes(levels(.)))
+Korea_bombs2$Tail_Fuze %>% setattr("levels", remove_quotes(levels(.)))
+
+# type fixes
+Korea_bombs2[, Row_Number := as.integer(Row_Number)] # gets forced to character somehow
+Korea_bombs2[, Mission_Number := as.integer(Mission_Number)] # gets forced to character somehow
+Korea_bombs2[, Aircraft_Lost_Num := as.integer(Aircraft_Lost_Num)] # fixing data type due to bad data
+Korea_bombs2[, Weapon_Expended_Num := as.integer(Weapon_Expended_Num)] # gets forced to character somehow
+
+
+### Vietnam Edits -----------------------------------------------------------
+
 if(debug_mode_on) print("fixing Vietnam")
-Vietnam_bombs[, Unit.Country := sapply(Unit.Country, proper_noun_phrase)]         # this takes way too long
-if(debug_mode_on) print("1")
-Vietnam_bombs[, Takeoff.Location := sapply(Takeoff.Location, proper_noun_phrase)] # this takes way too long
-if(debug_mode_on) print("2")
-Vietnam_bombs[, Target.Type := .(tolower(gsub(pattern = '\\\\', replacement = '/', Target.Type)))]
-if(debug_mode_on) print("3")
-Vietnam_bombs[, Bomb.Time := .(format(strptime(Bomb.Time, format = "%H%M"), format = "%H:%M"))]
-if(debug_mode_on) print("4")
-Vietnam_bombs[, Mission.Function.Code := .(as.integer(Mission.Function.Code))] # gets forced to character somehow
-if(debug_mode_on) print("5")
-Vietnam_bombs[, Mission.Function.Description := .(tolower(Mission.Function.Description))]
-if(debug_mode_on) print("6")
-Vietnam_bombs[, Operation.Supported := .(tolower(Operation.Supported))]
-if(debug_mode_on) print("7")
-Vietnam_bombs[, Mission.Day.Period := .(ifelse(Mission.Day.Period == "D", "day", ifelse(Mission.Day.Period == "N", "night", "")))]
-if(debug_mode_on) print("8")
-Vietnam_bombs[, Target.CloudCover := .(tolower(Target.CloudCover))]
-if(debug_mode_on) print("9")
-Vietnam_bombs[, Target.Control := .(tolower(Target.Control))]
-if(debug_mode_on) print("10")
-Vietnam_bombs[, Target.Country := sapply(Target.Country, proper_noun_phrase)]     # this takes way too long
-if(debug_mode_on) print("11")
-Vietnam_bombs[, Weapons.Class := .(tolower(Weapons.Class))]
-if(debug_mode_on) print("12")
-Vietnam_bombs[Weapons.Jettisoned.Num == -1, c("Weapons.Jettisoned.Num")] <- NA
-if(debug_mode_on) print("13")
-Vietnam_bombs[Weapons.Returned.Num == -1, c("Weapons.Returned.Num")] <- NA
-if(debug_mode_on) print("14")
-Vietnam_bombs[Weapons.Weight.Loaded == -1, c("Weapons.Weight.Loaded")] <- NA
-if(debug_mode_on) print("15")
-Vietnam_bombs[, Bomb.Altitude := .(ifelse(Bomb.Altitude == 0, NA, as.integer(Bomb.Altitude*1000)))] # assumed factor of 1000 here (in ft)--otherwise makes no sense
-if(debug_mode_on) print("16")
-Vietnam_bombs[, Bomb.Time := .(format(strptime(Target.Time.Off, format = "%H%M"), format = "%H:%M"))]
-if(debug_mode_on) print("17")
 
-### add useful columns ###
+# specific fixes, numerics
+Vietnam_bombs[Weapon_Jettisoned_Num == -1, 
+              `:=`(Weapon_Jettisoned_Num = NA_integer_)]
+Vietnam_bombs[Weapon_Returned_Num == -1, 
+              `:=`(Weapon_Returned_Num = NA_integer_)]
+Vietnam_bombs[Weapon_Weight_Loaded == -1, 
+              `:=`(Weapon_Weight_Loaded = NA_integer_)]
 
-if(debug_mode_on) print("adding to WW1")
-WW2_bombs[, Unit.Service.Title := .(ifelse(Unit.Country == "USA", paste(Unit.Country, Unit.Service), Unit.Service))]
-WW2_bombs[, Aircraft.Total := .(ifelse(!is.na(Aircraft.Attacking.Num), Aircraft.Attacking.Num,
-                                       ifelse(!is.na(Aircraft.Dropping.Num), Aircraft.Dropping.Num,
-                                              ifelse(!is.na(Aircraft.Airborne.Num), Aircraft.Airborne.Num, "some"))))]
+# general fixes, numerics
+Vietnam_bombs[, Bomb_Altitude_Feet := as.integer(Bomb_Altitude * 1000)] # assumed factor of 1000 here (in ft)--otherwise makes no sense
+
+# general fixes, times
+Vietnam_bombs[, Bomb_Time := format_military_times(Bomb_Time)]
+Vietnam_bombs[, Target_Time_Off := format_military_times(Target_Time_Off)]
+
+# specific fixes, strings
+Vietnam_bombs$Aircraft_Type %>% setattr("levels", gsub(pattern = "([A-Za-z]+)[ ./]?(\\d+[A-Za-z]*)( ?/.*)?", replacement = "\\1-\\2", levels(.)))
+Vietnam_bombs$Target_Type %>% setattr("levels", gsub(pattern = "/ANY", replacement = '', fixed = TRUE, 
+                                                     gsub(pattern = "\\", replacement = '/', fixed = TRUE, levels(.))))
+Vietnam_bombs$Operation %>% setattr("levels", gsub(pattern = "^([- \"/]+)|(IN COUNTRY[- \"/]*)", replacement = '', levels(.)))
+Vietnam_bombs$Operation %>% setattr("levels", gsub(pattern = "ROLLING THUN((D)|( - ROLLING THUN))?", replacement = "ROLLING THUNDER", levels(.)))
+
+Vietnam_bombs[, Unit_Country := fct_recode(Unit_Country, `South Korea` = "KOREA (SOUTH)", `USA` = "UNITED STATES OF AMERICA", `South Vietnam` = "VIETNAM (SOUTH)")]
+Vietnam_bombs[, Unit_Service := fct_other(Unit_Service, drop = c("OTHER"), other_level = "")]
+Vietnam_bombs[, Aircraft_Type := fct_other(Aircraft_Type, drop = c("NOT CODED"), other_level = "")]
+Vietnam_bombs[, Target_Type := fct_other(Target_Type, drop = c("NO TARGET ACQUIRED", "UNKNOWN/UNIDENTIFIED", "UNK/UND"), other_level = "")]
+Vietnam_bombs[, Target_Type := fct_recode(Target_Type, TROOPS = "TROOP UNK", TROOPS = "TROOP UNK #")]
+Vietnam_bombs[, Weapon_Type := fct_other(Weapon_Type, drop = c("UNK", "UNKNOWN"), other_level = "")]
+Vietnam_bombs[, Mission_Function_Code := fct_other(Mission_Function_Code, drop = c("1B", "1S", "1T", "1U", "2I", "2N", "2O", "3C", "3F", "3K", "3S", "3T", "3U", "4N", "5J", "6L", "6S"), other_level = "")]
+Vietnam_bombs[, Mission_Day_Period := fct_other(Mission_Day_Period, keep = c("D", "N", "M", "E"), other_level = "")]
+Vietnam_bombs[, Target_CloudCover := fct_other(Target_CloudCover, drop = c("NOT OBS"), other_level = "")]
+Vietnam_bombs[, Target_Control := fct_other(Target_Control, drop = c("UNKNOWN"), other_level = "")]
+Vietnam_bombs[, Target_Country := fct_other(Target_Country, drop = c("UNKNOWN"), other_level = "")]
+Vietnam_bombs[, Target_Country := fct_recode(Target_Country, PHILIPPINES = "PHILLIPINES", `WEST PACIFIC WATERS` = "WESTPAC WATERS")]
 
 
-### clean out obviously wrong values ###
+# general fixes, strings
+Vietnam_bombs$Unit_Country %>% setattr("levels", proper_noun_phrase_vectorized(levels(.)))
+Vietnam_bombs$Aircraft_Type %>% setattr("levels", format_aircraft_types(levels(.)))
+Vietnam_bombs$Target_Type %>% setattr("levels", tolower(cleanup_targets(levels(.))))
+Vietnam_bombs$Takeoff_Location %>% setattr("levels", proper_noun_phrase_vectorized(levels(.)))
+Vietnam_bombs$Mission_Function_Description %>% setattr("levels", tolower(levels(.)))
+Vietnam_bombs$Operation %>% setattr("levels", capitalize_phrase_vectorized(levels(.)))
+Vietnam_bombs$Mission_Day_Period %>% setattr("levels", ifelse(levels(.) == "D", "day", ifelse(levels(.) == "N", "night", ifelse(levels(.) == "M", "morning", ifelse(levels(.) == "E", "evening", "")))))
+Vietnam_bombs$Target_CloudCover %>% setattr("levels", tolower(levels(.)))
+Vietnam_bombs$Target_Country %>% setattr("levels", proper_noun_phrase_vectorized(levels(.)))
+Vietnam_bombs$Weapon_Class %>% setattr("levels", tolower(levels(.)))
 
-# drop missions without date
-# drop out of bounds Latitude and Longitude values
-# drop (0,0) Latitude and Longitude values
-# drop out of reasonable bounds bombing Altitude values
-if(debug_mode_on) print("cleaning WW1")
-WW1_clean <- WW1_bombs[!is.na(Mission.Date)
-                       & Target.Latitude <= 90 & Target.Latitude >= -90 
-                       & Target.Longitude <= 180 & Target.Longitude >= -180 
-                       & !(Target.Latitude == 0 & Target.Longitude == 0)
-                       & (Bomb.Altitude < 100000 | is.na(Bomb.Altitude)), ]
-
-if(debug_mode_on) print("cleaning WW2")
-WW2_clean <- WW2_bombs[!is.na(Mission.Date)
-                       & Target.Latitude <= 90 & Target.Latitude >= -90 
-                       & Target.Longitude <= 180 & Target.Longitude >= -180 
-                       & !(Target.Latitude == 0 & Target.Longitude == 0)
-                       & (Bomb.Altitude.Feet < 100000 | is.na(Bomb.Altitude.Feet)), ]
-
-if(debug_mode_on) print("cleaning Korea2")
-Korea_clean2 <- Korea_bombs2[!is.na(Mission.Date)
-                             & Target.Latitude <= 90 & Target.Latitude >= -90 
-                             & Target.Longitude <= 180 & Target.Longitude >= -180 
-                             & !(Target.Latitude == 0 & Target.Longitude == 0)
-                             & (Bomb.Altitude.Feet.Low < 100000 | is.na(Bomb.Altitude.Feet.Low)), ]
-
-if(debug_mode_on) print("cleaning Vietnam")
-Vietnam_clean <- Vietnam_bombs[!is.na(Mission.Date)
-                               & Target.Latitude <= 90 & Target.Latitude >= -90 
-                               & Target.Longitude <= 180 & Target.Longitude >= -180 
-                               & !(Target.Latitude == 0 & Target.Longitude == 0)
-                               & (Bomb.Altitude < 100000 | is.na(Bomb.Altitude)), ]
-
-
-### prepare tooltip helpers ###
-
-if(debug_mode_on) print("preparing tooltips WW1")
-WW1_clean[, tooltip_datetime := .(ifelse(is.na(Takeoff.Time), 
-                                         ifelse(is.na(Takeoff.Day.Period), 
-                                                paste0("On ", Mission.Date, ","), 
-                                                paste0("On ", Mission.Date, " during the ", Takeoff.Day.Period, ",")), 
-                                         paste0("On ", Mission.Date, " at ", Takeoff.Time, " hours,")))]
-WW1_clean[, tooltip_aircraft_num := .(ifelse(is.na(Aircraft.Attacking.Num), 
-                                             "some", 
-                                             toString(Aircraft.Attacking.Num)))]
-WW1_clean[, tooltip_aircraft_type := .(ifelse(is.na(Aircraft.Type), 
-                                              "aircraft", 
-                                              Aircraft.Type))]
-WW1_clean[, tooltip_aircraft_numtype := .(ifelse((tooltip_aircraft_num == "1" | tooltip_aircraft_type == "aircraft"), 
-                                                 paste0(tooltip_aircraft_num, " ", tooltip_aircraft_type), 
-                                                 paste0(tooltip_aircraft_num, " ", tooltip_aircraft_type, "s")))]
-WW1_clean[, tooltip_aircraft := .(ifelse(Unit.Service == "", 
-                                         paste0(tooltip_aircraft_numtype, " dropped"), 
-                                         paste0(tooltip_aircraft_numtype, " of the ", Unit.Service, " division dropped")))]
-WW1_clean[, tooltip_bombload := .(ifelse(is.na(Aircraft.Bombload), 
-                                         "some bombs on", 
-                                         paste0(toString(Aircraft.Bombload), " pounds of bombs on")))]
-WW1_clean[, tooltip_targetType := .(ifelse(Target.Type == "", 
-                                           "a target", 
-                                           Target.Type))]
-WW1_clean[, tooltip_targetLocation := .(ifelse((Target.City == "" & Target.Country == ""), 
-                                               "in this area", 
-                                               ifelse(Target.City == "", 
-                                                      paste0("in this area of ", Target.Country), 
-                                                      ifelse(Target.Country == "", 
-                                                             paste0("in ", Target.City), 
-                                                             paste0("in ", Target.City, ", ", Target.Country)))))]
-
-if(debug_mode_on) print("preparing tooltips WW2")
-WW2_clean[, tooltip_datetime := .(paste0("On ", 
-                                         Mission.Date, 
-                                         ","))]
-WW2_clean[, tooltip_aircraft_num := .(ifelse(is.na(Aircraft.Total), 
-                                             "some", 
-                                             toString(Aircraft.Total)))]
-WW2_clean[, tooltip_aircraft_type := .(ifelse(is.na(Aircraft.Name), 
-                                              "aircraft", 
-                                              Aircraft.Name))]
-WW2_clean[, tooltip_aircraft_numtype := .(ifelse((tooltip_aircraft_num == "1" | tooltip_aircraft_type == "aircraft"), 
-                                                 paste0(tooltip_aircraft_num, " ", tooltip_aircraft_type), 
-                                                 paste0(tooltip_aircraft_num, " ", tooltip_aircraft_type, "s")))]
-WW2_clean[, tooltip_aircraft := .(ifelse(Unit.Service == "", 
-                                         paste0(tooltip_aircraft_numtype, " dropped"), 
-                                         paste0(tooltip_aircraft_numtype, " of the ", Unit.Service, " division dropped")))]
-WW2_clean[, tooltip_bombload := .(ifelse(is.na(Bomb.Total.Tons), 
-                                         "some bombs on", 
-                                         paste0(toString(Bomb.Total.Tons), " tons of bombs on")))]
-WW2_clean[, tooltip_targetType := .(ifelse(Target.Type == "", 
-                                           "a target", 
-                                           Target.Type))]
-WW2_clean[, tooltip_targetLocation := .(ifelse((Target.City == "" & Target.Country == ""), 
-                                               "in this area", 
-                                               ifelse(Target.City == "", 
-                                                      paste0("in this area of ", Target.Country), 
-                                                      ifelse(Target.Country == "", 
-                                                             paste0("in ", Target.City), 
-                                                             paste0("in ", Target.City, ", ", Target.Country)))))]
-
-if(debug_mode_on) print("preparing tooltips Korea")
-Korea_clean2[, tooltip_datetime := .(paste0("On ", 
-                                            Mission.Date, 
-                                            ","))]
-Korea_clean2[, tooltip_aircraft_num := .(ifelse(is.na(Aircraft.Attacking.Num), 
-                                                "some", 
-                                                toString(Aircraft.Attacking.Num)))]
-Korea_clean2[, tooltip_aircraft_type := .(ifelse(is.na(Aircraft.Type), 
-                                                 "aircraft", 
-                                                 Aircraft.Type))]
-Korea_clean2[, tooltip_aircraft_numtype := .(ifelse((tooltip_aircraft_num == "1" | tooltip_aircraft_type == "aircraft"), 
-                                                    paste0(tooltip_aircraft_num, " ", tooltip_aircraft_type), 
-                                                    paste0(tooltip_aircraft_num, " ", tooltip_aircraft_type, "s")))]
-Korea_clean2[, tooltip_aircraft := .(ifelse(Unit.Group == "", 
-                                            paste0(tooltip_aircraft_numtype, " dropped"), 
-                                            paste0(tooltip_aircraft_numtype, " of the ", Unit.Group, " division dropped")))]
-Korea_clean2[, tooltip_bombload := .(ifelse(is.na(Aircraft.Bombload.Calculated.Pounds), 
-                                            "some bombs on", 
-                                            paste0(toString(Aircraft.Bombload.Calculated.Pounds), " pounds of bombs on")))]
-Korea_clean2[, tooltip_targetType := .(ifelse(Target.Type == "", 
-                                              "a target", 
-                                              Target.Type))]
-Korea_clean2[, tooltip_targetLocation := .(ifelse(Target.Name == "", 
-                                                  "in this area", 
-                                                  paste0("in ", Target.Name)))]
-
-if(debug_mode_on) print("preparing tooltips Vietnam")
-Vietnam_clean[, tooltip_datetime := .(paste0("On ", 
-                                             Mission.Date, 
-                                             ","))]
-Vietnam_clean[, tooltip_aircraft_num := .(ifelse(is.na(Aircraft.Num), 
-                                                 "some", 
-                                                 toString(Aircraft.Num)))]
-Vietnam_clean[, tooltip_aircraft_type := .(ifelse(is.na(Aircraft.Root.Valid), 
-                                                  "aircraft", 
-                                                  Aircraft.Root.Valid))]
-Vietnam_clean[, tooltip_aircraft_numtype := .(ifelse((tooltip_aircraft_num == "1" | tooltip_aircraft_type == "aircraft"), 
-                                                     paste0(tooltip_aircraft_num, " ", tooltip_aircraft_type), 
-                                                     paste0(tooltip_aircraft_num, " ", tooltip_aircraft_type, "s")))]
-Vietnam_clean[, tooltip_aircraft := .(ifelse(Unit.Service == "", 
-                                             paste0(tooltip_aircraft_numtype, " dropped bombs on"), 
-                                             paste0(tooltip_aircraft_numtype, " of the ", Unit.Service, " division dropped bombs on")))]
-Vietnam_clean[, tooltip_targetType := .(ifelse(Target.Type == "", 
-                                               "a target", 
-                                               Target.Type))]
-Vietnam_clean[, tooltip_targetLocation := .(ifelse(Target.Country == "", 
-                                                   "in this area", 
-                                                   paste0("in ", Target.Country)))]
-
-
-### add tooltips ###
-
-if(debug_mode_on) print("tooltips WW1")
-WW1_clean[, tooltip := .(paste(tooltip_datetime, 
-                               tooltip_aircraft, 
-                               tooltip_bombload, 
-                               tooltip_targetType, 
-                               tooltip_targetLocation, 
-                               collapse = "<br>"))]
-
-if(debug_mode_on) print("tooltips WW2")
-WW2_clean[, tooltip := .(paste(tooltip_datetime, 
-                               tooltip_aircraft, 
-                               tooltip_bombload, 
-                               tooltip_targetType, 
-                               tooltip_targetLocation, 
-                               collapse = "<br>"))]
-
-if(debug_mode_on) print("tooltips Korea2")
-Korea_clean2[, tooltip := .(paste(tooltip_datetime, 
-                                  tooltip_aircraft, 
-                                  tooltip_bombload, 
-                                  tooltip_targetType, 
-                                  tooltip_targetLocation, 
-                                  collapse = "<br>"))]
-
-if(debug_mode_on) print("tooltips Vietnam")
-Vietnam_clean[, tooltip := .(paste(tooltip_datetime, 
-                                   tooltip_aircraft, 
-                                   tooltip_targetType, 
-                                   tooltip_targetLocation, 
-                                   collapse = "<br>"))]
-
-
-### find unique targets etc ###
-if(debug_mode_on) print("unique WW1")
-WW1_unique_target <- unique(WW1_clean, by = c("Target.Latitude", "Target.Longitude"))
-if(debug_mode_on) print("unique WW2")
-WW2_unique_target <- unique(WW2_clean, by = c("Target.Latitude", "Target.Longitude"))
-#if(debug_mode_on) print("unique Korea1")
-#Korea_unique_target1 <- unique(Korea_clean1, by = c("Target.Latitude", "Target.Longitude"))
-if(debug_mode_on) print("unique Korea2")
-Korea_unique_target2 <- unique(Korea_clean2, by = c("Target.Latitude", "Target.Longitude"))
-if(debug_mode_on) print("unique Vietnam")
-Vietnam_unique_target <- unique(Vietnam_clean, by = c("Target.Latitude", "Target.Longitude"))
-
-### sample ###
-if(debug_mode_on) print("sampling WW1")
-WW1_sample <- WW1_unique_target
-if(debug_mode_on) print("sampling WW2")
-WW2_sample <- sample_n(WW2_unique_target, size = 1000)
-if(debug_mode_on) print("sampling Korea2")
-Korea_sample <- sample_n(Korea_unique_target2, size = 1000)
-if(debug_mode_on) print("sampling Vietnam")
-Vietnam_sample <- sample_n(Vietnam_unique_target, size = 1000)
-
-# ### can write samples for quick tests ###
-# if(debug_mode_on) print("writing WW1")
-# write.csv(x = data.frame(WW1_sample), file = 'saves/WW1_sample.csv', quote = TRUE)
-# if(full_write) write.csv(x = data.frame(WW1_clean), file = 'saves/WW1_clean.csv', quote = TRUE)
-# if(full_write) save(WW1_bombs, file = 'saves/WW1_bombs.Rda')
-# if(debug_mode_on) print("writing WW2")
-# write.csv(x = data.frame(WW2_sample), file = 'saves/WW2_sample.csv', quote = TRUE)
-# if(full_write) write.csv(x = data.frame(WW2_clean), file = 'saves/WW2_clean.csv', quote = TRUE)
-# if(full_write) save(WW2_bombs, file = 'saves/WW2_bombs.Rda')
-# if(debug_mode_on) print("writing Korea")
-# write.csv(x = data.frame(Korea_sample), file = 'saves/Korea_sample.csv', quote = TRUE)
-# if(full_write) write.csv(x = data.frame(Korea_clean2), file = 'saves/Korea_clean.csv', quote = TRUE)
-# if(full_write) save(Korea_bombs2, file = 'saves/Korea_bombs2.Rda')
-# if(debug_mode_on) print("writing Vietnam")
-# write.csv(x = data.frame(Vietnam_sample), file = 'saves/Vietnam_sample.csv', quote = TRUE)
-# if(full_write) write.csv(x = data.frame(Vietnam_clean), file = 'saves/Vietnam_clean.csv', quote = TRUE)
-# if(full_write) save(Vietnam_bombs, file = 'saves/Vietnam_bombs.Rda')
-# if(debug_mode_on) print("saving workspace")
-# if(full_write) save.image(file = 'saves/Shiny_2017-04-30.RData')
-# Vietnam_unique_target <- sample_n(tbl = Vietnam_unique_target, size = 100000, replace = FALSE)
-# Vietnam_clean <- Vietnam_unique_target
-# Vietnam_sample <- sample_n(tbl = Vietnam_unique_target, size = sample_num, replace = FALSE)
-# save.image('saves/Shiny_2017-04-30_downsampled.RData')
+# type fixes
+Vietnam_bombs[, Mission_Function_Code := as.integer(Mission_Function_Code)]

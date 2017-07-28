@@ -3,7 +3,7 @@
 # @date 2017-05-01 03:00
 
 
-## Version history ###
+### Version history ###
 
 0.1
 This version mapped out semi-cleaned longitudinal and latitudinal target data
@@ -96,20 +96,26 @@ Notes: sidebar and other parts reduced to what works
 0.9.3	Properly formatted tooltips for all conflicts
 	Included all sandboxes for all conflicts
 
+0.9.4	Functionalized code with vectorized helper functions
+	Broke code up into more representative scripts
+
+0.9.5	Implemented selectize inputs so that they filter and get updated
+	Used data.table syntax to improve filtering and fix bugs in graphs
+
+0.9.6	Redesigned cleaner.R to edit strings as factors for vast speed improvement
+	Introduced parallel processing for a few steps
+
+0.9.7	Wrote script to further clean WW2 weapon types, numbers, and total weights
+	Implemented DataTable display
+
 **Future version plans:
-*Lots of ggplots, maybe a self-playing gif of bombs droppedover time for each conflict
-*Fix some buggy tooltips (number agreement, NAs, capitalization, etc.)
-	Korea cities and such are mostly invisible
-	and, of course, number agreement
-*Make efficient for use on shinyapps.io through SQLite
-*Maybe match (or fail to match) the data with the historical record.
-*Could also allow users to link (using html) to relevant Wikipedia articles on
-  certain aspects of the conflicts (airframes, campaigns, etc.)
-*Edit civilian map to have not just number of bombing missions but also
-  number of bombs and weight of bombs to get a better sense of danger/intensity
-*Change heatmap parameters so it's not as odd-looking, especially changing so much
-  between zoom levels
-	Change blur and radius (and maybe even max) parameters?
+
+0.9.8	<finalize graphs>
+
+0.9.9	<finalize other tabs>
+
+1.0	<misc bug fixes, data polishing, and tooltip improvement>
+Complete version
 
 ### notes on data sources ###
 
