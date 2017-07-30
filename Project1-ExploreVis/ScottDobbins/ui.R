@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.7
-# @date 2017-07-28 17:30
+# @version 0.9.7.2
+# @date 2017-07-29 20:00
 
 
 ### UI Component ------------------------------------------------------------
@@ -19,15 +19,15 @@ shinyUI(dashboardPage(
                                     image = sidebar_image), 
                    
                    sidebarMenu(id = "tabs", 
-                               menuItem("Overview", tabName = "overview", icon = icon('map')), 
-                               menuItem("Data", tabName = "data", icon = icon('database')),
-                               menuItem("WW I", tabName = "WW1", icon = icon('bar-chart', lib = 'font-awesome')), 
-                               menuItem("WW II", tabName = "WW2", icon = icon('bar-chart', lib = 'font-awesome')), 
-                               menuItem("Korea", tabName = "Korea", icon = icon('bar-chart', lib = 'font-awesome')), 
-                               menuItem("Vietnam", tabName = "Vietnam", icon = icon('bar-chart', lib = 'font-awesome')), 
-                               menuItem("Be a pilot", tabName = "pilot", icon = icon('fighter-jet', lib = 'font-awesome')),
-                               menuItem("Be a commander", tabName = "commander", icon = icon('map-o', lib = 'font-awesome')),
-                               menuItem("Be a civilian", tabName = "civilian", icon = icon('life-ring', lib = 'font-awesome'))
+                               menuItem("Overview",       tabName = "overview",  icon = icon('map')), 
+                               menuItem("Data",           tabName = "data",      icon = icon('database')),
+                               menuItem("World War I",    tabName = "WW1",       icon = icon('bar-chart',   lib = 'font-awesome')), 
+                               menuItem("World War II",   tabName = "WW2",       icon = icon('bar-chart',   lib = 'font-awesome')), 
+                               menuItem("Korea",          tabName = "Korea",     icon = icon('bar-chart',   lib = 'font-awesome')), 
+                               menuItem("Vietnam",        tabName = "Vietnam",   icon = icon('bar-chart',   lib = 'font-awesome')), 
+                               menuItem("Be a pilot",     tabName = "pilot",     icon = icon('fighter-jet', lib = 'font-awesome')),
+                               menuItem("Be a commander", tabName = "commander", icon = icon('map-o',       lib = 'font-awesome')),
+                               menuItem("Be a civilian",  tabName = "civilian",  icon = icon('life-ring',   lib = 'font-awesome'))
                    ), 
                    
                    # war picker
@@ -91,16 +91,16 @@ shinyUI(dashboardPage(
               fluidRow(
                 infoBoxOutput(outputId = "num_missions", width = 3),
                 infoBoxOutput(outputId = "num_aircraft", width = 3), 
-                infoBoxOutput(outputId = "num_bombs", width = 3),
+                infoBoxOutput(outputId = "num_bombs",    width = 3),
                 infoBoxOutput(outputId = "total_weight", width = 3)
               ), 
               
               # map
               fluidRow(
                 box(leafletOutput("overview_map", 
-                                  width = "100%", 
+                                  width  = "100%", 
                                   height = map_height), 
-                    width = map_width, 
+                    width  = map_width, 
                     height = map_height)
               ), 
               
@@ -162,8 +162,8 @@ shinyUI(dashboardPage(
               fluidRow(
                 box(sliderInput(inputId = "WW1_hist_slider", 
                                 label = "# of bins", 
-                                min = WW1_min_bins, 
                                 value = WW1_init_bins, 
+                                min = WW1_min_bins, 
                                 max = WW1_max_bins, 
                                 step = 1), 
                     width = 6), 
@@ -206,8 +206,8 @@ shinyUI(dashboardPage(
               fluidRow(
                 box(sliderInput(inputId = "WW2_hist_slider", 
                                 label = "# of bins", 
-                                min = WW2_min_bins, 
                                 value = WW2_init_bins, 
+                                min = WW2_min_bins, 
                                 max = WW2_max_bins, 
                                 step = 1), 
                     width = 6), 
@@ -250,8 +250,8 @@ shinyUI(dashboardPage(
               fluidRow(
                 box(sliderInput(inputId = "Korea_hist_slider", 
                                 label = "# of bins", 
-                                min = Korea_min_bins, 
                                 value = Korea_init_bins, 
+                                min = Korea_min_bins, 
                                 max = Korea_max_bins, 
                                 step = 1), 
                     width = 6), 
@@ -294,8 +294,8 @@ shinyUI(dashboardPage(
               fluidRow(
                 box(sliderInput(inputId = "Vietnam_hist_slider", 
                                 label = "# of bins", 
-                                min = Vietnam_min_bins, 
                                 value = Vietnam_init_bins, 
+                                min = Vietnam_min_bins, 
                                 max = Vietnam_max_bins, 
                                 step = 1), 
                     width = 6), 
@@ -366,9 +366,9 @@ shinyUI(dashboardPage(
               # map
               fluidRow(
                 box(leafletOutput("civilian_map", 
-                                  width = "100%", 
+                                  width  = "100%", 
                                   height = map_height), 
-                    width = map_width, 
+                    width  = map_width, 
                     height = map_height)
               ), 
               

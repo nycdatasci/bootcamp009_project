@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.7
-# @date 2017-07-28 17:30
+# @version 0.9.7.2
+# @date 2017-07-29 20:00
 
 
 ### WW1 Column Names --------------------------------------------------------
@@ -466,27 +466,27 @@ Vietnam_col_classes <- list(numeric = c("THOR_DATA_VIET_ID",
 
 ### Read Data ---------------------------------------------------------------
 
-if(debug_mode_on) print("reading WW1")
-WW1_bombs <- fread(file =  WW1_missions_filepath, 
-                   col.names = WW1_col_names, 
+debug_message("reading WW1")
+WW1_bombs <- fread(file = WW1_missions_filepath, 
+                   col.names  = WW1_col_names, 
                    colClasses = WW1_col_classes)
 
-if(debug_mode_on) print("reading WW2")
-WW2_bombs <- fread(file =  WW2_missions_filepath, 
-                   col.names = WW2_col_names, 
+debug_message("reading WW2")
+WW2_bombs <- fread(file = WW2_missions_filepath, 
+                   col.names  = WW2_col_names, 
                    colClasses = WW2_col_classes)
 
-if(debug_mode_on) print("reading Korea1")
-Korea_bombs1 <- fread(file =  Korea_missions1_filepath, 
-                      col.names = Korea_col_names1, 
+debug_message("reading Korea1")
+Korea_bombs1 <- fread(file = Korea_missions1_filepath, 
+                      col.names  = Korea_col_names1, 
                       colClasses = Korea_col_classes1)
 
-if(debug_mode_on) print("reading Korea2")
-Korea_bombs2 <- fread(file =  Korea_missions2_filepath, 
-                      col.names = Korea_col_names2, 
+debug_message("reading Korea2")
+Korea_bombs2 <- fread(file = Korea_missions2_filepath, 
+                      col.names  = Korea_col_names2, 
                       colClasses = Korea_col_classes2)
 
-if(debug_mode_on) print("reading Vietnam")
-Vietnam_bombs <- fread(file =  Vietnam_missions_filepath, 
-                       col.names = Vietnam_col_names, 
+debug_message("reading Vietnam")
+Vietnam_bombs <- fread(file = Vietnam_missions_filepath, 
+                       col.names  = Vietnam_col_names, 
                        colClasses = Vietnam_col_classes)

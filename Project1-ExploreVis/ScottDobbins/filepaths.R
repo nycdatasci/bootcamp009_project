@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.7
-# @date 2017-07-28 17:30
+# @version 0.9.7.2
+# @date 2017-07-29 20:00
 
 
 ### Files -------------------------------------------------------------------
@@ -17,9 +17,9 @@ most_recent_save_date <- '2017-07-21'
 local_directory <- '/Users/scottdobbins/Developer/RStudio/NYCDSA/ScottDobbins_Shiny/'
 
 # data directories
-WW1_directory_infix <- 'THOR/WW1/'
-WW2_directory_infix <- 'THOR/WW2/'
-Korea_directory_infix <- 'THOR/Korea/'
+WW1_directory_infix     <- 'THOR/WW1/'
+WW2_directory_infix     <- 'THOR/WW2/'
+Korea_directory_infix   <- 'THOR/Korea/'
 Vietnam_directory_infix <- 'THOR/Vietnam/'
 
 # directory structure
@@ -31,31 +31,31 @@ aircraft_glossary_name <- 'aircraft.csv'
 weapons_glossary_name <- 'weapons.csv'
 
 # missions file names
-WW1_missions_filename <- 'WW1_missions.csv'
-WW2_missions_filename <- 'WW2_missions.csv'
-Korea_missions1_filename <- 'Korea_missions1.csv'
-Korea_missions2_filename <- 'Korea_missions2.csv'
+WW1_missions_filename     <- 'WW1_missions.csv'
+WW2_missions_filename     <- 'WW2_missions.csv'
+Korea_missions1_filename  <- 'Korea_missions1.csv'
+Korea_missions2_filename  <- 'Korea_missions2.csv'
 Vietnam_missions_filename <- 'Vietnam_missions.csv'
 
 # bombs file names
-WW1_bombs_filename <- 'WW1_bombs.csv'
-WW2_bombs_filename <- 'WW2_bombs.csv'
-Korea_bombs1_filename <- 'Korea_bombs1.csv'
-Korea_bombs2_filename <- 'Korea_bombs2.csv'
+WW1_bombs_filename     <- 'WW1_bombs.csv'
+WW2_bombs_filename     <- 'WW2_bombs.csv'
+Korea_bombs1_filename  <- 'Korea_bombs1.csv'
+Korea_bombs2_filename  <- 'Korea_bombs2.csv'
 Vietnam_bombs_filename <- 'Vietnam_bombs.csv'
 
 # clean file names
-WW1_clean_filename <- 'WW1_clean.csv'
-WW2_clean_filename <- 'WW2_clean.csv'
-Korea_clean1_filename <- 'Korea_clean1.csv'
-Korea_clean2_filename <- 'Korea_clean2.csv'
+WW1_clean_filename     <- 'WW1_clean.csv'
+WW2_clean_filename     <- 'WW2_clean.csv'
+Korea_clean1_filename  <- 'Korea_clean1.csv'
+Korea_clean2_filename  <- 'Korea_clean2.csv'
 Vietnam_clean_filename <- 'Vietnam_clean.csv'
 
 # unique target file names
-WW1_unique_filename <- 'WW1_unique.csv'
-WW2_unique_filename <- 'WW2_unique.csv'
-Korea_unique1_filename <- 'Korea_unique1.csv'
-Korea_unique2_filename <- 'Korea_unique2.csv'
+WW1_unique_filename     <- 'WW1_unique.csv'
+WW2_unique_filename     <- 'WW2_unique.csv'
+Korea_unique1_filename  <- 'Korea_unique1.csv'
+Korea_unique2_filename  <- 'Korea_unique2.csv'
 Vietnam_unique_filename <- 'Vietnam_unique.csv'
 
 # save directories

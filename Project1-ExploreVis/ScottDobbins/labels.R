@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.7
-# @date 2017-07-28 17:30
+# @version 0.9.7.2
+# @date 2017-07-29 20:00
 
 
 ### Overview Tab ------------------------------------------------------------
@@ -15,15 +15,15 @@ Vietnam_string = "Vietnam War (1955-1975)"
 ### Data Tab ----------------------------------------------------------------
 
 # columns
-WW1_datatable_columns <- c("Mission_Date", "Unit_Country", "Target_Country", "Target_City", "Target_Type", "Aircraft_Type", "Aircraft_Attacking_Num", "Weapon_Type", "Weapon_Expended_Num", "Weapon_Weight_Pounds")
-WW2_datatable_columns <- c("Mission_Date", "Unit_Country", "Target_Country", "Target_City", "Target_Type", "Aircraft_Type", "Aircraft_Attacking_Num", "Weapon_Type", "Weapon_Expended_Num", "Weapon_Weight_Pounds")
-Korea_datatable_columns2 <- c("Mission_Date", "Unit_Country", "Target_Name", "Target_Type", "Aircraft_Type", "Aircraft_Attacking_Num", "Weapon_Type", "Weapon_Expended_Num", "Weapon_Weight_Pounds")
+WW1_datatable_columns <-     c("Mission_Date", "Unit_Country", "Target_Country", "Target_City", "Target_Type", "Aircraft_Type", "Aircraft_Attacking_Num", "Weapon_Type", "Weapon_Expended_Num", "Weapon_Weight_Pounds")
+WW2_datatable_columns <-     c("Mission_Date", "Unit_Country", "Target_Country", "Target_City", "Target_Type", "Aircraft_Type", "Aircraft_Attacking_Num", "Weapon_Type", "Weapon_Expended_Num", "Weapon_Weight_Pounds")
+Korea_datatable_columns2 <-  c("Mission_Date", "Unit_Country", "Target_Name",                   "Target_Type", "Aircraft_Type", "Aircraft_Attacking_Num", "Weapon_Type", "Weapon_Expended_Num", "Weapon_Weight_Pounds")
 Vietnam_datatable_columns <- c("Mission_Date", "Unit_Country", "Target_Country", "Target_City", "Target_Type", "Aircraft_Type", "Aircraft_Attacking_Num", "Weapon_Type", "Weapon_Expended_Num", "Weapon_Weight_Pounds")
 
 # column names
-WW1_datatable_colnames <- c("Date", "Airforce", "Target Country", "Target City", "Target", "Aircraft", "# of Aircraft", "Weapon", "# of Weapons", "Explosives (lbs)")
-WW2_datatable_colnames <- c("Date", "Airforce", "Target Country", "Target City", "Target", "Aircraft", "# of Aircraft", "Weapon", "# of Weapons", "Explosives (lbs)")
-Korea_datatable_colnames <- c("Date", "Airforce", "Target City", "Target", "Aircraft", "# of Aircraft", "Weapon", "# of Weapons", "Explosives (lbs)")
+WW1_datatable_colnames <-     c("Date", "Airforce", "Target Country", "Target City", "Target", "Aircraft", "# of Aircraft", "Weapon", "# of Weapons", "Explosives (lbs)")
+WW2_datatable_colnames <-     c("Date", "Airforce", "Target Country", "Target City", "Target", "Aircraft", "# of Aircraft", "Weapon", "# of Weapons", "Explosives (lbs)")
+Korea_datatable_colnames <-   c("Date", "Airforce",                   "Target City", "Target", "Aircraft", "# of Aircraft", "Weapon", "# of Weapons", "Explosives (lbs)")
 Vietnam_datatable_colnames <- c("Date", "Airforce", "Target Country", "Target City", "Target", "Aircraft", "# of Aircraft", "Weapon", "# of Weapons", "Explosives (lbs)")
 
 

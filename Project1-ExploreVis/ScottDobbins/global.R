@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.7
-# @date 2017-07-28 17:30
+# @version 0.9.7.2
+# @date 2017-07-29 20:00
 
 
 ### Import Packages ---------------------------------------------------------
@@ -34,24 +34,24 @@ source('labels.R')
 ### Global Functions --------------------------------------------------------
 
 calculate_opacity <- function(sample_number, map_zoom) {
-  return(0.1 * max(1, 
-                   min(10, 
-                       -2 + map_zoom + ifelse(sample_number > 1024, 
-                                              1, # min opacity
-                                              ifelse(sample_number < 2, 
-                                                     10, # max opacity
-                                                     11 - log2(sample_number)))))) # intermediate opacities
+  return (0.1 * max(1, 
+                    min(10, 
+                        -2 + map_zoom + ifelse(sample_number > 1024, 
+                                               1, # min opacity
+                                        ifelse(sample_number < 2, 
+                                               10, # max opacity
+                                               11 - log2(sample_number)))))) # intermediate opacities
 }
 
 has_bombs_data <- function() {
-  return(exists("WW1_bombs") &
+  return (exists("WW1_bombs") &
            exists("WW2_bombs") &
            exists("Korea_bombs2") &
            exists("Vietnam_bombs"))
 }
 
 has_clean_data <- function() {
-  return(exists("WW1_clean") &
+  return (exists("WW1_clean") &
            exists("WW2_clean") &
            exists("Korea_clean2") &
            exists("Vietnam_clean"))
@@ -60,7 +60,7 @@ has_clean_data <- function() {
 
 ### Parallel ----------------------------------------------------------------
 
-if(use_parallel) {
+if (use_parallel) {
   library(parallel)
   cores <- detectCores(logical = TRUE)
   setDTthreads(cores)
@@ -69,14 +69,14 @@ if(use_parallel) {
 
 ### Get Data ----------------------------------------------------------------
 
-if(!has_clean_data()) {
+if (!has_clean_data()) {
   # enable JIT compiler
-  if(use_compiler) {
+  if (use_compiler) {
     library(compiler)
     enableJIT(3)
   }
   
-  if(refresh_data) {
+  if (refresh_data) {
     source('reader.R')
     source('cleaner.R')
     source('processor.R')
@@ -92,12 +92,12 @@ if(!has_clean_data()) {
     source('helper.R')
   }
   
-  if(full_write) {
+  if (full_write) {
     source('saver.R')
   }
   
   # reset JIT compiler
-  if(use_compiler) {
+  if (use_compiler) {
     enableJIT(0)
   }
 }
@@ -105,18 +105,18 @@ if(!has_clean_data()) {
 
 ### Set Keys ----------------------------------------------------------------
 
-setkey(WW1_clean, Mission_Date, Unit_Country, Aircraft_Type, Weapon_Type)
-setkey(WW2_clean, Mission_Date, Unit_Country, Aircraft_Type, Weapon_Type)
-setkey(Korea_clean2, Mission_Date, Unit_Country, Aircraft_Type, Weapon_Type)
+setkey(WW1_clean,     Mission_Date, Unit_Country, Aircraft_Type, Weapon_Type)
+setkey(WW2_clean,     Mission_Date, Unit_Country, Aircraft_Type, Weapon_Type)
+setkey(Korea_clean2,  Mission_Date, Unit_Country, Aircraft_Type, Weapon_Type)
 setkey(Vietnam_clean, Mission_Date, Unit_Country, Aircraft_Type, Weapon_Type)
 
 
 ### Create Samples ----------------------------------------------------------
 
-if(debug_mode_on) {
-  WW1_sample <- sample_n(WW1_clean, debug_sample_size)
-  WW2_sample <- sample_n(WW2_clean, debug_sample_size)
-  Korea_sample1 <- sample_n(Korea_clean1, debug_sample_size)
-  Korea_sample2 <- sample_n(Korea_clean2, debug_sample_size)
+if (debug_mode_on) {
+  WW1_sample <-     sample_n(WW1_clean,     debug_sample_size)
+  WW2_sample <-     sample_n(WW2_clean,     debug_sample_size)
+  Korea_sample1 <-  sample_n(Korea_clean1,  debug_sample_size)
+  Korea_sample2 <-  sample_n(Korea_clean2,  debug_sample_size)
   Vietnam_sample <- sample_n(Vietnam_clean, debug_sample_size)
 }

@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.7
-# @date 2017-07-28 17:30
+# @version 0.9.7.2
+# @date 2017-07-29 20:00
 
 
 ### Developer Control -------------------------------------------------------
@@ -11,7 +11,7 @@ debug_sample_size <- 1024
 
 # data refresh
 refresh_data <- TRUE
-full_write <- FALSE
+full_write <- TRUE
 
 # JIT compiler settings
 use_compiler <- TRUE
@@ -54,8 +54,8 @@ HERE_code <- 'mrmfvq4OREjya6Vbjmw6Gw'
 sidebar_image <- "https://yt3.ggpht.com/-04uuTMHfDz4/AAAAAAAAAAI/AAAAAAAAAAA/Kjeupp-eNNg/s100-c-k-no-rj-c0xffffff/photo.jpg"
 
 # sampling parameters
-min_sample_size <- 1
 init_sample_size <- 1024
+min_sample_size <- 1
 max_sample_size <- 4096
 
 # bin size parameters
@@ -80,29 +80,29 @@ empty_string_text <- "unspecified"
 
 # historical
 WW1_start_date <- as.Date("1914-07-28")
-WW1_end_date <- as.Date("1918-11-11")
+WW1_end_date   <- as.Date("1918-11-11")
 
 WW2_start_date <- as.Date("1939-09-01")
-WW2_end_date <- as.Date("1945-09-02")
+WW2_end_date   <- as.Date("1945-09-02")
 
 Korea_start_date <- as.Date("1950-06-25")
-Korea_end_date <- as.Date("1953-07-27")
+Korea_end_date   <- as.Date("1953-07-27")
 
 Vietnam_start_date <- as.Date("1955-11-01")
-Vietnam_end_date <- as.Date("1975-04-30")
+Vietnam_end_date   <- as.Date("1975-04-30")
 
 # records
 WW1_first_mission <- as.Date("1915-05-26")
-WW1_last_mission <- as.Date("1918-11-10")
+WW1_last_mission  <- as.Date("1918-11-10")
 
 WW2_first_mission <- as.Date("1939-09-03")
-WW2_last_mission <- as.Date("1945-12-31")
+WW2_last_mission  <- as.Date("1945-12-31")
 
 Korea_first_mission <- as.Date("1950-06-26")
-Korea_last_mission <- as.Date("1952-12-31")
+Korea_last_mission  <- as.Date("1952-12-31")
 
 Vietnam_first_mission <- as.Date("1965-06-01")
-Vietnam_last_mission <- as.Date("1975-06-30")
+Vietnam_last_mission  <- as.Date("1975-06-30")
 
 # for app
 earliest_date <- min(WW1_start_date, WW1_first_mission)

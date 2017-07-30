@@ -1,11 +1,11 @@
 # @author Scott Dobbins
-# @version 0.9.7
-# @date 2017-07-28 17:30
+# @version 0.9.7.2
+# @date 2017-07-29 20:00
 
 
 ### WW1 ---------------------------------------------------------------------
 
-if(debug_mode_on) print("cleaning WW1")
+debug_message("processing WW1")
 
 # filter
 WW1_clean <- WW1_bombs[!is.na(Mission_Date)
@@ -32,7 +32,7 @@ WW1_clean[, (cols) := mclapply(.SD, ordered_empty_at_end, empty_string_text, mc.
 
 ### WW2 ---------------------------------------------------------------------
 
-if(debug_mode_on) print("cleaning WW2")
+debug_message("processing WW2")
 
 # filter
 WW2_clean <- WW2_bombs[!is.na(Mission_Date)
@@ -91,7 +91,7 @@ WW2_clean[, (cols) := mclapply(.SD, ordered_empty_at_end, empty_string_text, mc.
 
 ### Korea 1 -----------------------------------------------------------------
 
-if(debug_mode_on) print("cleaning Korea 1")
+debug_message("processing Korea 1")
 
 # filter
 Korea_clean1 <- Korea_bombs1[!is.na(Mission_Date), ]
@@ -113,7 +113,7 @@ Korea_clean1[, (cols) := mclapply(.SD, ordered_empty_at_end, empty_string_text, 
 
 ### Korea 2 -----------------------------------------------------------------
 
-if(debug_mode_on) print("cleaning Korea 2")
+debug_message("processing Korea 2")
 
 # filter
 Korea_clean2 <- Korea_bombs2[!is.na(Mission_Date)
@@ -147,7 +147,7 @@ Korea_clean2[, (cols) := mclapply(.SD, ordered_empty_at_end, empty_string_text, 
 
 ### Vietnam -----------------------------------------------------------------
 
-if(debug_mode_on) print("cleaning Vietnam")
+debug_message("processing Vietnam")
 
 # filter
 Vietnam_clean <- Vietnam_bombs[!is.na(Mission_Date)
@@ -184,38 +184,38 @@ Vietnam_clean[, (cols) := mclapply(.SD, ordered_empty_at_end, empty_string_text,
 
 ### prepare tooltip rows ###
 
-if(debug_mode_on) print("preparing tooltips WW1")
-WW1_clean[, `:=`(tooltip_datetime = date_period_time_string(date_string(Month_name, Day, Year), Takeoff_Day_Period, Takeoff_Time), 
-                 tooltip_aircraft = aircraft_string_vectorized(aircraft_numtype_string_vectorized(Aircraft_Attacking_Num, Aircraft_Type), Unit_Squadron), 
-                 tooltip_bombload = bomb_weight_string_vectorized(Weapon_Weight_Pounds), 
-                 tooltip_targetType = target_type_string_vectorized(as.character(Target_Type)), 
+debug_message("preparing tooltips WW1")
+WW1_clean[, `:=`(tooltip_datetime       = date_period_time_string(date_string(Month_name, Day, Year), Takeoff_Day_Period, Takeoff_Time), 
+                 tooltip_aircraft       = aircraft_string_vectorized(aircraft_numtype_string_vectorized(Aircraft_Attacking_Num, Aircraft_Type), Unit_Squadron), 
+                 tooltip_bombload       = bomb_weight_string_vectorized(Weapon_Weight_Pounds), 
+                 tooltip_targetType     = target_type_string_vectorized(as.character(Target_Type)), 
                  tooltip_targetLocation = target_location_string_vectorized(Target_City, Target_Country))]
 
-if(debug_mode_on) print("preparing tooltips WW2")
-WW2_clean[, `:=`(tooltip_datetime = date_string(Month_name, Day, Year), 
-                 tooltip_aircraft = aircraft_string_vectorized(aircraft_numtype_string_vectorized(Aircraft_Num_Total, Aircraft_Type), Unit_Squadron), 
-                 tooltip_bombload = bomb_weight_string_vectorized(Weapon_Weight_Pounds), 
-                 tooltip_targetType = target_type_string_vectorized(as.character(Target_Type)), 
+debug_message("preparing tooltips WW2")
+WW2_clean[, `:=`(tooltip_datetime       = date_string(Month_name, Day, Year), 
+                 tooltip_aircraft       = aircraft_string_vectorized(aircraft_numtype_string_vectorized(Aircraft_Num_Total, Aircraft_Type), Unit_Squadron), 
+                 tooltip_bombload       = bomb_weight_string_vectorized(Weapon_Weight_Pounds), 
+                 tooltip_targetType     = target_type_string_vectorized(as.character(Target_Type)), 
                  tooltip_targetLocation = target_location_string_vectorized(Target_City, Target_Country))]
 
-if(debug_mode_on) print("preparing tooltips Korea")
-Korea_clean2[, `:=`(tooltip_datetime = date_string(Month_name, Day, Year), 
-                    tooltip_aircraft = aircraft_string_vectorized(aircraft_numtype_string_vectorized(Aircraft_Attacking_Num, Aircraft_Type), Unit_Squadron), 
-                    tooltip_bombload = bomb_weight_string_vectorized(Weapon_Weight_Pounds), 
-                    tooltip_targetType = target_type_string_vectorized(as.character(Target_Type)), 
+debug_message("preparing tooltips Korea")
+Korea_clean2[, `:=`(tooltip_datetime       = date_string(Month_name, Day, Year), 
+                    tooltip_aircraft       = aircraft_string_vectorized(aircraft_numtype_string_vectorized(Aircraft_Attacking_Num, Aircraft_Type), Unit_Squadron), 
+                    tooltip_bombload       = bomb_weight_string_vectorized(Weapon_Weight_Pounds), 
+                    tooltip_targetType     = target_type_string_vectorized(as.character(Target_Type)), 
                     tooltip_targetLocation = target_area_string_vectorized(Target_Name))]
 
-if(debug_mode_on) print("preparing tooltips Vietnam")
-Vietnam_clean[, `:=`(tooltip_datetime = date_string(Month_name, Day, Year), 
-                     tooltip_aircraft = paste0(aircraft_numtype_string_vectorized(Aircraft_Attacking_Num, Aircraft_Type), " dropped"), 
-                     tooltip_bombload = bomb_weight_string_vectorized(Weapon_Weight_Pounds), 
-                     tooltip_targetType = target_type_string_vectorized(as.character(Target_Type)), 
+debug_message("preparing tooltips Vietnam")
+Vietnam_clean[, `:=`(tooltip_datetime       = date_string(Month_name, Day, Year), 
+                     tooltip_aircraft       = paste0(aircraft_numtype_string_vectorized(Aircraft_Attacking_Num, Aircraft_Type), " dropped"), 
+                     tooltip_bombload       = bomb_weight_string_vectorized(Weapon_Weight_Pounds), 
+                     tooltip_targetType     = target_type_string_vectorized(as.character(Target_Type)), 
                      tooltip_targetLocation = target_area_string_vectorized(Target_Country))]
 
 
 ### create tooltips ###
 
-if(debug_mode_on) print("tooltips WW1")
+debug_message("tooltips WW1")
 WW1_clean[, tooltip := paste(tooltip_datetime, 
                              tooltip_aircraft, 
                              tooltip_bombload, 
@@ -223,7 +223,7 @@ WW1_clean[, tooltip := paste(tooltip_datetime,
                              tooltip_targetLocation, 
                              sep = "<br>")]
 
-if(debug_mode_on) print("tooltips WW2")
+debug_message("tooltips WW2")
 WW2_clean[, tooltip := paste(tooltip_datetime, 
                              tooltip_aircraft, 
                              tooltip_bombload, 
@@ -231,7 +231,7 @@ WW2_clean[, tooltip := paste(tooltip_datetime,
                              tooltip_targetLocation, 
                              sep = "<br>")]
 
-if(debug_mode_on) print("tooltips Korea2")
+debug_message("tooltips Korea2")
 Korea_clean2[, tooltip := paste(tooltip_datetime, 
                                 tooltip_aircraft, 
                                 tooltip_bombload, 
@@ -239,7 +239,7 @@ Korea_clean2[, tooltip := paste(tooltip_datetime,
                                 tooltip_targetLocation, 
                                 sep = "<br>")]
 
-if(debug_mode_on) print("tooltips Vietnam")
+debug_message("tooltips Vietnam")
 Vietnam_clean[, tooltip := paste(tooltip_datetime, 
                                  tooltip_aircraft, 
                                  tooltip_bombload, 
@@ -250,13 +250,13 @@ Vietnam_clean[, tooltip := paste(tooltip_datetime,
 
 ### Unique Target Locations -------------------------------------------------
 
-if(debug_mode_on) print("unique WW1")
+debug_message("unique WW1")
 WW1_unique <- unique(WW1_clean, by = c("Target_Latitude", "Target_Longitude"))
-if(debug_mode_on) print("unique WW2")
+debug_message("unique WW2")
 WW2_unique <- unique(WW2_clean, by = c("Target_Latitude", "Target_Longitude"))
-if(debug_mode_on) print("unique Korea1")
+debug_message("unique Korea1")
 Korea_unique1 <- copy(Korea_clean1)
-if(debug_mode_on) print("unique Korea2")
+debug_message("unique Korea2")
 Korea_unique2 <- unique(Korea_clean2, by = c("Target_Latitude", "Target_Longitude"))
-if(debug_mode_on) print("unique Vietnam")
+debug_message("unique Vietnam")
 Vietnam_unique <- unique(Vietnam_clean, by = c("Target_Latitude", "Target_Longitude"))

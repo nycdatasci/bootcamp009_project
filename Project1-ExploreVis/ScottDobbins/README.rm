@@ -1,129 +1,184 @@
-@author Scott Dobbins
-@version 0.9.3
-# @date 2017-05-01 03:00
+# @author Scott Dobbins
+# @version 0.9.7.2
+# @date 2017-07-29 20:00
 
 
-### Version history ###
+### Overview ###
 
-0.1
-This version mapped out semi-cleaned longitudinal and latitudinal target data
-  from the United States Airforce in WW2 onto one color map with map labels.
-Major changes: implemented basic data cleaning and basic plotting
+This Shiny app is designed to demonstrate for the user the course of various 20th century wars and give the user a feel of the scale of these historical events. It is designed to be useful to the curious passer-by and the amateur historian (or student) alike, and contains many different ways for visualizing and investigating the data. 
 
 
-0.2
-This version mapped out semi-cleaned longitudinal and latitudinal target data
-  from the United States Airforce in 4 major conflicts during the 20th century
-  onto a selection of maps with map label options.
-Major changes: added other datasets; added other maps and map options
+### Use Instructions ###
+
+The left panel tabs allow the user to navigate between different fuctionalities within the app, and the left panel dropdown boxes allow the user to control which types of events to show (i.e. to filter the data according to their wishes--it affects not just the overview panel but all panels). 
+
+The overview panel graphs out individual bombing events. The dropdown boxes at the bottom allow for graphing points on different map skins and with different label and border settings. When there are more events than can reasonably be graphed simultaneously (as is often the case), the graphed data represent a sub-sample of the overall data, and the number of sample points to graph can be selected at the bottom as well. 
+
+The data inspection panel allows the user to investigate (a subset of) the bombing data on their own. Clicking the column heads allows sorting in either ascending or descending order by that particular column. 
+
+The data panels for World War One, World War Two, the Korean War, and the Vietnam War allow further exploration of the relationships between different aspects of the bombing data. On the left side is a histogram plot that shows how the number of missions flown per unit time changed over the course of the war. On the right side is a sandbox-style plot that allows the user to plot out direct relationships between (nearly) any two variables (which are selected using the dropdown boxes at the bottom). Groupings affect both the histogram plot and the sandbox-style plot. 
+
+The pilot panel (in future releases) links to a video describing what flying bombing missions was like during World War 2 (for reference). 
+
+The commander panel (in future releases) shows what planing maps of each war looked like. 
+
+The civilian panel graphs out bombing intensity according to a few metrics which may be selected at the bottom. 
 
 
-0.3
-This version maps out semi-cleaned longitudinal and latitudinal target data
-  from the United States Airforce in 4 major conflicts during the 20th century
-  onto a selection of maps with map label options and clickable, detailed tooltips.
-Major changes: tooltips
+### Script Contents ###
 
-0.3.1	Separated scripts into Shiny 3-file structure (with README.rm and code_graveyard.txt)
-	Fixed leaflet tile attributions (sort of) and removed htmlEscapes
-	Added app_id and app_code for HERE map usage
-	Removed redundant initial drawings of map and labels
-0.3.2	Made code much more readable with line breaks
-	Edited formatting of popup labels
+ui.R	
+	The User Interface (UI) for the Shiny app
+	Describes what the app contains and where to put everything
 
-0.4
-This version maps out all semi-cleaned longitudinal and latitudinal target data
-  from the United States Airforce in 4 major conflicts during the 20th century
-  onto a selection of maps with map label options and clickable, detailed tooltips.
-Major changes: big data clean; incorporation of all Vietnam and Korea data
+server.R
+	The server-side implementation of the app (the "brains" behind what the app does)
+	Describes all app reactivity and functionality
 
-0.5
-This version maps out all semi-cleaned longitudinal and latitudinal target data
-  from the United States Airforce in 4 major conflicts during the 20th century
-  onto a selection of maps with map label options and clickable, well-formatted, 
-  detailed tooltips using speed advantages brought to it by data table functions.
-Major changes: help cleaning and formatting with helper.R; speed-optimized with data table
+global.R
+	Everything shared by both ui.R and server.R
+	Contains (and sources) all data processing and helper functions
 
-0.6
-This version maps out all semi-cleaned longitudinal and latitudinal target data
-  from the United States Airforce in 4 major conflicts during the 20th century
-  onto a selection of maps with map label options and clickable, well-formatted, 
-  detailed tooltips using speed advantages brought to it by data table functions
-  and cached outputs (while still enabling full refreshes of the displayed data).
-Major changes: further organized code with cleaner.R; development-friendly caching
+labels.R
+	The app contains a lot of labels, which are all placed here
+	Contains all textual data referenced by the app
 
-0.6.1	Additionally cleared up how data is input and processed
-	Fixed Korean war dates
-	Fixed how data is saved and read
+reader.R
+	Manual input of data required many details, all described here
+	Contains all specifics for manually reading in the raw data
 
-0.7
-This version maps out all semi-cleaned longitudinal and latitudinal target data
-  from the United States Airforce in 4 major conflicts during the 20th century
-  onto a selection of maps with map label options and clickable, well-formatted, 
-  detailed tooltips using speed advantages brought to it by data table functions
-  and cached outputs (while still enabling full refreshes of the displayed data).
-Major changes: Shiny dashboard
+cleaner.R
+	Cleans the raw data into a usable form
+	A script of executed steps to clean specific problems in the raw data
 
-0.8
-This version maps out all semi-cleaned longitudinal and latitudinal target data
-  from the United States Airforce in 4 major conflicts during the 20th century
-  onto a selection of maps with map label options and clickable, well-formatted, 
-  detailed tooltips using speed advantages brought to it by data table functions
-  and cached outputs (while still enabling full refreshes of the displayed data).
-  It also plots a bin-editable histogram of missions by date for each conflict.
-Major changes: full sidebar; tabs for each war
+WW2_weapon_cleaning.R
+	The world war two weapon data was particularly dirty, 
+	so it's cleaning was isolated from the general cleaning script (cleaner.R)
 
-0.8.1	Added stat boxes in the overview tab
-	Made date restrictions apply to all data accessed in all tabs
-	Made sampling occur after date restriction changes
-	Opacity now updates with sample size as well
+processor.R
+	Processes the cleaned data into a form that best fits the app
+	A script of executed steps to drop irrelevant data and to prepare tooltips
 
-0.9
-Version for class lecture
-Major changes: Sandbox added; labeling added
-Notes: sidebar and other parts reduced to what works
+saver.R
+	Writes the cleaned and processed data to disk for later fast read access
 
-0.9.1	Fixed civilian tab
-	Moved "which wars?" selectizeInput to the sidebar
-	Made "which wars?" update civilian tab
-	Increased speed of sandbox and removed one typo-bug
+downsampler.R
+	Samples the data from each war to fit size requirements for an online app
 
-0.9.2	Added explanatory text box to overview tab for spacing
-	Put comma delimiters in infoBoxes
-	Increased maximum sample size
-	Filtered out (0,0) GPS locations
+helper.R
+	Contains an arsenal of helper functions used to clean and display the data
+ 
+parameters.R
+	Isolates commonly changed parameters that alter app behavior 
+	into one small editable file
 
-0.9.3	Properly formatted tooltips for all conflicts
-	Included all sandboxes for all conflicts
+filepaths.R
+	Listing filepath components for accessing and saving specific files 
+	was a task deserving of its own file
 
-0.9.4	Functionalized code with vectorized helper functions
-	Broke code up into more representative scripts
+busywork.R
+	Contains largely behind-the-scences tasks that are necessary 
+	but not of interest to the other files (mostly completes filepath information)
 
-0.9.5	Implemented selectize inputs so that they filter and get updated
-	Used data.table syntax to improve filtering and fix bugs in graphs
+utils.R
+	Contains functions (as of now, just one function) commonly used 
+	across all the author's R projects for debugging and convenience purposes
 
-0.9.6	Redesigned cleaner.R to edit strings as factors for vast speed improvement
-	Introduced parallel processing for a few steps
 
-0.9.7	Wrote script to further clean WW2 weapon types, numbers, and total weights
-	Implemented DataTable display
+### Used Package Citations ###
 
-**Future version plans:
+# R
+@Manual{,
+    title = {R: A Language and Environment for Statistical Computing},
+    author = {{R Core Team}},
+    organization = {R Foundation for Statistical Computing},
+    address = {Vienna, Austria},
+    year = {2017},
+    url = {https://www.R-project.org/},
+  }
 
-0.9.8	<finalize graphs>
+# shiny
+@Manual{,
+    title = {shiny: Web Application Framework for R},
+    author = {Winston Chang and Joe Cheng and JJ Allaire and Yihui Xie and Jonathan McPherson},
+    year = {2017},
+    note = {R package version 1.0.3},
+    url = {https://CRAN.R-project.org/package=shiny},
+  }
 
-0.9.9	<finalize other tabs>
+# shinydashboard
+@Manual{,
+    title = {shinydashboard: Create Dashboards with 'Shiny'},
+    author = {Winston Chang and Barbara {Borges Ribeiro}},
+    year = {2017},
+    note = {R package version 0.6.1},
+    url = {https://CRAN.R-project.org/package=shinydashboard},
+  }
 
-1.0	<misc bug fixes, data polishing, and tooltip improvement>
-Complete version
+# leaflet
+@Manual{,
+    title = {leaflet: Create Interactive Web Maps with the JavaScript 'Leaflet' Library},
+    author = {Joe Cheng and Bhaskar Karambelkar and Yihui Xie},
+    year = {2017},
+    note = {R package version 1.1.0.9000},
+    url = {http://rstudio.github.io/leaflet/},
+  }
 
-### notes on data sources ###
+# leaflet.extras
+@Manual{,
+    title = {leaflet.extras: Extra Functionality for 'leaflet' Package},
+    author = {Bhaskar Karambelkar},
+    year = {2017},
+    note = {R package version 0.2},
+    url = {https://CRAN.R-project.org/package=leaflet.extras},
+  }
 
-WW1
+# ggplot2
+@Book{,
+    author = {Hadley Wickham},
+    title = {ggplot2: Elegant Graphics for Data Analysis},
+    publisher = {Springer-Verlag New York},
+    year = {2009},
+    isbn = {978-0-387-98140-6},
+    url = {http://ggplot2.org},
+  }
+
+# data.table
+# note: I used data.table v1.10.5, which was in development at the time of my use
+@Manual{,
+    title = {data.table: Extension of `data.frame`},
+    author = {Matt Dowle and Arun Srinivasan},
+    year = {2017},
+    note = {R package version 1.10.5},
+    url = {http://r-datatable.com},
+  }
+
+# dplyr
+@Manual{,
+    title = {dplyr: A Grammar of Data Manipulation},
+    author = {Hadley Wickham and Romain Francois and Lionel Henry and Kirill Müller},
+    year = {2017},
+    note = {R package version 0.7.2},
+    url = {https://CRAN.R-project.org/package=dplyr},
+  }
+
+# DT
+@Manual{,
+    title = {DT: A Wrapper of the JavaScript Library 'DataTables'},
+    author = {Yihui Xie},
+    year = {2016},
+    note = {R package version 0.2},
+    url = {https://CRAN.R-project.org/package=DT},
+  }
+
+
+### Data Sources ###
+
+World War 1
 data source: data.mil
 data origin URL: https://insight.livestories.com/s/v2/world-war-i/5be11be2-83c7-4d20-b5bc-05b3dc325d7e/
 
-WW2
+World War 2
 data source: data.mil
 data origin URL: https://insight.livestories.com/s/v2/world-war-ii/3262351e-df74-437c-8624-0c3b623064b5/
 
@@ -134,5 +189,6 @@ data origin URL: https://insight.livestories.com/s/v2/korea/ff390af4-7ee7-4742-a
 Vietnam
 data source: data.mil
 data origin URL: https://insight.livestories.com/s/v2/vietnam/48973b96-8add-4898-9b33-af2a676b10bb/
+
 
 ### END ###
