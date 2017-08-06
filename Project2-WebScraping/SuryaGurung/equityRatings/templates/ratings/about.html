@@ -1,0 +1,40 @@
+{% extends 'ratings/base.html' %}
+{% load staticfiles %}
+
+
+{% block title_block %}
+    About EquityRating
+{% endblock %}
+
+{% block chart_block %}
+    <div style="padding: 15px 150px 50px 150px;">
+        <h3>EquityRatings:</h3>
+        <pre>
+        EquityRating is a web scraping project to scrape a web 
+        page to collect specific data. The collected data is 
+        used to perform data munging and visualization.
+        </pre>
+        <h3>Web site:</h3>
+        <pre>
+        https://www.briefing.com/Investor/Calendars/Upgrades-Downgrades/
+        </pre>
+        
+        <h3>What did I use:</h3>
+        <pre>
+        <ul class="list-inline" style="font-size:12px;horizontal-align:center;">
+            <li>Scrapy</li>
+            <li>Python</li>
+            <li>Django</li>
+            <li>html 5</li>
+            <li>JavaScript</li>
+            <li>Bootstrap</li>
+            <li>SQLite</li>
+            <li>plotly.js</li>
+            
+        </ul>
+        </pre>
+        by: Surya Gurung<br>
+      
+    </div>
+{% endblock %}
+
