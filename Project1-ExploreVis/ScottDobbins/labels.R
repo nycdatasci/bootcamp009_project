@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.7.2
-# @date 2017-07-29 20:00
+# @version 0.9.8
+# @date 2017-08-11 23:30
 
 
 ### Overview Tab ------------------------------------------------------------
@@ -18,13 +18,13 @@ Vietnam_string = "Vietnam War (1955-1975)"
 WW1_datatable_columns <-     c("Mission_Date", "Unit_Country", "Target_Country", "Target_City", "Target_Type", "Aircraft_Type", "Aircraft_Attacking_Num", "Weapon_Type", "Weapon_Expended_Num", "Weapon_Weight_Pounds")
 WW2_datatable_columns <-     c("Mission_Date", "Unit_Country", "Target_Country", "Target_City", "Target_Type", "Aircraft_Type", "Aircraft_Attacking_Num", "Weapon_Type", "Weapon_Expended_Num", "Weapon_Weight_Pounds")
 Korea_datatable_columns2 <-  c("Mission_Date", "Unit_Country", "Target_Name",                   "Target_Type", "Aircraft_Type", "Aircraft_Attacking_Num", "Weapon_Type", "Weapon_Expended_Num", "Weapon_Weight_Pounds")
-Vietnam_datatable_columns <- c("Mission_Date", "Unit_Country", "Target_Country", "Target_City", "Target_Type", "Aircraft_Type", "Aircraft_Attacking_Num", "Weapon_Type", "Weapon_Expended_Num", "Weapon_Weight_Pounds")
+Vietnam_datatable_columns <- c("Mission_Date", "Unit_Country", "Target_Country",                "Target_Type", "Aircraft_Type", "Aircraft_Attacking_Num", "Weapon_Type", "Weapon_Expended_Num", "Weapon_Weight_Pounds")
 
 # column names
 WW1_datatable_colnames <-     c("Date", "Airforce", "Target Country", "Target City", "Target", "Aircraft", "# of Aircraft", "Weapon", "# of Weapons", "Explosives (lbs)")
 WW2_datatable_colnames <-     c("Date", "Airforce", "Target Country", "Target City", "Target", "Aircraft", "# of Aircraft", "Weapon", "# of Weapons", "Explosives (lbs)")
 Korea_datatable_colnames <-   c("Date", "Airforce",                   "Target City", "Target", "Aircraft", "# of Aircraft", "Weapon", "# of Weapons", "Explosives (lbs)")
-Vietnam_datatable_colnames <- c("Date", "Airforce", "Target Country", "Target City", "Target", "Aircraft", "# of Aircraft", "Weapon", "# of Weapons", "Explosives (lbs)")
+Vietnam_datatable_colnames <- c("Date", "Airforce", "Target Country",                "Target", "Aircraft", "# of Aircraft", "Weapon", "# of Weapons", "Explosives (lbs)")
 
 
 ### WW1 ---------------------------------------------------------------------
@@ -162,7 +162,7 @@ Korea_categorical = list("Military Division" = "Unit_Squadron",
                          "Tail Fuze" = "Tail_Fuze")
 
 Korea_continuous = list("Number of Attacking Aircraft" = "Aircraft_Attacking_Num", 
-                        "Altitude at Bomb Drop" = "Bomb_Altitude_Feet_Low", 
+                        "Altitude at Bomb Drop" = "Bomb_Altitude_Feet", 
                         "Number of Bombs Dropped" = "Weapon_Num", 
                         "Weight of Bombs Dropped" = "Weapon_Weight_Pounds", 
                         "Bombload (weight of bombs per plane)" = "Aircraft_Bombload_Calculated_Pounds", 

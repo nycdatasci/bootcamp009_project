@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.7.2
-# @date 2017-07-29 20:00
+# @version 0.9.8
+# @date 2017-08-11 23:30
 
 
 ### WW1 Column Names --------------------------------------------------------
@@ -19,8 +19,8 @@ WW1_col_names <- c("ID",                                     # integer        # 
                    "Callsign",                               # character
                    "Weapon_Expended_Num",                    # integer
                    "Weapon_Type",                            # character
-                   "Aircraft_Bombload_Pounds",               # double
                    "Weapon_Weight_Pounds",                   # double
+                   "Aircraft_Bombload_Pounds",               # double
                    "Target_Latitude",                        # double
                    "Target_Longitude",                       # double
                    "Target_City",                            # character
@@ -188,7 +188,7 @@ Vietnam_col_names <- c("ID",                                 # integer
                        "Target_Longitude",                   # double
                        "Target_Type",                        # character
                        "Weapon_Expended_Num",                # integer
-                       "Bomb_Time",                          # character
+                       "Bomb_Time_Start",                    # character
                        "Weapon_Type",                        # character
                        "Weapon_Class2",                     # character   # drop while reading
                        "Weapon_Unit_Weight",                 # integer
@@ -221,7 +221,7 @@ Vietnam_col_names <- c("ID",                                 # integer
                        "Bomb_Altitude",                      # integer
                        "Bomb_Speed",                        # integer     # drop while reading
                        "Bomb_Damage_Assessment",             # character
-                       "Target_Time_Off",                    # integer
+                       "Bomb_Time_Finish",                   # integer
                        "Weapon_Weight_Loaded")               # integer
 
 
@@ -382,10 +382,11 @@ Korea_col_classes2 <- list(numeric = c("NBR_ATTACK_EFFEC_AIRCRAFT",
                                          "MISSION_NUMBER",
                                          "MISSION_DATE",
                                          "NBR_LOST_AIRCRAFT",
+                                         "NBR_OF_WEAPONS",
                                          "TGT_LATITUDE_WGS84",
-                                         "TGT_LONGITUDE_WGS84",
-                                         "NBR_OF_WEAPONS", 
-                                         "ALTITUDE_FT"), 
+                                         "TGT_LONGITUDE_WGS84", 
+                                         "ALTITUDE_FT", 
+                                         "BDA"), 
                            
                            factor = c("OP_ORDER",
                                       "UNIT",
@@ -395,7 +396,6 @@ Korea_col_classes2 <- list(numeric = c("NBR_ATTACK_EFFEC_AIRCRAFT",
                                       "WEAPONS_TYPE",
                                       "BOMB_SIGHTING_METHOD",
                                       "MISSION_TYPE",
-                                      "BDA",
                                       "NOSE_FUZE",
                                       "TAIL_FUZE",
                                       "RECORD_SOURCE"), 
@@ -421,15 +421,12 @@ Vietnam_col_classes <- list(numeric = c("THOR_DATA_VIET_ID",
                                         "NUMWEAPONSJETTISONED",
                                         "NUMWEAPONSRETURNED",
                                         "RELEASEALTITUDE",
-                                        "TIMEOFFTARGET",
                                         "WEAPONSLOADEDWEIGHT"), #*** for now: once int32 colClasses issue is fixed in data.table 1.10.5 dev update, switch to integer
 
                             double = c("TGTLATDD_DDD_WGS84",
                                        "TGTLONDDD_DDD_WGS84"),
 
-                            character = c("MSNDATE",
-                                          "TIMEONTARGET",
-                                          "MFUNC"), 
+                            character = c("MSNDATE"), 
                             
                             factor = c("COUNTRYFLYINGMISSION",
                                        "MILSERVICE",
@@ -437,6 +434,7 @@ Vietnam_col_classes <- list(numeric = c("THOR_DATA_VIET_ID",
                                        "VALID_AIRCRAFT_ROOT",
                                        "TAKEOFFLOCATION",
                                        "TGTTYPE",
+                                       "TIMEONTARGET", 
                                        "WEAPONTYPE",
                                        "AIRCRAFT_ORIGINAL",
                                        "AIRCRAFT_ROOT",
@@ -453,8 +451,10 @@ Vietnam_col_classes <- list(numeric = c("THOR_DATA_VIET_ID",
                                        "TGTWEATHER",
                                        "ADDITIONALINFO",
                                        "GEOZONE",
+                                       "MFUNC",
                                        "MFUNC_DESC_CLASS",
-                                       "RESULTSBDA"), 
+                                       "RESULTSBDA", 
+                                       "TIMEOFFTARGET"), 
 
                             NULL = c("AIRFORCEGROUP",
                                      "AIRFORCESQDN",

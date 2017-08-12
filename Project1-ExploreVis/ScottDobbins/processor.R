@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.7.2
-# @date 2017-07-29 20:00
+# @version 0.9.8
+# @date 2017-08-11 23:30
 
 
 ### WW1 ---------------------------------------------------------------------
@@ -8,11 +8,7 @@
 debug_message("processing WW1")
 
 # filter
-WW1_clean <- WW1_bombs[!is.na(Mission_Date)
-                       & Target_Latitude <= 90 & Target_Latitude >= -90 
-                       & Target_Longitude <= 180 & Target_Longitude >= -180 
-                       & !(Target_Latitude == 0 & Target_Longitude == 0)
-                       & (Bomb_Altitude_Feet < 100000 | is.na(Bomb_Altitude_Feet)), ]
+WW1_clean <- WW1_bombs[!is.na(Mission_Date) & !is.na(Target_Latitude) & !is.na(Target_Longitude), ]
 
 # delete useless columns
 WW1_clean[, `:=`(ID = NULL, 
@@ -27,7 +23,7 @@ WW1_clean[, `:=`(ID = NULL,
 
 # format columns
 cols <- colnames(keep(WW1_clean, is.factor))
-WW1_clean[, (cols) := mclapply(.SD, ordered_empty_at_end, empty_string_text, mc.cores = cores), .SDcols = cols]
+WW1_clean[, (cols) := mclapply(.SD, ordered_empty_at_end, empty_text, mc.cores = cores), .SDcols = cols]
 
 
 ### WW2 ---------------------------------------------------------------------
@@ -35,11 +31,7 @@ WW1_clean[, (cols) := mclapply(.SD, ordered_empty_at_end, empty_string_text, mc.
 debug_message("processing WW2")
 
 # filter
-WW2_clean <- WW2_bombs[!is.na(Mission_Date)
-                       & Target_Latitude <= 90 & Target_Latitude >= -90 
-                       & Target_Longitude <= 180 & Target_Longitude >= -180 
-                       & !(Target_Latitude == 0 & Target_Longitude == 0)
-                       & (Bomb_Altitude_Feet < 100000 | is.na(Bomb_Altitude_Feet)), ]
+WW2_clean <- WW2_bombs[!is.na(Mission_Date) & !is.na(Target_Latitude) & !is.na(Target_Longitude), ]
 
 # delete useless columns
 WW2_clean[, `:=`(ID = NULL, 
@@ -62,31 +54,29 @@ WW2_clean[, `:=`(ID = NULL,
                  Database_Edit_Comments = NULL)]
 
 # add useful columns
-WW2_clean[, Unit_Service_Title := factor(ifelse(Unit_Country == "USA", 
-                                                paste(Unit_Country, Unit_Service), 
-                                                as.character(Unit_Service)))]
-WW2_clean[, Aircraft_Num_Total := ifelse(!is.na(Aircraft_Attacking_Num), 
-                                         Aircraft_Attacking_Num, 
-                                  ifelse(!is.na(Aircraft_Dropping_Num), 
-                                         Aircraft_Dropping_Num, 
-                                  ifelse(!is.na(Aircraft_Airborne_Num), 
-                                         Aircraft_Airborne_Num, 
-                                         NA_integer_)))]
-WW2_clean[, Weapon_Expended_Num := ifelse(is.na(Weapon_Expl_Num), 0, Weapon_Expl_Num) + 
-                                   ifelse(is.na(Weapon_Incd_Num), 0, Weapon_Incd_Num) + 
-                                   ifelse(is.na(Weapon_Frag_Num), 0, Weapon_Frag_Num)]
-WW2_clean[, Weapon_Expended_Num := ifelse(Weapon_Expended_Num == 0, NA_integer_, Weapon_Expended_Num)]
-WW2_clean[, Weapon_Type := factor(ifelse(Weapon_Expl_Type != "unspecified", 
-                                         as.character(Weapon_Expl_Type), 
-                                  ifelse(Weapon_Incd_Type != "unspecified", 
-                                         as.character(Weapon_Incd_Type), 
-                                  ifelse(Weapon_Frag_Type != "unspecified", 
-                                         as.character(Weapon_Frag_Type), 
-                                         empty_string_text))))]
+WW2_clean[, Unit_Service_Title := factor(if_else(Unit_Country == "USA", 
+                                                 paste(Unit_Country, Unit_Service), 
+                                                 as.character(Unit_Service)))]
+WW2_clean[, Aircraft_Num_Total := if_else(!is.na(Aircraft_Attacking_Num), 
+                                          Aircraft_Attacking_Num, 
+                                  if_else(!is.na(Aircraft_Dropping_Num), 
+                                          Aircraft_Dropping_Num, 
+                                  if_else(!is.na(Aircraft_Airborne_Num), 
+                                          Aircraft_Airborne_Num, 
+                                          NA_integer_)))]
+WW2_clean[, Weapon_Expended_Num := sum(Weapon_Expl_Num, Weapon_Incd_Num, Weapon_Frag_Num, na.rm = TRUE), by = seq_len(nrow(WW2_clean))]
+WW2_clean[, Weapon_Expended_Num := if_else(Weapon_Expended_Num == 0L, NA_integer_, Weapon_Expended_Num)]
+WW2_clean[, Weapon_Type := factor(if_else(Weapon_Expl_Type != empty_text, 
+                                          as.character(Weapon_Expl_Type), 
+                                  if_else(Weapon_Incd_Type != empty_text, 
+                                          as.character(Weapon_Incd_Type), 
+                                  if_else(Weapon_Frag_Type != empty_text, 
+                                          as.character(Weapon_Frag_Type), 
+                                          empty_text))))]
 
 # reformat columns
 cols <- colnames(keep(WW2_clean, is.factor))
-WW2_clean[, (cols) := mclapply(.SD, ordered_empty_at_end, empty_string_text, mc.cores = cores), .SDcols = cols]
+WW2_clean[, (cols) := mclapply(.SD, ordered_empty_at_end, empty_text, mc.cores = cores), .SDcols = cols]
 
 
 ### Korea 1 -----------------------------------------------------------------
@@ -100,15 +90,17 @@ Korea_clean1 <- Korea_bombs1[!is.na(Mission_Date), ]
 Korea_clean1[, `:=`(ID = NULL, 
                     Unit_ID = NULL, 
                     Unit_ID2 = NULL, 
-                    Unit_ID_Long = NULL)]
+                    Unit_ID_Long = NULL, 
+                    Takeoff_Latitude = NULL, 
+                    Takeoff_Longitude = NULL)]
 
 # add useful columns
 Korea_clean1[, Unit_Country := factor("USA")]
-Korea_bombs1[, Weapon_Weight_Pounds := as.integer(round(Weapon_Weight_Tons * 2000))]
+Korea_clean1[, Weapon_Type := factor(empty_text)]
 
 # format columns
 cols <- colnames(keep(Korea_clean1, is.factor))
-Korea_clean1[, (cols) := mclapply(.SD, ordered_empty_at_end, empty_string_text, mc.cores = cores), .SDcols = cols]
+Korea_clean1[, (cols) := mclapply(.SD, ordered_empty_at_end, empty_text, mc.cores = cores), .SDcols = cols]
 
 
 ### Korea 2 -----------------------------------------------------------------
@@ -116,11 +108,7 @@ Korea_clean1[, (cols) := mclapply(.SD, ordered_empty_at_end, empty_string_text, 
 debug_message("processing Korea 2")
 
 # filter
-Korea_clean2 <- Korea_bombs2[!is.na(Mission_Date)
-                             & Target_Latitude <= 90 & Target_Latitude >= -90 
-                             & Target_Longitude <= 180 & Target_Longitude >= -180 
-                             & !(Target_Latitude == 0 & Target_Longitude == 0)
-                             & (Bomb_Altitude_Feet_Low < 100000 | is.na(Bomb_Altitude_Feet_Low)), ]
+Korea_clean2 <- Korea_bombs2[!is.na(Mission_Date) & !is.na(Target_Latitude) & !is.na(Target_Longitude), ]
 
 # delete useless columns
 Korea_clean2[, `:=`(Row_Number = NULL, 
@@ -130,6 +118,7 @@ Korea_clean2[, `:=`(Row_Number = NULL,
                     Target_MGRS = NULL, 
                     Target_Latitude_Source = NULL, 
                     Target_Longitude_Source = NULL, 
+                    Bomb_Altitude_Feet_Range = NULL, 
                     Aircraft_Bombload_Pounds = NULL, 
                     Aircraft_Total_Weight = NULL, 
                     Callsign = NULL, 
@@ -138,11 +127,13 @@ Korea_clean2[, `:=`(Row_Number = NULL,
 
 # add useful columns
 Korea_clean2[, Unit_Country := factor("USA")]
-Korea_clean2[, Weapon_Weight_Pounds := Aircraft_Attacking_Num * Aircraft_Bombload_Calculated_Pounds]
+Korea_clean2[, Bomb_Altitude_Feet := if_else(is.na(Bomb_Altitude_Feet_High), 
+                                             Bomb_Altitude_Feet_Low, 
+                                             round_to_int((Bomb_Altitude_Feet_Low + Bomb_Altitude_Feet_High) / 2))]
 
 # format columns
 cols <- colnames(keep(Korea_clean2, is.factor))
-Korea_clean2[, (cols) := mclapply(.SD, ordered_empty_at_end, empty_string_text, mc.cores = cores), .SDcols = cols]
+Korea_clean2[, (cols) := mclapply(.SD, ordered_empty_at_end, empty_text, mc.cores = cores), .SDcols = cols]
 
 
 ### Vietnam -----------------------------------------------------------------
@@ -150,11 +141,7 @@ Korea_clean2[, (cols) := mclapply(.SD, ordered_empty_at_end, empty_string_text, 
 debug_message("processing Vietnam")
 
 # filter
-Vietnam_clean <- Vietnam_bombs[!is.na(Mission_Date)
-                               & Target_Latitude <= 90 & Target_Latitude >= -90 
-                               & Target_Longitude <= 180 & Target_Longitude >= -180 
-                               & !(Target_Latitude == 0 & Target_Longitude == 0)
-                               & (Bomb_Altitude < 100000 | is.na(Bomb_Altitude)), ]
+Vietnam_clean <- Vietnam_bombs[!is.na(Mission_Date) & !is.na(Target_Latitude) & !is.na(Target_Longitude), ]
 
 # delete useless columns
 Vietnam_clean[, `:=`(Reference_Source_ID = NULL, 
@@ -174,43 +161,40 @@ Vietnam_clean[, `:=`(Reference_Source_ID = NULL,
                      Bomb_Speed = NULL, 
                      Bomb_Damage_Assessment = NULL)]
 
-# add useful columns
-Vietnam_clean[, Weapon_Weight_Pounds := Weapon_Expended_Num * Weapon_Unit_Weight]
-
 # format columns
 cols <- colnames(keep(Vietnam_clean, is.factor))
-Vietnam_clean[, (cols) := mclapply(.SD, ordered_empty_at_end, empty_string_text, mc.cores = cores), .SDcols = cols]
+Vietnam_clean[, (cols) := mclapply(.SD, ordered_empty_at_end, empty_text, mc.cores = cores), .SDcols = cols]
 
 
 ### prepare tooltip rows ###
 
 debug_message("preparing tooltips WW1")
-WW1_clean[, `:=`(tooltip_datetime       = date_period_time_string(date_string(Month_name, Day, Year), Takeoff_Day_Period, Takeoff_Time), 
-                 tooltip_aircraft       = aircraft_string_vectorized(aircraft_numtype_string_vectorized(Aircraft_Attacking_Num, Aircraft_Type), Unit_Squadron), 
-                 tooltip_bombload       = bomb_weight_string_vectorized(Weapon_Weight_Pounds), 
-                 tooltip_targetType     = target_type_string_vectorized(as.character(Target_Type)), 
-                 tooltip_targetLocation = target_location_string_vectorized(Target_City, Target_Country))]
+WW1_clean[, `:=`(tooltip_datetime       = date_period_time_string(date_string(Month_name, Day, Year), Takeoff_Day_Period, Takeoff_Time, empty_text), 
+                 tooltip_aircraft       = aircraft_string_vectorized(aircraft_numtype_string_vectorized(Aircraft_Attacking_Num, Aircraft_Type, empty_text), Unit_Squadron, empty_text), 
+                 tooltip_bombload       = bomb_string_vectorized(Weapon_Weight_Pounds, Weapon_Type, empty_text), 
+                 tooltip_targetType     = target_type_string_vectorized(as.character(Target_Type, empty_text)), 
+                 tooltip_targetLocation = target_location_string_vectorized(Target_City, Target_Country, empty_text))]
 
 debug_message("preparing tooltips WW2")
-WW2_clean[, `:=`(tooltip_datetime       = date_string(Month_name, Day, Year), 
-                 tooltip_aircraft       = aircraft_string_vectorized(aircraft_numtype_string_vectorized(Aircraft_Num_Total, Aircraft_Type), Unit_Squadron), 
-                 tooltip_bombload       = bomb_weight_string_vectorized(Weapon_Weight_Pounds), 
-                 tooltip_targetType     = target_type_string_vectorized(as.character(Target_Type)), 
-                 tooltip_targetLocation = target_location_string_vectorized(Target_City, Target_Country))]
+WW2_clean[, `:=`(tooltip_datetime       = date_time_string(date_string(Month_name, Day, Year), Bomb_Time, empty_text), 
+                 tooltip_aircraft       = aircraft_string_vectorized(aircraft_numtype_string_vectorized(Aircraft_Num_Total, Aircraft_Type, empty_text), Unit_Squadron, empty_text), 
+                 tooltip_bombload       = bomb_string_vectorized(Weapon_Weight_Pounds, Weapon_Type, empty_text), 
+                 tooltip_targetType     = target_type_string_vectorized(as.character(Target_Type, empty_text)), 
+                 tooltip_targetLocation = target_location_string_vectorized(Target_City, Target_Country, empty_text))]
 
 debug_message("preparing tooltips Korea")
 Korea_clean2[, `:=`(tooltip_datetime       = date_string(Month_name, Day, Year), 
-                    tooltip_aircraft       = aircraft_string_vectorized(aircraft_numtype_string_vectorized(Aircraft_Attacking_Num, Aircraft_Type), Unit_Squadron), 
-                    tooltip_bombload       = bomb_weight_string_vectorized(Weapon_Weight_Pounds), 
-                    tooltip_targetType     = target_type_string_vectorized(as.character(Target_Type)), 
-                    tooltip_targetLocation = target_area_string_vectorized(Target_Name))]
+                    tooltip_aircraft       = aircraft_string_vectorized(aircraft_numtype_string_vectorized(Aircraft_Attacking_Num, Aircraft_Type, empty_text), Unit_Squadron, empty_text), 
+                    tooltip_bombload       = bomb_string_vectorized(Weapon_Weight_Pounds, Weapon_Type, empty_text), 
+                    tooltip_targetType     = target_type_string_vectorized(as.character(Target_Type, empty_text)), 
+                    tooltip_targetLocation = target_area_string_vectorized(Target_Name, empty_text))]
 
 debug_message("preparing tooltips Vietnam")
-Vietnam_clean[, `:=`(tooltip_datetime       = date_string(Month_name, Day, Year), 
-                     tooltip_aircraft       = paste0(aircraft_numtype_string_vectorized(Aircraft_Attacking_Num, Aircraft_Type), " dropped"), 
-                     tooltip_bombload       = bomb_weight_string_vectorized(Weapon_Weight_Pounds), 
-                     tooltip_targetType     = target_type_string_vectorized(as.character(Target_Type)), 
-                     tooltip_targetLocation = target_area_string_vectorized(Target_Country))]
+Vietnam_clean[, `:=`(tooltip_datetime       = date_period_time_string(date_string(Month_name, Day, Year), Mission_Day_Period, Bomb_Time_Start, empty_text), 
+                     tooltip_aircraft       = paste0(aircraft_numtype_string_vectorized(Aircraft_Attacking_Num, Aircraft_Type, empty_text), " dropped"), 
+                     tooltip_bombload       = bomb_string_vectorized(Weapon_Weight_Pounds, Weapon_Type, empty_text), 
+                     tooltip_targetType     = target_type_string_vectorized(as.character(Target_Type, empty_text)), 
+                     tooltip_targetLocation = target_area_string_vectorized(Target_Country, empty_text))]
 
 
 ### create tooltips ###
@@ -260,3 +244,8 @@ debug_message("unique Korea2")
 Korea_unique2 <- unique(Korea_clean2, by = c("Target_Latitude", "Target_Longitude"))
 debug_message("unique Vietnam")
 Vietnam_unique <- unique(Vietnam_clean, by = c("Target_Latitude", "Target_Longitude"))
+
+
+### Combine Data ------------------------------------------------------------
+
+#plyr::rbind.fill() to combine data frames that don't have the same (or same number of) columns

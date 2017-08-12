@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.7
-# @date 2017-07-28 17:30
+# @version 0.9.8
+# @date 2017-08-11 23:30
 
 ### Code Graveyard ###
 # where buggy or formerly useful but now unnecessary code lays to rest
@@ -1246,5 +1246,89 @@ WW1_aircraft_letters <- c("B", "CA", "DH", "FE", "O", "2B", "9A")
 WW2_aircraft_letters <- c("A", "B", "F", "IV", "JU", "LB", "P", "PV", "TBF")
 Korea_aircraft_letters <- c("B", "C", "F", "G", "H", "L", "RB", "RC", "RF", "SA", "SB", "T", "VB", "VC", "WB", "WS")
 Vietnam_aircraft_letters <- c("A", "AC", "AH", "B", "C", "E", "EA", "EB", "EC", "EF", "EKA", "F", "FC", "HC", "JC", "KA", "O", "OV", "RA", "RB", "RC", "RF", "T", "TA", "TF", "UC", "UH", "WC")
+
+unique_from_filtered_col <- function(war_data, column, start_date, end_date, countries, aircrafts, weapons) {
+    if ("All" %c% countries) {
+      if ("All" %c% aircrafts) {
+        if ("All" %c% weapons) {
+          war_data[Mission_Date >= start_date & Mission_Date <= end_date, as.character(unique(column))]
+        } else {
+          war_data[.(weapons), on = .(Weapon_Type)][Mission_Date >= start_date & Mission_Date <= end_date, as.character(unique(column))]
+        }
+      } else {
+        if ("All" %c% weapons) {
+          war_data[.(aircrafts), on = .(Aircraft_Type)][Mission_Date >= start_date & Mission_Date <= end_date, as.character(unique(column))]
+        } else {
+          war_data[.(aircrafts, weapons), on = .(Aircraft_Type, Weapon_Type)][Mission_Date >= start_date & Mission_Date <= end_date, as.character(unique(column))]
+        }
+      }
+    } else {
+      if ("All" %c% aircrafts) {
+        if ("All" %c% weapons) {
+          war_data[.(countries), on = .(Unit_Country)][Mission_Date >= start_date & Mission_Date <= end_date, as.character(unique(column))]
+        } else {
+          war_data[.(countries, weapons), on = .(Unit_Country, Weapon_Type)][Mission_Date >= start_date & Mission_Date <= end_date, as.character(unique(column))]
+        }
+      } else {
+        if ("All" %c% weapons) {
+          war_data[.(countries, aircrafts), on = .(Unit_Country, Aircraft_Type)][Mission_Date >= start_date & Mission_Date <= end_date, as.character(unique(column))]
+        } else {
+          war_data[.(countries, aircrafts, weapons), on = .(Unit_Country, Aircraft_Type, Weapon_Type)][Mission_Date >= start_date & Mission_Date <= end_date, as.character(unique(column))]
+        }
+      }
+    }
+  }
+
+update_maps <- TRUE
+    if (all_countries_selected) {# all countries were selected previously
+      if ("All" %c% input$country) {# all is still selected
+        if (length(input$country) > 1) {# and there's another one in there
+          # then do remove all thing
+          all_countries_selected <<- FALSE
+          updateSelectizeInput(session, inputId = "country", selected = input$country[input$country != "All"])
+          update_maps <- FALSE
+        }
+      } else {# all has been removed
+        all_countries_selected <<- FALSE
+      }
+    } else{# all countries was not selected previously
+      if ("All" %c% input$country) {# all is now added
+        all_countries_selected <<- TRUE
+        if (length(input$country) > 1) {# and there was previously something else in there
+          # then do remove other countries thing
+          updateSelectizeInput(session, inputId = "country", selected = "All")
+          update_maps <- FALSE
+        }
+      }
+    }
+    if (update_maps) {# only update when normal changes have been made
+      redraw(overview_proxy, civilian_proxy)
+      update_other_selectize_inputs("countries")
+    }
+
+gsub_f <- function(pattern, replacement, x, silently = FALSE) {
+  if (!silently && grepl("[?*+]", pat)) {
+    message("The pattern parameter you used makes it look like you inteded to use a non-fixed version of gsub")
+  }
+  return (gsub(pattern = pattern, replacement = replacement, fixed = TRUE, x = x))
+}
+
+gsub_rf <- function(pattern, x, silently = FALSE) {
+  if (!silently && grepl("[?*+]", pattern)) {
+    message("The pattern parameter you used makes it look like you inteded to use a non-fixed version of gsub")
+  }
+  return (gsub(pattern = pattern, replacement = "", fixed = TRUE, x = x))
+}
+
+grem <- function(pattern, x, replacement = NULL, ...) {
+  if (replacement == "") {
+    message('You supplied the assumed default replacement argument, which is redundant in this version of gsub (which assumes replacement = "")')
+  } else if (!is.null(replacement)) {
+    warning('You supplied a replacement argument, which has been ignored (this version of gsub assumes replacement = "")')
+  }
+  return (gsub(pattern = pattern, replacement = "", x = x, ...))
+}
+
+#KB-29 technically exists, and is modified B-29 available in 1948, so theoretically possible, but it's just a refueling aircraft--probably an OCR error for RB-29, but I'm not sure
 
 

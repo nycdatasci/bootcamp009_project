@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.7.2
-# @date 2017-07-29 20:00
+# @version 0.9.8
+# @date 2017-08-11 23:30
 
 
 ### Developer Control -------------------------------------------------------
@@ -25,6 +25,15 @@ downsample <- TRUE
 downsample_size <- 1e5
 
 
+### unit testing
+max_string_length <- 4096L
+
+
+### processing data
+near_tolerance <- 0.1
+empty_text <- "unspecified"
+
+
 ### Appearance Modifiers ----------------------------------------------------
 
 # sizes
@@ -42,6 +51,7 @@ Vietnam_color <- "darkgreen"
 # graph parameters
 point_weight <- 5
 point_fill <- TRUE
+boxplot_width <- 0.2
 civilian_blur <- 20
 civilian_max <- 0.05
 civilian_radius <- 15
@@ -71,9 +81,6 @@ Korea_max_bins <- 48
 Vietnam_min_bins <- 4
 Vietnam_init_bins <- 30
 Vietnam_max_bins <- 240
-
-# unknowns
-empty_string_text <- "unspecified"
 
 
 ### Dates -------------------------------------------------------------------
@@ -107,3 +114,11 @@ Vietnam_last_mission  <- as.Date("1975-06-30")
 # for app
 earliest_date <- min(WW1_start_date, WW1_first_mission)
 latest_date <- max(Vietnam_end_date, Vietnam_last_mission)
+
+
+### Historical Data ---------------------------------------------------------
+
+WW1_altitude_max_feet <- 20000L
+WW2_altitude_max_feet <- 40000L
+Korea_altitude_max_feet <- 40000L
+Vietnam_altitude_max_feet <- 70000L

@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.7.2
-# @date 2017-07-29 20:00
+# @version 0.9.8
+# @date 2017-08-11 23:30
 
 
 ### Local Values ------------------------------------------------------------
@@ -37,7 +37,7 @@ lower_case_set <- c(stop_words, measurement_units, ordinal_markers)
 lower_case_set_upper <- toupper(lower_case_set)
 
 unusual_plural_set <- c("anti-aircraft", "aircraft", "ammunition", "ammo", "personnel")
-vowel_set <- c('a', 'e', 'i', 'o', 'u')
+vowel_set <- c("a", "e", "i", "o", "u")
 
 
 ### Capitalize Functions ----------------------------------------------------
@@ -47,19 +47,19 @@ capitalize <- function(words) {
 }
 
 capitalize_phrase <- function(line) {
-  return (paste(capitalize(strsplit(line, split = ' ')[[1]]), collapse = ' '))
+  return (paste(capitalize(strsplit(line, split = " ")[[1]]), collapse = " "))
 }
 
 capitalize_phrase_vectorized <- function(lines) {
-  lines_mod <- ifelse(lines == "", '`', tolower(lines))
+  lines_mod <- if_else(lines == "", "`", tolower(lines))
   num_lines <- length(lines)
   
-  split_result <- strsplit(lines, split = ' ')
+  split_result <- strsplit(lines_mod, split = " ")
   split_lengths <- lengths(split_result)
-  split_result <- split(proper_noun_vectorized(unlist(split_result)), rep(1:num_lines, split_lengths))
-  lines_reduced <- map_chr(split_result, paste0, collapse = ' ')
+  split_result <- split(proper_noun_vectorized(unlist(split_result, use.names = FALSE)), rep(1:num_lines, split_lengths))
+  lines_reduced <- map_chr(split_result, paste0, collapse = " ")
   
-  return (ifelse(lines == "", "", lines_reduced))
+  return (if_else(lines == "", "", lines_reduced))
 }
 
 capitalize_from_caps <- function(words) {
@@ -85,11 +85,11 @@ proper_noun <- function(word) {
 }
 
 proper_noun_vectorized <- function(words) {
-  return (ifelse(words %in% upper_case_set_lower, 
-                 toupper(words), 
-          ifelse(words %in% lower_case_set, 
-                 words, 
-                 capitalize(words))))
+  return (if_else(words %in% upper_case_set_lower, 
+                  toupper(words), 
+          if_else(words %in% lower_case_set, 
+                  words, 
+                  capitalize(words))))
 }
 
 proper_noun_from_caps <- function(word) {
@@ -103,11 +103,11 @@ proper_noun_from_caps <- function(word) {
 }
 
 proper_noun_from_caps_vectorized <- function(words) {
-  return (ifelse(words %in% upper_case_set, 
-                 words, 
-          ifelse(words %in% lower_case_set_upper, 
-                 tolower(words), 
-                 capitalize_from_caps(words))))
+  return (if_else(words %in% upper_case_set, 
+                  words, 
+          if_else(words %in% lower_case_set_upper, 
+                  tolower(words), 
+                  capitalize_from_caps(words))))
 }
 
 proper_noun_aircraft <- function(word) {
@@ -119,75 +119,64 @@ proper_noun_aircraft <- function(word) {
 }
 
 proper_noun_aircraft_vectorized <- function(words) {
-  return (ifelse(words %in% aircraft_letters | 
-                   (regexpr(pattern = "-|\\d", words) > 0L & regexpr(pattern = "[A-Za-z]{6,}", words) == -1L), 
-                 words, 
-                 capitalize_from_caps(words)))
+  return (if_else(words %in% aircraft_letters | 
+                    (regexpr(pattern = "-|\\d", words) > 0L & regexpr(pattern = "[A-Za-z]{6,}", words) == -1L), 
+                  words, 
+                  capitalize_from_caps(words)))
 }
 
 proper_noun_phrase <- function(line) {
   line <- tolower(line)
-  line <- paste(proper_noun_vectorized(strsplit(line, split = ' ')[[1]]),   collapse = ' ')
-  line <- paste(proper_noun_vectorized(strsplit(line, split = '-')[[1]]),   collapse = '-')
-  line <- paste(proper_noun_vectorized(strsplit(line, split = '/')[[1]]),   collapse = '/')
-  line <- paste(proper_noun_vectorized(strsplit(line, split = '\\(')[[1]]), collapse = '(')
+  line <- paste(proper_noun_vectorized(strsplit(line, split = " ")[[1]]),   collapse = " ")
+  line <- paste(proper_noun_vectorized(strsplit(line, split = "-")[[1]]),   collapse = "-")
+  line <- paste(proper_noun_vectorized(strsplit(line, split = "/")[[1]]),   collapse = "/")
+  line <- paste(proper_noun_vectorized(strsplit(line, split = "\\(")[[1]]), collapse = "(")
   return (line)
 }
 
 proper_noun_phrase_vectorized <- function(lines) {
-  lines_mod <- ifelse(lines == "", '`', tolower(lines))
+  lines_mod <- if_else(lines == "", "`", tolower(lines))
   num_lines <- length(lines)
   
-  split_result <- strsplit(lines_mod, split = ' ')
+  split_result <- strsplit(lines_mod, split = " ")
   split_lengths <- lengths(split_result)
-  split_result <- split(proper_noun_vectorized(unlist(split_result)), rep(1:num_lines, split_lengths))
-  lines_reduced <- map_chr(split_result, paste0, collapse = ' ')
+  split_result <- split(proper_noun_vectorized(unlist(split_result, use.names = FALSE)), rep(1:num_lines, split_lengths))
+  lines_reduced <- map_chr(split_result, paste0, collapse = " ")
   
   num_lines_reduced <- length(lines_reduced)
   
-  split_result <- strsplit(lines_reduced, split = '-')
+  split_result <- strsplit(lines_reduced, split = "-")
   split_lengths <- lengths(split_result)
-  split_result <- split(proper_noun_vectorized(unlist(split_result)), rep(1:num_lines_reduced, split_lengths))
-  lines_reduced <- map_chr(split_result, paste0, collapse = '-')
+  split_result <- split(proper_noun_vectorized(unlist(split_result, use.names = FALSE)), rep(1:num_lines_reduced, split_lengths))
+  lines_reduced <- map_chr(split_result, paste0, collapse = "-")
   
-  split_result <- strsplit(lines_reduced, split = '/')
+  split_result <- strsplit(lines_reduced, split = "/")
   split_lengths <- lengths(split_result)
-  split_result <- split(proper_noun_vectorized(unlist(split_result)), rep(1:num_lines_reduced, split_lengths))
-  lines_reduced <- map_chr(split_result, paste0, collapse = '/')
+  split_result <- split(proper_noun_vectorized(unlist(split_result, use.names = FALSE)), rep(1:num_lines_reduced, split_lengths))
+  lines_reduced <- map_chr(split_result, paste0, collapse = "/")
   
-  split_result <- strsplit(lines_reduced, split = '\\(')
+  split_result <- strsplit(lines_reduced, split = "\\(")
   split_lengths <- lengths(split_result)
-  split_result <- split(proper_noun_vectorized(unlist(split_result)), rep(1:num_lines_reduced, split_lengths))
-  lines_reduced <- map_chr(split_result, paste0, collapse = '(')
+  split_result <- split(proper_noun_vectorized(unlist(split_result, use.names = FALSE)), rep(1:num_lines_reduced, split_lengths))
+  lines_reduced <- map_chr(split_result, paste0, collapse = "(")
 
-  return (ifelse(lines == "", "", lines_reduced))
+  return (if_else(lines == "", "", lines_reduced))
 }
 
 proper_noun_phrase_aircraft <- function(line) {
-  return (paste(proper_noun_aircraft_vectorized(strsplit(line, split = ' ')[[1]]), collapse = ' '))
+  return (paste(proper_noun_aircraft_vectorized(strsplit(line, split = " ")[[1]]), collapse = " "))
 }
 
 proper_noun_phrase_aircraft_vectorized <- function(lines) {
-  lines_mod <- ifelse(lines == "", '`', lines)
+  lines_mod <- if_else(lines == "", "`", lines)
   num_lines <- length(lines)
   
-  split_result <- strsplit(lines_mod, split = ' ')
+  split_result <- strsplit(lines_mod, split = " ")
   split_lengths <- lengths(split_result)
-  split_result <- split(proper_noun_aircraft_vectorized(unlist(split_result)), rep(1:num_lines, split_lengths))
-  lines_reduced <- map_chr(split_result, paste0, collapse = ' ')
+  split_result <- split(proper_noun_aircraft_vectorized(unlist(split_result, use.names = FALSE)), rep(1:num_lines, split_lengths))
+  lines_reduced <- map_chr(split_result, paste0, collapse = " ")
   
-  return (ifelse(lines == "", "", lines_reduced))
-}
-
-
-### Other Functions ---------------------------------------------------------
-
-remove_quotes <- function(strings) {
-  return (gsub(pattern = "\"", replacement = '', strings))
-}
-
-remove_nonASCII_chars <- function(strings) {
-  return (gsub(pattern = "[^ -~]+", replacement = '', strings))
+  return (if_else(lines == "", "", lines_reduced))
 }
 
 
@@ -197,43 +186,58 @@ date_string <- function(month_names, day_strings, year_strings) {
   return (paste0("On ", month_names, " ", day_strings, ", ", year_strings, ","))
 }
 
-date_period_time_string <- function(date_strings, period_strings, time_strings) {
-  return (ifelse(time_strings == "", 
-                 ifelse(period_strings == "", 
-                        date_strings, 
-                        paste0(date_strings, " during the ", period_strings, ",")), 
-                 paste0(date_strings, " at ", time_strings, " hours,")))
+date_time_string <- function(date_strings, time_strings, empty = "") {
+  return (if_else(time_strings == empty, 
+                  date_strings, 
+                  paste0(date_strings, " at ", time_strings, " hours,")))
 }
 
-bomb_weight_string <- function(weight) {
+date_period_time_string <- function(date_strings, period_strings, time_strings, empty = "") {
+  return (if_else(time_strings == empty, 
+                  if_else(period_strings == empty, 
+                          date_strings, 
+                          paste0(date_strings, " during the ", period_strings, ",")), 
+                  paste0(date_strings, " at ", time_strings, " hours,")))
+}
+
+bomb_string <- function(weight, bomb, empty = "") {
   if (is.na(weight)) {
-    return ("some bombs on")
+    if (bomb == empty) {
+      return ("some bombs on")
+    } else {
+      return (paste0("some ", bomb, " on"))
+    }
   } else {
-    return (paste0(add_commas(weight), " pounds of bombs on"))
+    if (bomb == empty) {
+      return (paste0(add_commas(weight), " pounds of bombs on"))
+    } else {
+      return (paste0(add_commas(weight), " pounds of ", bomb, " on"))
+    }
   }
 }
 
-bomb_weight_string_vectorized <- function(weights) {
-  return (ifelse(is.na(weights), 
-                 "some bombs on", 
-                 paste0(add_commas_vectorized(weights), " pounds of bombs on")))
+bomb_string_vectorized <- function(weights, bombs, empty = "") {
+  result <- if_else(is.na(weights), 
+                    "some", 
+                    add_commas_vectorized(weights))
+  return (if_else(bombs == empty, paste0(result, " bombs on"), paste0(result, " ", bombs, " on")))
 }
 
-aircraft_numtype_string <- function(num, type) {
+aircraft_numtype_string <- function(num, type, empty = "") {
   if (is.na(num)) {
-    if (type == "") {
+    if (type == empty) {
       return ("some aircraft")
     } else {
       return (paste0("some ", type, "s"))
     }
   } else if (num == 1) {
-    if (type == "") {
+    if (type == empty) {
       return ("1 aircraft")
     } else {
       return (paste0("1 ", type))
     }
   } else {
-    if (type == "") {
+    if (type == empty) {
       return (paste0(as.character(num), " aircraft"))
     } else {
       return (paste0(as.character(num), " ", type, "s"))
@@ -241,71 +245,69 @@ aircraft_numtype_string <- function(num, type) {
   }
 }
 
-aircraft_numtype_string_vectorized <- function(nums, types) {
-  return (ifelse(is.na(nums), 
-                 ifelse(types == "", 
-                        "some aircraft", 
-                        paste0("some ", types, "s")), 
-                 ifelse(nums == 1, 
-                        ifelse(types == "", 
-                               "1 aircraft", 
-                               paste0("1 ", types)), 
-                        ifelse(types == "", 
-                               paste0(as.character(nums), " aircraft"), 
-                               paste0(as.character(nums), " ", types, "s")))))
+aircraft_numtype_string_vectorized <- function(nums, types, empty = "") {
+  return (if_else(nums == 1, if_else(types == empty, 
+                                     "1 aircraft", 
+                                     paste0("1 ", types)), 
+                             if_else(types == empty, 
+                                     paste0(as.character(nums), " aircraft"), 
+                                     paste0(as.character(nums), " ", types, "s")), 
+                             missing = if_else(types == empty, 
+                                               "some aircraft", 
+                                               paste0("some ", types, "s"))))
 }
 
-aircraft_string <- function(numtype, division) {
-  if (division == "") {
+aircraft_string <- function(numtype, division, empty = "") {
+  if (division == empty) {
     return (paste0(numtype, " dropped"))
   } else {
     return (paste0(numtype, " of the ", division, " division dropped"))
   }
 }
 
-aircraft_string_vectorized <- function(numtypes, divisions) {
-  return (ifelse(divisions == "", 
-                 paste0(numtypes, " dropped"), 
-                 paste0(numtypes, " of the ", divisions, " division dropped")))
+aircraft_string_vectorized <- function(numtypes, divisions, empty = "") {
+  return (if_else(divisions == empty, 
+                  paste0(numtypes, " dropped"), 
+                  paste0(numtypes, " of the ", divisions, " division dropped")))
 }
 
-target_type_string <- function(type) {
-  if (type == "") {
+target_type_string <- function(type, empty = "") {
+  if (type == empty) {
     return ("a target")
   } else {
     return (fix_articles(type))
   }
 }
 
-target_type_string_vectorized <- function(types) {
-  return (ifelse(types == "", 
-                 "a target", 
-                 fix_articles_vectorized(types)))
+target_type_string_vectorized <- function(types, empty = "") {
+  return (if_else(types == empty, 
+                  "a target", 
+                  fix_articles_vectorized(types)))
 }
 
-target_area_string <- function(area) {
-  if (area == "") {
+target_area_string <- function(area, empty = "") {
+  if (area == empty) {
     return ("in this area")
   } else {
     return (paste0("in ", area))
   }
 }
 
-target_area_string_vectorized <- function(areas) {
-  return (ifelse(areas == "", 
-                 "in this area", 
-                 paste0("in ", areas)))
+target_area_string_vectorized <- function(areas, empty = "") {
+  return (if_else(areas == empty, 
+                  "in this area", 
+                  paste0("in ", areas)))
 }
 
-target_location_string <- function(city, country) {
-  if (city == "") {
-    if (country == "") {
+target_location_string <- function(city, country, empty = "") {
+  if (city == empty) {
+    if (country == empty) {
       return ("in this area")
     } else {
       return (paste0("in this area of ", country))
     }
   } else {
-    if (country == "") {
+    if (country == empty) {
       return (paste0("in ", city))
     } else {
       return (paste0("in ", city, ", ", country))
@@ -313,14 +315,14 @@ target_location_string <- function(city, country) {
   }
 }
 
-target_location_string_vectorized <- function(cities, countries) {
-  return (ifelse(cities == "", 
-                 ifelse(countries == "", 
-                        "in this area", 
-                        paste0("in this area of ", countries)), 
-                 ifelse(countries == "", 
-                        paste0("in ", cities), 
-                        paste0("in ", cities, ", ", countries))))
+target_location_string_vectorized <- function(cities, countries, empty = "") {
+  return (if_else(cities == empty, 
+                  if_else(countries == empty, 
+                          "in this area", 
+                          paste0("in this area of ", countries)), 
+                  if_else(countries == "", 
+                          paste0("in ", cities), 
+                          paste0("in ", cities, ", ", countries))))
 }
 
 
@@ -328,7 +330,7 @@ target_location_string_vectorized <- function(cities, countries) {
 
 fix_articles <- function(string) {
   l <- nchar(string)
-  if (substr(string, l, l) == 's' | substr(string, 1, 2) == 'a ' | string %in% unusual_plural_set) {
+  if (substr(string, l, l) == "s" | substr(string, 1, 2) == "a " | string %in% unusual_plural_set) {
     return (string)
   } else if (substr(string, 1, 1) %in% vowel_set) {
     return (paste("an", string))
@@ -339,11 +341,13 @@ fix_articles <- function(string) {
 
 fix_articles_vectorized <- function(strings) {
   lengths <- nchar(strings)
-  return (ifelse(substr(strings, lengths, lengths) == 's' | substr(strings, 1, 2) == 'a ' | strings %in% unusual_plural_set, 
-                 strings, 
-                 ifelse(substr(strings, 1, 1) %in% vowel_set, 
-                        paste("an", strings), 
-                        paste("a", strings))))
+  return (if_else(substr(strings, lengths, lengths) == "s" | 
+                    substr(strings, 1, 2) == "a " | 
+                    strings %in% unusual_plural_set, 
+                  strings, 
+                  if_else(substr(strings, 1, 1) %in% vowel_set, 
+                          paste("an", strings), 
+                          paste("a", strings))))
 }
 
 
@@ -387,10 +391,10 @@ add_commas <- function(number) {
   }
 }
 
-# note: this assumes non-negative integers as inputs
+# note: this assumes non-negative finite integers as inputs
 add_commas_vectorized <- function(numbers) {
   numbers_strings <- as.character(numbers)
-  nums_digits <- ifelse(numbers < 10, 1, ceiling(log10(numbers)))
+  nums_digits <- if_else(numbers < 10, 1, ceiling(log10(numbers)))
   max_digits <- max(nums_digits, na.rm = TRUE)
   num_rounds <- ceiling(max_digits / 3) - 1
   
@@ -400,7 +404,7 @@ add_commas_vectorized <- function(numbers) {
   
   for (round in 1:num_rounds) {
     needs_more <- nums_digits > (3*round)
-    results <- ifelse(needs_more, paste0(results, ',', substr(numbers_strings, tail_positions+(3*(round-1)), tail_positions+(3*round))), results)
+    results <- if_else(needs_more, paste0(results, ",", substr(numbers_strings, tail_positions+(3*(round-1)), tail_positions+(3*round))), results)
   }
   return (results)
 }
@@ -417,23 +421,61 @@ format_military_times <- function(digits) {
           gsub(pattern = "^(\\d)(\\d)$", replacement = "\\1:\\20", 
           gsub(pattern = "^(1[0-9]|2[0-3])$", replacement = "\\1:00", 
           gsub(pattern = "^(\\d)([03])$", replacement = "\\1:\\20", 
-          gsub(pattern = "^(\\d{1,2})(\\d{2})$", replacement = "\\1:\\2", 
-          gsub(pattern = "^(\\d{1,2}):(\\d{2}):(\\d{2})$", replacement = "\\1:\\2", digits)))))))
+          gsub(pattern = "^(\\d{1,2})(\\d{2})", replacement = "\\1:\\2", 
+          gsub(pattern = "^(\\d{1,2}):(\\d{2}):(\\d{2})", replacement = "\\1:\\2", digits)))))))
+}
+
+ampm_to_24_hour <- function(times) {
+  return (gsub(pattern = "^12:(\\d{2}) ?[Pp][Mm]", replacement = "00:\\1", 
+          gsub(pattern = "^11:(\\d{2}) ?[Pp][Mm]", replacement = "23:\\1", 
+          gsub(pattern = "^10:(\\d{2}) ?[Pp][Mm]", replacement = "22:\\1", 
+          gsub(pattern = "^0?9:(\\d{2}) ?[Pp][Mm]", replacement = "21:\\1", 
+          gsub(pattern = "^0?8:(\\d{2}) ?[Pp][Mm]", replacement = "20:\\1", 
+          gsub(pattern = "^0?7:(\\d{2}) ?[Pp][Mm]", replacement = "19:\\1", 
+          gsub(pattern = "^0?6:(\\d{2}) ?[Pp][Mm]", replacement = "18:\\1", 
+          gsub(pattern = "^0?5:(\\d{2}) ?[Pp][Mm]", replacement = "17:\\1", 
+          gsub(pattern = "^0?4:(\\d{2}) ?[Pp][Mm]", replacement = "16:\\1", 
+          gsub(pattern = "^0?3:(\\d{2}) ?[Pp][Mm]", replacement = "15:\\1", 
+          gsub(pattern = "^0?2:(\\d{2}) ?[Pp][Mm]", replacement = "14:\\1", 
+          gsub(pattern = "^0?1:(\\d{2}) ?[Pp][Mm]", replacement = "13:\\1", 
+          gsub(pattern = " ?[Aa][Mm]", replacement = "", times))))))))))))))
+}
+
+format_day_periods <- function(periods) {
+  return (if_else(periods == "D", "day", 
+          if_else(periods == "N", "night", 
+          if_else(periods == "M", "morning", 
+          if_else(periods == "E", "evening", 
+          "")))))
 }
 
 remove_parentheticals <- function(phrases) {
-  return (gsub(pattern = " ?\\([^\\)]*\\)", replacement = '', phrases))
+  return (grem(pattern = " ?\\([^\\)]*\\)", phrases))
 }
+
+remove_quotes <- function(strings) {
+  return (grem(pattern = "\"", strings))
+}
+
+remove_nonASCII_chars <- function(strings) {
+  return (grem(pattern = "[^ -~]+", strings))
+}
+
+remove_extra_whitespace <- function(strings) {
+  return (gsub(pattern = "\\s{2,}", replacement = " ", strings))
+}
+
+remove_bad_formatting <- trimws %.% remove_extra_whitespace %.% remove_quotes %.% remove_nonASCII_chars
 
 
 ### Targets -----------------------------------------------------------------
 
 cleanup_targets <- function(targets) {
-  targets <- gsub(pattern = " +-? *", replacement = "", targets)
-  targets <- gsub(pattern = "\\b(A C)\\b", replacement = "AC", 
-             gsub(pattern = "\\b(ADM(IN[A-Z]*)?)\\b", replacement = "ADMINISTRATIVE", 
+  targets <- gsub(pattern = " +-? *", replacement = " ", 
+             grem(pattern = "?", fixed = TRUE, targets))
+  targets <- gsub(pattern = "\\b(ADM(IN[A-Z]*)?)\\b", replacement = "ADMINISTRATIVE", 
              gsub(pattern = "\\b(AC|A C)\\b", replacement = "AIRCRAFT", 
-             gsub(pattern = "\\b(AERO?DROM[A-Z]*|AIRODROM[A-Z]*|AIRDROM[A-Z]*|AIDROM[A-Z]*|AIR DROM[A-Z]*)\\b", replacement = "AIRDROME", 
+             gsub(pattern = "\\b(AERO?D?[A-Z]*|AIRODROM[A-Z]*|AIRDROM[A-Z]*|AIDROM[A-Z]*|AIR DROM[A-Z]*)\\b", replacement = "AIRDROME", 
              gsub(pattern = "\\b(AIR FIELDS?|AIRFIEL|AIRFIELDS)\\b", replacement = "AIRFIELD", 
              gsub(pattern = "\\b(AIR FRAMES?)\\b", replacement = "AIRFRAME", 
              gsub(pattern = "\\b(AMMO|AMMUN[A-Z]*)\\b", replacement = "AMMUNITION", 
@@ -443,11 +485,11 @@ cleanup_targets <- function(targets) {
              gsub(pattern = "\\b(ARTILLER)\\b", replacement = "ARTILLERY", 
              gsub(pattern = "\\b(ASSBLY)\\b", replacement = "ASSEMBLY", 
              gsub(pattern = "\\b(BRAGES?|BARGES)\\b", replacement = "BARGE", 
-             gsub(pattern = "\\b(BK?S|BARRAC.*)\\b", replacement = "BARRACKS", 
+             gsub(pattern = "\\b(BKS?|BARRAC.*)\\b", replacement = "BARRACKS", 
              gsub(pattern = "\\b(BASFS?|BASES)\\b", replacement = "BASE", 
              gsub(pattern = "\\b(BTY|BRTY|BTRY)\\b", replacement = "BATTERY", 
              gsub(pattern = "\\b(BEARING)\\b", replacement = "BEARINGS", 
-             gsbu(pattern = "\\b(BLST)\\b", replacement = "BLAST", 
+             gsub(pattern = "\\b(BLST)\\b", replacement = "BLAST", 
              gsub(pattern = "\\b(BOATS)\\b", replacement = "BOAT", 
              gsub(pattern = "\\b(BR|BR?DGE?S?|BRID ES?|8RIDGES?|GRIDGES?|BOIDGES?|BIRDGES?|BRIDGES)\\b", replacement = "BRIDGE", 
              gsub(pattern = "\\b(BLDGS?|BUILD|BUILOING|BUILDINGS)\\b", replacement = "BUILDING", 
@@ -464,7 +506,7 @@ cleanup_targets <- function(targets) {
              gsub(pattern = "\\b(COMPONENT)\\b", replacement = "COMPONENTS", 
              gsub(pattern = "\\b(CONPOUNDS?|CPMPOUNDS?|COMPOU[A-Z]*)\\b", replacement = "COMPOUND", 
              gsub(pattern = "\\b(CONCT?S?|CONCENT[A-Z]*|CONSTRATIONS?|CONTRATIONS?|CQNCENTRATIONS?)\\b", replacement = "CONCENTRATION", 
-             gsub(pattern = "\\b(CONST)\\b", replacement = "CONSTRUCTION", targets)))))))))))))))))))))))))))))))))))
+             gsub(pattern = "\\b(CONST)\\b", replacement = "CONSTRUCTION", targets))))))))))))))))))))))))))))))))))
   targets <- gsub(pattern = "\\b(DEFENCE?S|DEFENSE)\\b", replacement = "DEFENSES", 
              gsub(pattern = "\\b(DEF)\\b", replacement = "DEFENSIVE", 
              gsub(pattern = "\\b(DDCKS?|DOCKS)\\b", replacement = "DOCK", 
@@ -551,62 +593,62 @@ cleanup_targets <- function(targets) {
 ### Month Number to Name ----------------------------------------------------
 
 month_num_to_name <- function(months) {
-  return (ifelse(is.na(months), 
-                 "", 
-          ifelse(months == "1", 
-                 "January", 
-          ifelse(months == "2", 
-                 "February", 
-          ifelse(months == "3", 
-                 "March", 
-          ifelse(months == "4", 
-                 "April", 
-          ifelse(months == "5", 
-                 "May", 
-          ifelse(months == "6", 
-                 "June", 
-          ifelse(months == "7", 
-                 "July", 
-          ifelse(months == "8", 
-                 "August", 
-          ifelse(months == "9", 
-                 "September", 
-          ifelse(months == "10", 
-                 "October", 
-          ifelse(months == "11", 
-                 "November", 
-          ifelse(months == "12", 
-                 "December", 
+  return (if_else(is.na(months), 
+                  "", 
+          if_else(months == "1", 
+                  "January", 
+          if_else(months == "2", 
+                  "February", 
+          if_else(months == "3", 
+                  "March", 
+          if_else(months == "4", 
+                  "April", 
+          if_else(months == "5", 
+                  "May", 
+          if_else(months == "6", 
+                  "June", 
+          if_else(months == "7", 
+                  "July", 
+          if_else(months == "8", 
+                  "August", 
+          if_else(months == "9", 
+                  "September", 
+          if_else(months == "10", 
+                  "October", 
+          if_else(months == "11", 
+                  "November", 
+          if_else(months == "12", 
+                  "December", 
           ""))))))))))))))
 }
 
 month_num_padded_to_name <- function(months) {
-  return (ifelse(is.na(months), 
-                 "", 
-          ifelse(months == "01", 
-                 "January", 
-          ifelse(months == "02", 
-                 "February", 
-          ifelse(months == "03", 
-                 "March", 
-          ifelse(months == "04", 
-                 "April", 
-          ifelse(months == "05", 
-                 "May", 
-          ifelse(months == "06", 
-                 "June", 
-          ifelse(months == "07", 
-                 "July", 
-          ifelse(months == "08", 
-                 "August", 
-          ifelse(months == "09", 
-                 "September", 
-          ifelse(months == "10", 
-                 "October", 
-          ifelse(months == "11", 
-                 "November", 
-          ifelse(months == "12", 
-                 "December", 
+  return (if_else(is.na(months), 
+                  "", 
+          if_else(months == "01", 
+                  "January", 
+          if_else(months == "02", 
+                  "February", 
+          if_else(months == "03", 
+                  "March", 
+          if_else(months == "04", 
+                  "April", 
+          if_else(months == "05", 
+                  "May", 
+          if_else(months == "06", 
+                  "June", 
+          if_else(months == "07", 
+                  "July", 
+          if_else(months == "08", 
+                  "August", 
+          if_else(months == "09", 
+                  "September", 
+          if_else(months == "10", 
+                  "October", 
+          if_else(months == "11", 
+                  "November", 
+          if_else(months == "12", 
+                  "December", 
           ""))))))))))))))
 }
 
@@ -615,9 +657,9 @@ month_num_padded_to_name <- function(months) {
 
 ordered_empty_at_end <- function(column, empty_string) {
   ordered_levels <- sort(levels(column))
-  if ("" %in% ordered_levels) {
+  if ("" %c% ordered_levels) {
     ordered_levels <- c(ordered_levels[ordered_levels != ""], empty_string)
-    return (ordered(fct_other(column, drop = c(""), other_level = empty_string), levels = ordered_levels))
+    return (ordered(replace_level(column, from = "", to = empty_string), levels = ordered_levels))
   } else {
     return (ordered(column, levels = ordered_levels))
   }

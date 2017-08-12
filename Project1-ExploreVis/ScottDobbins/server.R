@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.7.2
-# @date 2017-07-29 20:00
+# @version 0.9.8
+# @date 2017-08-11 23:30
 
 
 # ### initialize plotly ###
@@ -9,48 +9,52 @@
 # Sys.setenv("plotly_api_key"="ElZwoGYrCyhDGcauIpUQ")
 
 
+### Constants ---------------------------------------------------------------
+
+change_token <- "change_token"
+
+
 ### Server Component --------------------------------------------------------
 
 shinyServer(function(input, output, session) {
   
 ### Session variables -------------------------------------------------------
 
-  # toggles for graphs
-  WW1_selected <- FALSE
-  WW2_selected <- FALSE
-  Korea_selected <- FALSE
-  Vietnam_selected <- FALSE
-  all_countries_selected <- TRUE
-  all_aircraft_selected <- TRUE
-  all_weapons_selected <- TRUE
+  previous_wars_selection <- c()
+  previous_countries_selection <- c("All")
+  previous_aircrafts_selection <- c("All")
+  previous_weapons_selection <- c("All")
+  
+  overview_proxy <- leafletProxy("overview_map")
+  civilian_proxy <- leafletProxy("civilian_map")
   
   
 ### DataTable ---------------------------------------------------------------
 
   output$table <- DT::renderDataTable({
-    if (WW1_string %in% input$which_war) {
-      datatable(data = select(WW1_selection(), WW1_datatable_columns), 
+    if (WW1_selected()) {
+      datatable(data = WW1_selection() %>% select(WW1_datatable_columns), 
                 rownames = FALSE, 
                 colnames = WW1_datatable_colnames) %>%
         formatStyle(columns = WW1_datatable_columns, 
                     background = 'skyblue', 
                     fontWeight = 'bold')
-    } else if (WW2_string %in% input$which_war) {
-      datatable(data = select(WW2_selection(), WW2_datatable_columns), 
+    } else if (WW2_selected()) {
+      datatable(data = WW2_selection() %>% select(WW2_datatable_columns), 
                 rownames = FALSE, 
                 colnames = WW2_datatable_colnames) %>%
         formatStyle(columns = WW2_datatable_columns, 
                     background = 'indianred', 
                     fontWeight = 'bold')
-    } else if (Korea_string %in% input$which_war) {
-      datatable(data = select(Korea_selection(), Korea_datatable_columns2), 
+    } else if (Korea_selected()) {
+      datatable(data = Korea_selection() %>% select(Korea_datatable_columns2), 
                 rownames = FALSE, 
                 colnames = Korea_datatable_colnames) %>%
         formatStyle(columns = Korea_datatable_columns2, 
                     background = 'khaki', 
                     fontWeight = 'bold')
-    } else if (Vietnam_string %in% input$which_war) {
-      datatable(data = select(Vietnam_selection(), Vietnam_datatable_columns), 
+    } else if (Vietnam_selected()) {
+      datatable(data = Vietnam_selection() %>% select(Vietnam_datatable_columns), 
                 rownames = FALSE, 
                 colnames = Vietnam_datatable_colnames) %>%
         formatStyle(columns = Vietnam_datatable_columns, 
@@ -68,40 +72,64 @@ shinyServer(function(input, output, session) {
 
 ### War Selections ----------------------------------------------------------
 
+  WW1_selected <- reactive(WW1_string %c% input$which_war)
+  
+  WW2_selected <- reactive(WW2_string %c% input$which_war)
+  
+  Korea_selected <- reactive(Korea_string %c% input$which_war)
+  
+  Vietnam_selected <- reactive(Vietnam_string %c% input$which_war)
+  
   WW1_selection <- reactive({
-    filter_selection(WW1_clean, 
-                     input$dateRange[1], 
-                     input$dateRange[2], 
-                     input$country, 
-                     input$aircraft, 
-                     input$weapon)
+    if (all(length(input$dateRange) == 2L, length(input$country) >= 1L, length(input$aircraft) >= 1L, length(input$weapon) >= 1L)) {
+      filter_selection(WW1_clean, 
+                       input$dateRange[1], 
+                       input$dateRange[2], 
+                       input$country, 
+                       input$aircraft, 
+                       input$weapon)
+    } else {
+      WW1_clean
+    }
   })
   
   WW2_selection <- reactive({
-    filter_selection(WW2_clean, 
-                     input$dateRange[1], 
-                     input$dateRange[2], 
-                     input$country, 
-                     input$aircraft, 
-                     input$weapon)
+    if (all(length(input$dateRange) == 2L, length(input$country) >= 1L, length(input$aircraft) >= 1L, length(input$weapon) >= 1L)) {
+      filter_selection(WW2_clean, 
+                       input$dateRange[1], 
+                       input$dateRange[2], 
+                       input$country, 
+                       input$aircraft, 
+                       input$weapon)
+    } else {
+      WW2_clean
+    }
   })
   
   Korea_selection <- reactive({
-    filter_selection(Korea_clean2, 
-                     input$dateRange[1], 
-                     input$dateRange[2], 
-                     input$country, 
-                     input$aircraft, 
-                     input$weapon)
+    if (all(length(input$dateRange) == 2L, length(input$country) >= 1L, length(input$aircraft) >= 1L, length(input$weapon) >= 1L)) {
+      filter_selection(Korea_clean2, 
+                       input$dateRange[1], 
+                       input$dateRange[2], 
+                       input$country, 
+                       input$aircraft, 
+                       input$weapon)
+    } else {
+      Korea_clean2
+    }
   })
   
   Vietnam_selection <- reactive({
-    filter_selection(Vietnam_clean, 
-                     input$dateRange[1], 
-                     input$dateRange[2], 
-                     input$country, 
-                     input$aircraft, 
-                     input$weapon)
+    if (all(length(input$dateRange) == 2L, length(input$country) >= 1L, length(input$aircraft) >= 1L, length(input$weapon) >= 1L)) {
+      filter_selection(Vietnam_clean, 
+                       input$dateRange[1], 
+                       input$dateRange[2], 
+                       input$country, 
+                       input$aircraft, 
+                       input$weapon)
+    } else {
+      Vietnam_clean
+    }
   })
   
 
@@ -147,108 +175,108 @@ shinyServer(function(input, output, session) {
 ### Missions reactives ------------------------------------------------------
   
   WW1_missions_reactive <- reactive({
-    if (WW1_string %in% input$which_war) {
+    if (WW1_selected()) {
       WW1_selection()[, .N]
-    } else { 0 }
+    } else 0
   })
   
   WW2_missions_reactive <- reactive({
-    if (WW2_string %in% input$which_war) {
+    if (WW2_selected()) {
       WW2_selection()[, .N]
-    } else { 0 }
+    } else 0
   })
   
   Korea_missions_reactive <- reactive({
-    if (Korea_string %in% input$which_war) {
+    if (Korea_selected()) {
       Korea_selection()[, .N]
-    } else { 0 }
+    } else 0
   })
   
   Vietnam_missions_reactive <- reactive({
-    if (Vietnam_string %in% input$which_war) {
+    if (Vietnam_selected()) {
       Vietnam_selection()[, .N]
-    } else { 0 }
+    } else 0
   })
   
   
 ### Flights reactives -------------------------------------------------------
 
   WW1_flights_reactive <- reactive({
-    if (WW1_string %in% input$which_war) {
+    if (WW1_selected()) {
       WW1_selection()[, sum(Aircraft_Attacking_Num, na.rm = TRUE)]
-    } else { 0 }
+    } else 0
   })
   
   WW2_flights_reactive <- reactive({
-    if (WW2_string %in% input$which_war) {
+    if (WW2_selected()) {
       WW2_selection()[, sum(Aircraft_Attacking_Num, na.rm = TRUE)]
-    } else { 0 }
+    } else 0
   })
   
   Korea_flights_reactive <- reactive({
-    if (Korea_string %in% input$which_war) {
+    if (Korea_selected()) {
       Korea_selection()[, sum(Aircraft_Attacking_Num, na.rm = TRUE)]
-    } else { 0 }
+    } else 0
   })
   
   Vietnam_flights_reactive <- reactive({
-    if (Vietnam_string %in% input$which_war) {
+    if (Vietnam_selected()) {
       Vietnam_selection()[, sum(Aircraft_Attacking_Num, na.rm = TRUE)]
-    } else { 0 }
+    } else 0
   })
   
 
 ### Bombs reactives ---------------------------------------------------------
   
   WW1_bombs_reactive <- reactive({
-    if (WW1_string %in% input$which_war) {
+    if (WW1_selected()) {
       WW1_selection()[, sum(Weapon_Expended_Num, na.rm = TRUE)]
-    } else { 0 }
+    } else 0
   })
   
   WW2_bombs_reactive <- reactive({
-    if (WW2_string %in% input$which_war) {
+    if (WW2_selected()) {
       WW2_selection()[, sum(Weapon_Expended_Num, na.rm = TRUE)]
-    } else { 0 }
+    } else 0
   })
   
   Korea_bombs_reactive <- reactive({
-    if (Korea_string %in% input$which_war) {
+    if (Korea_selected()) {
       Korea_selection()[, sum(Weapon_Expended_Num, na.rm = TRUE)]
-    } else { 0 }
+    } else 0
   })
   
   Vietnam_bombs_reactive <- reactive({
-    if (Vietnam_string %in% input$which_war) {
+    if (Vietnam_selected()) {
       Vietnam_selection()[, sum(Weapon_Expended_Num, na.rm = TRUE)]
-    } else { 0 }
+    } else 0
   })
   
 
 ### Weight reactives --------------------------------------------------------
 
   WW1_weight_reactive <- reactive({
-    if (WW1_string %in% input$which_war) {
+    if (WW1_selected()) {
       WW1_selection()[, sum(Weapon_Weight_Pounds, na.rm = TRUE)]
-    } else { 0 }
+    } else 0
   })
   
   WW2_weight_reactive <- reactive({
-    if (WW2_string %in% input$which_war) {
+    if (WW2_selected()) {
       WW2_selection()[, sum(as.numeric(Weapon_Weight_Pounds), na.rm = TRUE)]
-    } else { 0 }
+    } else 0
   })
   
   Korea_weight_reactive <- reactive({
-    if (Korea_string %in% input$which_war) {
+    if (Korea_selected()) {
       Korea_selection()[, sum(Weapon_Weight_Pounds, na.rm = TRUE)]
-    } else { 0 }
+    } else 0
   })
   
   Vietnam_weight_reactive <- reactive({
-    if (Vietnam_string %in% input$which_war) {
+    if (Vietnam_selected()) {
       Vietnam_selection()[, sum(Weapon_Weight_Pounds, na.rm = TRUE)]
-    } else { 0 }
+    } else 0
   })
   
 
@@ -333,7 +361,7 @@ shinyServer(function(input, output, session) {
     } else {
       group_category <- WW1_categorical[[input$WW1_sandbox_group]]
       WW1_hist_plot <- ggplot(mapping = aes(x     = WW1_selection()[["Mission_Date"]], 
-                                            color = WW1_selection()[[group_category]])) + 
+                                            fill = WW1_selection()[[group_category]])) + 
         geom_freqpoly(bins = input$WW1_hist_slider) + 
         guides(color = guide_legend(title = input$WW1_sandbox_group))
     }
@@ -355,12 +383,11 @@ shinyServer(function(input, output, session) {
         group_category <- WW1_categorical[[input$WW1_sandbox_group]]
         WW1_sandbox_plot <- ggplot(mapping = aes(x     = WW1_selection()[["Year"]], 
                                                  y     = WW1_selection()[[plot_continuous]], 
-                                                 group = WW1_selection()[[group_category]], 
                                                  fill  = WW1_selection()[[group_category]])) + 
           guides(fill = guide_legend(title = input$WW1_sandbox_group))
       }
-      WW1_sandbox_plot <- WW1_sandbox_plot + geom_col(position = 'dodge')
-    } else if (input$WW1_sandbox_ind %in% WW1_categorical_choices) {
+      WW1_sandbox_plot <- WW1_sandbox_plot + geom_violin() + stat_summary(fun.y = quartile_points, geom = 'point', position = position_dodge(width = 0.9))
+    } else if (input$WW1_sandbox_ind %c% WW1_categorical_choices) {
       plot_category <- WW1_categorical[[input$WW1_sandbox_ind]]
       plot_continuous <- WW1_continuous[[input$WW1_sandbox_dep]]
       if (input$WW1_sandbox_group == "None") {
@@ -370,11 +397,10 @@ shinyServer(function(input, output, session) {
         group_category <- WW1_categorical[[input$WW1_sandbox_group]]
         WW1_sandbox_plot <- ggplot(mapping = aes(x     = WW1_selection()[[plot_category]], 
                                                  y     = WW1_selection()[[plot_continuous]], 
-                                                 group = WW1_selection()[[group_category]], 
                                                  fill  = WW1_selection()[[group_category]])) + 
           guides(fill = guide_legend(title = input$WW1_sandbox_group))
       }
-      WW1_sandbox_plot <- WW1_sandbox_plot + geom_col(position = 'dodge')
+      WW1_sandbox_plot <- WW1_sandbox_plot + geom_violin() + stat_summary(fun.y = quartile_points, geom = 'point', position = position_dodge(width = 0.9))
     } else {
       plot_independent <- WW1_continuous[[input$WW1_sandbox_ind]]
       plot_dependent <- WW1_continuous[[input$WW1_sandbox_dep]]
@@ -434,8 +460,8 @@ shinyServer(function(input, output, session) {
                                                  fill  = WW2_selection()[[group_category]])) + 
           guides(fill = guide_legend(title = input$WW2_sandbox_group))
       }
-      WW2_sandbox_plot <- WW2_sandbox_plot + geom_col(position = 'dodge')
-    } else if (input$WW2_sandbox_ind %in% WW2_categorical_choices) {
+      WW2_sandbox_plot <- WW2_sandbox_plot + geom_violin() + stat_summary(fun.y = quartile_points, geom = 'point')
+    } else if (input$WW2_sandbox_ind %c% WW2_categorical_choices) {
       plot_category <- WW2_categorical[[input$WW2_sandbox_ind]]
       plot_continuous <- WW2_continuous[[input$WW2_sandbox_dep]]
       if (input$WW2_sandbox_group == "None") {
@@ -449,7 +475,7 @@ shinyServer(function(input, output, session) {
                                                  fill  = WW2_selection()[[group_category]])) + 
           guides(fill = guide_legend(title = input$WW2_sandbox_group))
       }
-      WW2_sandbox_plot <- WW2_sandbox_plot + geom_col(position = 'dodge')
+      WW2_sandbox_plot <- WW2_sandbox_plot + geom_violin() + stat_summary(fun.y = quartile_points, geom = 'point')
     } else {
       plot_independent <- WW2_continuous[[input$WW2_sandbox_ind]]
       plot_dependent <- WW2_continuous[[input$WW2_sandbox_dep]]
@@ -509,8 +535,8 @@ shinyServer(function(input, output, session) {
                                                    fill  = Korea_selection()[[group_category]])) + 
           guides(fill = guide_legend(title = input$Korea_sandbox_group))
       }
-      Korea_sandbox_plot <- Korea_sandbox_plot + geom_col(position = 'dodge')
-    } else if (input$Korea_sandbox_ind %in% Korea_categorical_choices) {
+      Korea_sandbox_plot <- Korea_sandbox_plot + geom_violin() + stat_summary(fun.y = quartile_points, geom = 'point')
+    } else if (input$Korea_sandbox_ind %c% Korea_categorical_choices) {
       plot_category <- Korea_categorical[[input$Korea_sandbox_ind]]
       plot_continuous <- Korea_continuous[[input$Korea_sandbox_dep]]
       if (input$Korea_sandbox_group == "None") {
@@ -524,7 +550,7 @@ shinyServer(function(input, output, session) {
                                                    fill  = Korea_selection()[[group_category]])) + 
           guides(fill = guide_legend(title = input$Korea_sandbox_group))
       }
-      Korea_sandbox_plot <- Korea_sandbox_plot + geom_col(position = 'dodge')
+      Korea_sandbox_plot <- Korea_sandbox_plot + geom_violin() + stat_summary(fun.y = quartile_points, geom = 'point')
     } else {
       plot_independent <- Korea_continuous[[input$Korea_sandbox_ind]]
       plot_dependent <- Korea_continuous[[input$Korea_sandbox_dep]]
@@ -585,8 +611,8 @@ shinyServer(function(input, output, session) {
                                                      fill  = Vietnam_selection()[[group_category]])) + 
           guides(fill = guide_legend(title = input$Vietnam_sandbox_group))
       }
-      Vietnam_sandbox_plot <- Vietnam_sandbox_plot + geom_col(position = 'dodge')
-    } else if (input$Vietnam_sandbox_ind %in% Vietnam_categorical_choices) {
+      Vietnam_sandbox_plot <- Vietnam_sandbox_plot + geom_violin() + stat_summary(fun.y = quartile_points, geom = 'point')
+    } else if (input$Vietnam_sandbox_ind %c% Vietnam_categorical_choices) {
       plot_category <- Vietnam_categorical[[input$Vietnam_sandbox_ind]]
       plot_continuous <- Vietnam_continuous[[input$Vietnam_sandbox_dep]]
       if (input$Vietnam_sandbox_group == "None") {
@@ -600,7 +626,7 @@ shinyServer(function(input, output, session) {
                                                      fill  = Vietnam_selection()[[group_category]])) + 
           guides(fill = guide_legend(title = input$Vietnam_sandbox_group))
       }
-      Vietnam_sandbox_plot <- Vietnam_sandbox_plot + geom_col(position = 'dodge')
+      Vietnam_sandbox_plot <- Vietnam_sandbox_plot + geom_violin() + stat_summary(fun.y = quartile_points, geom = 'point')
     } else {
       plot_independent <- Vietnam_continuous[[input$Vietnam_sandbox_ind]]
       plot_dependent <- Vietnam_continuous[[input$Vietnam_sandbox_dep]]
@@ -632,24 +658,25 @@ shinyServer(function(input, output, session) {
   # hanlder for changes in map type
   observeEvent(eventExpr = input$pick_map, handlerExpr = {
     debug_message("map altered")
-    overview_proxy <- leafletProxy("overview_map")
     # remove other tiles and add designated map
     fix_map_base(overview_proxy, map_type = input$pick_map)
     # gotta redraw the map labels if the underlying map has changed
-    fix_map_labels(overview_proxy, borders = "Borders" %in% input$pick_labels, text = "Text" %in% input$pick_labels)
+    fix_map_labels(overview_proxy, 
+                   borders = "Borders" %c% input$pick_labels, 
+                   text = "Text" %c% input$pick_labels)
   })
   
   # handler for changes in map labels
   observeEvent(eventExpr = input$pick_labels, ignoreNULL = FALSE, handlerExpr = {
     debug_message("labels altered")
-    overview_proxy <- leafletProxy("overview_map")
-    fix_map_labels(overview_proxy, borders = "Borders" %in% input$pick_labels, text = "Text" %in% input$pick_labels)
+    fix_map_labels(overview_proxy, 
+                   borders = "Borders" %c% input$pick_labels, 
+                   text = "Text" %c% input$pick_labels)
   })
   
   # handler for changes in map zoom
   observeEvent(eventExpr = input$overview_map_zoom, handlerExpr = {
     debug_message("map zoomed")
-    overview_proxy <- leafletProxy("overview_map")
     redraw_overview(overview_proxy)
   })
   
@@ -659,68 +686,56 @@ shinyServer(function(input, output, session) {
   # handler for war selection
   observeEvent(eventExpr = input$which_war, ignoreNULL = FALSE, ignoreInit = TRUE, handlerExpr = {
     debug_message("wars selected")
-    overview_proxy <- leafletProxy("overview_map")
-    civilian_proxy <- leafletProxy("civilian_map")
-    if (xor(WW1_selected, WW1_string %in% input$which_war)) {
-      if (WW1_selected) {
+    diff_war <- previous_wars_selection %dd% input$which_war
+    deselected <- length(previous_wars_selection) > length(input$which_war)
+    if (WW1_string %e% diff_war) {
+      if (deselected) {
         debug_message("WW1 deselected")
         clear_WW1(overview_proxy, civilian_proxy)
-        WW1_selected <<- FALSE
       } else {
         debug_message("WW1 selected")
         draw_WW1(overview_proxy, civilian_proxy)
-        WW1_selected <<- TRUE
       }
-    } else if(xor(WW2_selected, WW2_string %in% input$which_war)) {
-      if (WW2_selected) {
+    } else if(WW2_string %e% diff_war) {
+      if (deselected) {
         debug_message("WW2 deselected")
         clear_WW2(overview_proxy, civilian_proxy)
-        WW2_selected <<- FALSE
       } else {
         debug_message("WW2 selected")
         draw_WW2(overview_proxy, civilian_proxy)
-        WW2_selected <<- TRUE
       }
-    } else if(xor(Korea_selected, Korea_string %in% input$which_war)) {
-      if (Korea_selected) {
+    } else if(Korea_string %e% diff_war) {
+      if (deselected) {
         debug_message("Korea deselected")
         clear_Korea(overview_proxy, civilian_proxy)
-        Korea_selected <<- FALSE
       } else {
         debug_message("Korea selected")
         draw_Korea(overview_proxy, civilian_proxy)
-        Korea_selected <<- TRUE
       }
-    } else if(xor(Vietnam_selected, Vietnam_string %in% input$which_war)) {
-      if (Vietnam_selected) {
+    } else if(Vietnam_string %e% diff_war) {
+      if (deselected) {
         debug_message("Vietnam deselected")
         clear_Vietnam(overview_proxy, civilian_proxy)
-        Vietnam_selected <<- FALSE
       } else {
         debug_message("Vietnam selected")
         draw_Vietnam(overview_proxy, civilian_proxy)
-        Vietnam_selected <<- TRUE
       }
     } else {
       debug_message("all wars deselected")
-      print(stupid_var)
-      if (WW1_selected) {
+      if (WW1_string %c% previous_wars_selection) {
         clear_WW1(overview_proxy, civilian_proxy)
-        WW1_selected <<- FALSE
-      } else if (WW2_selected) {
+      } else if (WW2_string %c% previous_wars_selection) {
         clear_WW2(overview_proxy, civilian_proxy)
-        WW2_selected <<- FALSE
-      } else if (Korea_selected) {
+      } else if (Korea_string %c% previous_wars_selection) {
         clear_Korea(overview_proxy, civilian_proxy)
-        Korea_selected <<- FALSE
-      } else if (Vietnam_selected) {
+      } else if (Vietnam_string %c% previous_wars_selection) {
         clear_Vietnam(overview_proxy, civilian_proxy)
-        Vietnam_selected <<- FALSE
       } else {
         debug_message("something else happened")
       }
     }
     update_selectize_inputs()
+    previous_wars_selection <<- input$which_war
   })
   
 
@@ -729,33 +744,36 @@ shinyServer(function(input, output, session) {
   # handler for country selection
   observeEvent(eventExpr = input$country, ignoreNULL = FALSE, ignoreInit = TRUE, handlerExpr = {
     debug_message("country selected")
-    update_maps <- TRUE
-    if (all_countries_selected) {# all countries were selected previously
-      if ("All" %in% input$country) {# all is still selected
-        if (length(input$country) > 1) {# and there's another one in there
-          # then do remove all thing
-          all_countries_selected <<- FALSE
-          updateSelectizeInput(session, inputId = "country", selected = input$country[input$country != "All"])
-          update_maps <- FALSE
-        }
-      } else {# all has been removed
-        all_countries_selected <<- FALSE
-      }
-    } else{# all countries was not selected previously
-      if ("All" %in% input$country) {# all is now added
-        all_countries_selected <<- TRUE
-        if (length(input$country) > 1) {# and there was previously something else in there
-          # then do remove other countries thing
-          updateSelectizeInput(session, inputId = "country", selected = "All")
-          update_maps <- FALSE
-        }
-      }
-    }
-    if (update_maps) {# only update when normal changes have been made
-      overview_proxy <- leafletProxy("overview_map")
-      civilian_proxy <- leafletProxy("civilian_map")
+    if (change_token %c% previous_countries_selection) {
+      debug_message("redraw with change token")
+      previous_countries_selection <<- previous_countries_selection %d% change_token
       redraw(overview_proxy, civilian_proxy)
       update_other_selectize_inputs("countries")
+    } else {
+      if (length(input$country) == 0L) {
+        debug_message("ooops, deleted everything")
+        previous_countries_selection <<- c("All", change_token)
+        updateSelectizeInput(session, inputId = "country", selected = "All")
+      } else {
+        diff_country <- previous_countries_selection %dd% input$country
+        selected <- length(input$country) > length(previous_countries_selection)
+        if ("All" %c% previous_countries_selection) {
+          debug_message("added something on top of All")
+          previous_countries_selection <<- c(diff_country, change_token)
+          updateSelectizeInput(session, inputId = "country", selected = diff_country)
+        } else {
+          if ("All" %e% diff_country) {
+            debug_message("added All on top of other things")
+            previous_countries_selection <<- c("All", change_token)
+            updateSelectizeInput(session, inputId = "country", selected = "All")
+          } else {
+            debug_message("something added or deleted")
+            previous_countries_selection <<- input$country
+            redraw(overview_proxy, civilian_proxy)
+            update_other_selectize_inputs("countries")
+          }
+        }
+      }
     }
   })
 
@@ -765,33 +783,36 @@ shinyServer(function(input, output, session) {
   # handler for aircraft selection
   observeEvent(eventExpr = input$aircraft, ignoreNULL = FALSE, ignoreInit = TRUE, handlerExpr = {
     debug_message("aircraft selected")
-    update_maps <- TRUE
-    if (all_aircraft_selected) {# all aircraft were selected previously
-      if ("All" %in% input$aircraft) {# all is still selected
-        if (length(input$aircraft) > 1) {# and there's another one in there
-          # then do remove all thing
-          all_aircraft_selected <<- FALSE
-          updateSelectizeInput(session, inputId = "aircraft", selected = input$aircraft[input$aircraft != "All"])
-          update_maps <- FALSE
-        }
-      } else {# all has been removed
-        all_aircraft_selected <<- FALSE
-      }
-    } else{# all aircraft was not selected previously
-      if ("All" %in% input$aircraft) {# all is now added
-        all_aircraft_selected <<- TRUE
-        if (length(input$aircraft) > 1) {# and there was previously something else in there
-          # then do remove other aircraft thing
-          updateSelectizeInput(session, inputId = "aircraft", selected = "All")
-          update_maps <- FALSE
-        }
-      }
-    }
-    if (update_maps) {# only update when normal changes have been made
-      overview_proxy <- leafletProxy("overview_map")
-      civilian_proxy <- leafletProxy("civilian_map")
+    if (change_token %c% previous_aircrafts_selection) {
+      debug_message("redraw with change token")
+      previous_aircrafts_selection <<- previous_aircrafts_selection %d% change_token
       redraw(overview_proxy, civilian_proxy)
       update_other_selectize_inputs("aircraft")
+    } else {
+      if (length(input$aircraft) == 0L) {
+        debug_message("ooops, deleted everything")
+        previous_aircrafts_selection <<- c("All", change_token)
+        updateSelectizeInput(session, inputId = "aircraft", selected = "All")
+      } else {
+        diff_aircraft <- previous_aircrafts_selection %dd% input$aircraft
+        selected <- length(input$aircraft) > length(previous_aircrafts_selection)
+        if ("All" %c% previous_aircrafts_selection) {
+          debug_message("added something on top of All")
+          previous_aircrafts_selection <<- c(diff_aircraft, change_token)
+          updateSelectizeInput(session, inputId = "aircraft", selected = diff_aircraft)
+        } else {
+          if ("All" %e% diff_aircraft) {
+            debug_message("added All on top of other things")
+            previous_aircrafts_selection <<- c("All", change_token)
+            updateSelectizeInput(session, inputId = "aircraft", selected = "All")
+          } else {
+            debug_message("something added or deleted")
+            previous_aircrafts_selection <<- input$aircraft
+            redraw(overview_proxy, civilian_proxy)
+            update_other_selectize_inputs("aircraft")
+          }
+        }
+      }
     }
   })
   
@@ -801,33 +822,36 @@ shinyServer(function(input, output, session) {
   # handler for weapon selection
   observeEvent(eventExpr = input$weapon, ignoreNULL = FALSE, ignoreInit = TRUE, handlerExpr = {
     debug_message("weapon selected")
-    update_maps <- TRUE
-    if (all_weapons_selected) {# all weapons were selected previously
-      if ("All" %in% input$weapon) {# all is still selected
-        if (length(input$weapon) > 1) {# and there's another one in there
-          # then do remove all thing
-          all_weapons_selected <<- FALSE
-          updateSelectizeInput(session, inputId = "weapon", selected = input$weapon[input$weapon != "All"])
-          update_maps <- FALSE
-        }
-      } else {# all has been removed
-        all_weapons_selected <<- FALSE
-      }
-    } else{# all weapons was not selected previously
-      if ("All" %in% input$weapon) {# all is now added
-        all_weapons_selected <<- TRUE
-        if (length(input$weapon) > 1) {# and there was previously something else in there
-          # then do remove other weapons thing
-          updateSelectizeInput(session, inputId = "weapon", selected = "All")
-          update_maps <- FALSE
-        }
-      }
-    }
-    if (update_maps) {# only update when normal changes have been made
-      overview_proxy <- leafletProxy("overview_map")
-      civilian_proxy <- leafletProxy("civilian_map")
+    if (change_token %c% previous_weapons_selection) {
+      debug_message("redraw with change token")
+      previous_weapons_selection <<- previous_weapons_selection %d% change_token
       redraw(overview_proxy, civilian_proxy)
       update_other_selectize_inputs("weapons")
+    } else {
+      if (length(input$weapons) == 0L) {
+        debug_message("ooops, deleted everything")
+        previous_weapons_selection <<- c("All", change_token)
+        updateSelectizeInput(session, inputId = "weapons", selected = "All")
+      } else {
+        diff_weapon <- previous_weapons_selection %dd% input$weapons
+        selected <- length(input$weapons) > length(previous_weapons_selection)
+        if ("All" %c% previous_weapons_selection) {
+          debug_message("added something on top of All")
+          previous_weapons_selection <<- c(diff_weapon, change_token)
+          updateSelectizeInput(session, inputId = "weapons", selected = diff_weapon)
+        } else {
+          if ("All" %e% diff_weapon) {
+            debug_message("added All on top of other things")
+            previous_weapons_selection <<- c("All", change_token)
+            updateSelectizeInput(session, inputId = "weapons", selected = "All")
+          } else {
+            debug_message("something added or deleted")
+            previous_weapons_selection <<- input$weapons
+            redraw(overview_proxy, civilian_proxy)
+            update_other_selectize_inputs("weapons")
+          }
+        }
+      }
     }
   })
   
@@ -837,15 +861,12 @@ shinyServer(function(input, output, session) {
   # handler for sample size refresh
   observeEvent(eventExpr = input$sample_num, ignoreNULL = TRUE, ignoreInit = TRUE, handlerExpr = {
     debug_message("sample size changed")
-    overview_proxy <- leafletProxy("overview_map")
     redraw_overview(overview_proxy)
   })
   
   # handler for date range refresh
   observeEvent(eventExpr = input$dateRange, ignoreNULL = TRUE, ignoreInit = TRUE, handlerExpr = {
     debug_message("date range changed")
-    overview_proxy <- leafletProxy("overview_map")
-    civilian_proxy <- leafletProxy("civilian_map")
     redraw(overview_proxy, civilian_proxy)
   })
   
@@ -1093,48 +1114,24 @@ shinyServer(function(input, output, session) {
 ### General Drawers ---------------------------------------------------------
 
   redraw_overview <- function(proxy) {
-    if (WW1_selected) {
-      redraw_WW1_overview(proxy)
-    }
-    if (WW2_selected) {
-      redraw_WW2_overview(proxy)
-    }
-    if (Korea_selected) {
-      redraw_Korea_overview(proxy)
-    }
-    if (Vietnam_selected) {
-      redraw_Vietnam_overview(proxy)
-    }
+    if (WW1_selected()) redraw_WW1_overview(proxy)
+    if (WW2_selected()) redraw_WW2_overview(proxy)
+    if (Korea_selected()) redraw_Korea_overview(proxy)
+    if (Vietnam_selected()) redraw_Vietnam_overview(proxy)
   }
   
   redraw_civilian <- function(proxy) {
-    if (WW1_selected) {
-      redraw_WW1_civilian(proxy)
-    }
-    if (WW2_selected) {
-      redraw_WW2_civilian(proxy)
-    }
-    if (Korea_selected) {
-      redraw_Korea_civilian(proxy)
-    }
-    if (Vietnam_selected) {
-      redraw_Vietnam_civilian(proxy)
-    }
+    if (WW1_selected()) redraw_WW1_civilian(proxy)
+    if (WW2_selected()) redraw_WW2_civilian(proxy)
+    if (Korea_selected()) redraw_Korea_civilian(proxy)
+    if (Vietnam_selected()) redraw_Vietnam_civilian(proxy)
   }
   
   redraw <- function(overview_proxy, civilian_proxy) {
-    if (WW1_selected) {
-      redraw_WW1(overview_proxy, civilian_proxy)
-    }
-    if (WW2_selected) {
-      redraw_WW2(overview_proxy, civilian_proxy)
-    }
-    if (Korea_selected) {
-      redraw_Korea(overview_proxy, civilian_proxy)
-    }
-    if (Vietnam_selected) {
-      redraw_Vietnam(overview_proxy, civilian_proxy)
-    }
+    if (WW1_selected()) redraw_WW1(overview_proxy, civilian_proxy)
+    if (WW2_selected()) redraw_WW2(overview_proxy, civilian_proxy)
+    if (Korea_selected()) redraw_Korea(overview_proxy, civilian_proxy)
+    if (Vietnam_selected()) redraw_Vietnam(overview_proxy, civilian_proxy)
   }
   
 
@@ -1190,35 +1187,50 @@ shinyServer(function(input, output, session) {
   
   # country drop-down updater
   update_countries <- function() {
-    countries <- c("All", get_unique_from_selected_wars("Unit_Country"))
+    debug_message("Countries choices updated")
+    country_choices <- c("All", possible_selectize_choices("Unit_Country"))
+    country_matches <- input$country %in% country_choices
+    if (any(country_matches)) {
+      countries_selected <- input$country[country_matches]
+    } else {
+      countries_selected <- "All"
+    }
     updateSelectizeInput(session, 
                          inputId = "country", 
-                         choices = countries, 
-                         selected = ifelse(any(input$country %in% countries), 
-                                           input$country[input$country %in% countries], 
-                                           "All"))
+                         choices = country_choices, 
+                         selected = countries_selected)
   }
   
   # aircraft drop-down updater
   update_aircraft <- function() {
-    aircraft <- c("All", get_unique_from_selected_wars("Aircraft_Type"))
+    debug_message("Aircraft choices updated")
+    aircraft_choices <- c("All", possible_selectize_choices("Aircraft_Type"))
+    aircraft_matches <- input$aircraft %in% aircraft_choices
+    if (any(aircraft_matches)) {
+      aircraft_selected <- input$aircraft[aircraft_matches]
+    } else {
+      aircraft_selected <- "All"
+    }
     updateSelectizeInput(session, 
                          inputId = "aircraft", 
-                         choices = aircraft, 
-                         selected = ifelse(any(input$aircraft %in% aircraft), 
-                                           input$aircraft[input$aircraft %in% aircraft], 
-                                           "All"))
+                         choices = aircraft_choices, 
+                         selected = aircraft_selected)
   }
   
   # weapon drop-down updater
   update_weapons <- function() {
-    weapons <- c("All", get_unique_from_selected_wars("Weapon_Type"))
+    debug_message("Weapons choices updated")
+    weapon_choices <- c("All", possible_selectize_choices("Weapon_Type"))
+    weapon_matches <- input$weapon %in% weapon_choices
+    if (any(weapon_matches)) {
+      weapons_selected <- input$weapon[weapon_matches]
+    } else {
+      weapons_selected <- "All"
+    }
     updateSelectizeInput(session, 
                          inputId = "weapon", 
-                         choices = weapons, 
-                         selected = ifelse(any(input$weapon %in% weapons), 
-                                           input$weapon[input$weapon %in% weapons], 
-                                           "All"))
+                         choices = weapon_choices, 
+                         selected = weapons_selected)
   }
   
   update_selectize_inputs <- function() {
@@ -1243,83 +1255,85 @@ shinyServer(function(input, output, session) {
 
 ### Filtering Functions -----------------------------------------------------
 
-  get_unique_from_selected_wars <- function(column) {
+  possible_selectize_choices <- function(column) {
     start_date <- input$dateRange[1]
     end_date <- input$dateRange[2]
-    countries <- ifelse(column == "Unit_Country", "All", input$country)
-    aircrafts <- ifelse(column == "Aircraft_Type", "All", input$aircraft)
-    weapons <- ifelse(column == "Weapon_Type", "All", input$weapon)
+    countries <- input$country
+    aircrafts <- input$aircraft
+    weapons <- input$weapon
+    if (column == "Unit_Country") {
+      countries <- "All"
+    } else if (column == "Aircraft_Type") {
+      aircrafts <- "All"
+    } else if (column == "Weapon_Type") {
+      weapons <- "All"
+    }
     result <- c()
-    if (WW1_selected) {
-      result <- c(result, 
-                  as.character(unique(filter_selection(WW1_clean, 
-                                                       start_date, 
-                                                       end_date, 
-                                                       countries, 
-                                                       aircrafts, 
-                                                       weapons)[[column]])))
+    if (WW1_selected()) {
+      result <- append(result, as.character(unique(filter_selection(WW1_clean, 
+                                                                    start_date, 
+                                                                    end_date, 
+                                                                    countries, 
+                                                                    aircrafts, 
+                                                                    weapons)[[column]])))
     }
-    if (WW2_selected) {
-      result <- c(result, 
-                  as.character(unique(filter_selection(WW2_clean, 
-                                                       start_date, 
-                                                       end_date, 
-                                                       countries, 
-                                                       aircrafts, 
-                                                       weapons)[[column]])))
+    if (WW2_selected()) {
+      result <- append(result, as.character(unique(filter_selection(WW2_clean, 
+                                                                    start_date, 
+                                                                    end_date, 
+                                                                    countries, 
+                                                                    aircrafts, 
+                                                                    weapons)[[column]])))
     }
-    if (Korea_selected) {
-      result <- c(result, 
-                  as.character(unique(filter_selection(Korea_clean2, 
-                                                       start_date, 
-                                                       end_date, 
-                                                       countries, 
-                                                       aircrafts, 
-                                                       weapons)[[column]])))
+    if (Korea_selected()) {
+      result <- append(result, as.character(unique(filter_selection(Korea_clean2, 
+                                                                    start_date, 
+                                                                    end_date, 
+                                                                    countries, 
+                                                                    aircrafts, 
+                                                                    weapons)[[column]])))
     }
-    if (Vietnam_selected) {
-      result <- c(result, 
-                  as.character(unique(filter_selection(Vietnam_clean, 
-                                                       start_date, 
-                                                       end_date, 
-                                                       countries, 
-                                                       aircrafts, 
-                                                       weapons)[[column]])))
+    if (Vietnam_selected()) {
+      result <- append(result, as.character(unique(filter_selection(Vietnam_clean, 
+                                                                    start_date, 
+                                                                    end_date, 
+                                                                    countries, 
+                                                                    aircrafts, 
+                                                                    weapons)[[column]])))
     }
-    print(result)
     if (length(result) > 0) {
-      result <- base::sort(unique(result))
-      if ("unspecified" %in% result) {
-        result <- c(result[result != "unspecified"], "unspecified")
+      result <- sort(unique(result))
+      if (empty_text %c% result) {
+        result <- c(result[result != empty_text], empty_text)
       }
     }
     result
   }
   
   filter_selection <- function(war_data, start_date, end_date, countries, aircrafts, weapons) {
-    if ("All" %in% countries) {
-      if ("All" %in% aircrafts) {
-        if ("All" %in% weapons) {
+    if ("All" %c% countries) {
+      if ("All" %c% aircrafts) {
+        if ("All" %c% weapons) {
           war_data[Mission_Date >= start_date & Mission_Date <= end_date]
         } else {
           war_data[.(weapons), on = .(Weapon_Type)][Mission_Date >= start_date & Mission_Date <= end_date]
         }
       } else {
-        if ("All" %in% weapons) {
+        if ("All" %c% weapons) {
           war_data[.(aircrafts), on = .(Aircraft_Type)][Mission_Date >= start_date & Mission_Date <= end_date]
         } else {
           war_data[.(aircrafts, weapons), on = .(Aircraft_Type, Weapon_Type)][Mission_Date >= start_date & Mission_Date <= end_date]
         }
       }
     } else {
-      if ("All" %in% aircrafts) {
-        if ("All" %in% weapons) {
+      if ("All" %c% aircrafts) {
+        if ("All" %c% weapons) {
           war_data[.(countries), on = .(Unit_Country)][Mission_Date >= start_date & Mission_Date <= end_date]
         } else {
           war_data[.(countries, weapons), on = .(Unit_Country, Weapon_Type)][Mission_Date >= start_date & Mission_Date <= end_date]
         }
       } else {
-        if ("All" %in% weapons) {
+        if ("All" %c% weapons) {
           war_data[.(countries, aircrafts), on = .(Unit_Country, Aircraft_Type)][Mission_Date >= start_date & Mission_Date <= end_date]
         } else {
           war_data[.(countries, aircrafts, weapons), on = .(Unit_Country, Aircraft_Type, Weapon_Type)][Mission_Date >= start_date & Mission_Date <= end_date]

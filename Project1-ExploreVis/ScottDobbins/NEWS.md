@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.7.2
-# @date 2017-07-29 20:00
+# @version 0.9.8
+# @date 2017-08-11 23:30
 
 
 ### Version History ###
@@ -123,85 +123,73 @@ Complete version
 
 ### Future change notepad:
 
-# render icons from within ui.R, not server.R
-
-#******big deals:
-# modify levels of factors instead of strings directly (forcats)
-# purrr and map reduce stuff
-# times with hms or ITime
-# broom for list-columns of models etc
-# eventually, Rmarkdown stuff
-# proper noun phrase functions for aircaft don't work!#*** probably fixed***
-# why can't I just set certain parts of the levels manually in place and then save them back in? don't use fct_recode or fct_other because they will mess it up I think.
-# also figure out whether graphs should show totals or statistics (medians, means, and the like)
-# make sure filters returning NAs don't mess things up--check if nomatch = 0 would be better
-
-#*** lesser deals:
-# further functionalize a lot of repeated code
-# fix proxies to see if we can save redundancy
-# see if different map_*() functions can improve speed
-# see if broom can fix issues with the vectorized strsplit helper functions I made
-# get regex working on levels (to set to "")
+Data Quality:
+# some Weapon_Expl_Nums may be overwritten improperly by Bomb_Altitude kind of stuff (Bomb_Altitude = 10, Bomb_Altitude_Feet = 1000, Weapon_Expl_Num = 100 specifically)
+# there are some altitude ranges in Korea_bombs2$Aircraft_Total_Weight
 # duplicates appear in dataset (check for duplicates: same aircraft type, same day, same target area and type, same weapons and same num_attacking_aircraft)
-# update country and other codes when knowable (generate list of code to description matches and fill in as possible)
-# use all new data.table knowledge to rewrite cleaner.R, processor.R, and server.R (especially the filtering parts)
-# use append() for get_unique_from_selected_wars?
-
-#** other ideas:
-#*Better ggplots, maybe a self-playing gif of bombs droppedover time for each conflict
-#*Make efficient for use on shinyapps.io through SQLite
-#*Maybe match (or fail to match) the data with the historical record.
-#*Could also allow users to link (using html) to relevant Wikipedia articles on certain aspects of the conflicts (airframes, campaigns, etc.)
-#*Edit civilian map to have not just number of bombing missions but also number of bombs and weight of bombs to get a better sense of danger/intensity
-#*Change heatmap parameters so it's not as odd-looking, especially changing so much between zoom levels: change blur and radius (and maybe even max) parameters?
-
-# move all label changes into labs() function
-
 # there's a 9:00 am and an 11:00 am in Unit_Squadron of WW2--check for other misplaced values
+# check bomb_altitude and bomb_altitude_feet in WW2
+# make sure types of bombs are formatted, cleaned, and processed
+# make sure all fields with codes have their relevant explanation/text and all relevant texts that are 1:1 with a code if they have the code (like WW2 Sighting_Method_Code and Sighting_Method_Explanation etc); complete country, target priority, target industry, etc. codes where possible (WW2 and potentially others); update country and other codes when knowable (generate list of code to description matches and fill in as possible)
+# plenty of O vs 0 mistakes in Vietnam (and maybe other database) callsigns; Korea1 callsign has nothing; Korea2 callsign has nothing except one data leak; very few callsigns in WW2; WW1 callsigns are just aircraft types
+
+Data Processing:
+# also do some num * per-unit-weight = total-weight calculation verification for Korea 2 and others
+# perhaps update WW2 (and potentially other wars') weapons types that include clusters to just be counted as singlets but with a mention that they were originally in clusters
+# be careful about "squadron division" sounding funny in tooltips
+# change Weapon_Unit_Weight in Vietnam to something like Weapon_Unit_Total_Weight and then create new column Weapon_Unit_Weight that reads from Weapon_Type and then fills in if possible from Weapon_Unit_Total_Weight if the read value is blank
+
+Sandboxes/Graphics:
+# fix formatting of title, axes, background, and legend in sandbox
+# make histograms able to plot density of num_missions (this is just a normal histogram), num_aircraft, num_bombs, and weight_bombs
+# fix categories with an overwhelming number of choices by allowing the graphing of top or bottom (or evenly spaced sorted sample of) <x> choices
 # turn label text sideways above a certain number of labels
-# make sure sandbox is integrating over entire dataset, not just first observation or whatever
 # maybe reorder bars in plots in ascending order
 # maybe use coord_flip() to help category names not overlap
-# maybe change local absolute paths to relative paths
 
-#* check bomb_altitude and bomb_altitude_feet in WW2
-#* make sure types of bombs are formatted, cleaned, and processed
-
-#** fix formatting of title, axes, background, and legend in sandbox
-#** also add in new columns and/or rephrase descriptions of old columns
-
-#*** fix other war bomb nums and weights too
-#*** lots of tooltips still say "0 pounds of bombs"--have tooltips not just test if they're not NA but also not 0
-#*** fix the fact that the app saves locally when it should save externally
-#*** ensure that aircraft_attacking_num is as clean and complete as possible
-
-#**** add Unit_Country to all tooltips
-#**** also include type of bombs
-#**** maybe fix proper_noun_phrase_vectorized by filtering down amount of data that needs to be processed at each step: first check if the given line is empthy, then check if the line is only one word long (doesn't contain any of the split characters) and then check for each character before each step (or keep large vectors of logicals about whether each symbol is contained in each row and use those)
-#**** use more <<- to make sure sessions don't interfere with one another
-#**** please somehow isolate the selection reactive function from senseless updates (adding or subtracting "all") on every filtering factor
-
-# see if you can fix how long it takes Vietnam data to be sampled (sub-sample further?)
-# maybe put background of flags with low alpha over territories they controlled
-# fix Korea1 to make sure its data gets included too
-# maybe figure out how to add all war data together into one big dataset (perhaps combinatorially based on which wars have been selected)
-# if you do any text editing on bomb type descriptions then you may need to change the WW2 match from "X" to "x" and the Korea match from "Unknown" to "unknown"
-# also include vague categories like "incendiary", "fragmentary", and "high explosive" (as in WW2) as possible selections in weapons drop down (depending on what wars and countries are selected)
-# provide fragmentary, incendiary, and high explosive columns in non-WW2 databases as well
-# maybe also add a kinetic weapon column for WW2 and others
-# maybe try doing all tooltip calculations at once to see if data.table parallelizes it
+Programming Style:
+# change levels functions so that loading of data.table is not required and having installed data.table is sufficient
+# functionalize histogram and sandbox code
+# further functionalize a lot of repeated code
+# move all label changes into labs() function
+# fix the fact that the app saves locally when it should save externally
 # maybe further functionalize cleaner.R cleaning sections for each war
-# maybe functionalize the sandbox and histogram plots
+
+Programming Quality:
 # merge together Korea1 and Korea2 after cleaning
 # compare timing with and without JIT compiler
 # figure out a way to suppress or fix all those warnings (and also random data.table updates and package information)
-# 2 Vietnam dates fail to parse as they are for an impossible date (1970-02-29)--could change to 1970-02-28 manually
-# make sure all fields with codes have their relevant explanation/text and all relevant texts that are 1:1 with a code if they have the code (like WW2 Sighting_Method_Code and Sighting_Method_Explanation etc)
-# maybe read the times in as character to allow better processing--I bet not all are integers/numbers (some may have formatting characters like : in them)
-# redo strptime() and format() bits--it's silly to convert from text to POSIXlt (converted inside data.table to POSIXct) then back to text again
-# plenty of O vs 0 mistakes in Vietnam (and maybe other database) callsigns; Korea1 callsign has nothing; Korea2 callsign has nothing except one data leak; very few callsigns in WW2; WW1 callsigns are just aircraft types
-# be careful about "squadron division" sounding funny in tooltips
-# maybe add Vietnam squadrons back into tooltip (though very rare)
-# complete country, target priority, target industry, etc. codes where possible (WW2 and potentially others)
-# perhaps update WW2 (and potentially other wars') weapons types that include clusters to just be counted as singlets but with a mention that they were originally in clusters
+# make sure filters returning NAs don't mess things up--check if nomatch = 0 would be better
+# see if different map_*() functions can improve speed
+# see if broom can fix issues with the vectorized strsplit helper functions I made
+# maybe change local absolute paths to relative paths--use basename/dirname to help with filepaths stuff / use file.path to make filepaths platform independent (path.expand may help as well)
+# maybe fix proper_noun_phrase_vectorized by filtering down amount of data that needs to be processed at each step: first check if the given line is empthy, then check if the line is only one word long (doesn't contain any of the split characters) and then check for each character before each step (or keep large vectors of logicals about whether each symbol is contained in each row and use those)
+# please somehow isolate the selection reactive function from senseless updates (adding or subtracting "all") on every filtering factor
+# see if you can fix how long it takes Vietnam data to be sampled (sub-sample further?)
 # I like the functionality of the filter_selection() function, but it seems slower than having separate functions for each war
+
+Small Improvements:
+# add Unit_Country to all tooltips / also include type of bombs
+# times with hms or ITime
+# Change heatmap parameters so it's not as odd-looking, especially changing so much between zoom levels: change blur and radius (and maybe even max) parameters?
+# convert Expl, Incd, and Frag combined into a single matrix column (use df$col <- matrix() for this
+# also add in new columns and/or rephrase descriptions of old columns (for sandbox)
+# maybe figure out how to add all war data together into one big dataset (perhaps combinatorially based on which wars have been selected)
+# maybe actually convert the times into time objects
+
+Significant Improvements:
+# Edit civilian map to have not just number of bombing missions but also number of bombs and weight of bombs to get a better sense of danger/intensity
+# Better ggplots, maybe a self-playing gif of bombs droppedover time for each conflict
+# Could also allow users to link (using html) to relevant Wikipedia articles on certain aspects of the conflicts (airframes, campaigns, etc.)
+# maybe put background of flags with low alpha over territories they controlled
+# also include vague categories like "incendiary", "fragmentary", and "high explosive" (as in WW2) as possible selections in weapons drop down (depending on what wars and countries are selected); provide fragmentary, incendiary, and high explosive columns in non-WW2 databases as well
+# maybe also add a kinetic weapon column for WW2 and others
+
+Misc/Other Projects:
+# broom for list-columns of models etc
+# Make efficient for use on shinyapps.io through SQLite
+# Maybe match (or fail to match) the data with the historical record.
+
+Presentation/Writing:
+# eventually, Rmarkdown stuff
+

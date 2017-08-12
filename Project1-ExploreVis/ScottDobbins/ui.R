@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.7.2
-# @date 2017-07-29 20:00
+# @version 0.9.8
+# @date 2017-08-11 23:30
 
 
 ### UI Component ------------------------------------------------------------
@@ -97,48 +97,48 @@ shinyUI(dashboardPage(
               
               # map
               fluidRow(
-                box(leafletOutput("overview_map", 
+                box(width  = map_width, 
+                    height = map_height, 
+                    leafletOutput("overview_map", 
                                   width  = "100%", 
-                                  height = map_height), 
-                    width  = map_width, 
-                    height = map_height)
+                                  height = map_height))
               ), 
               
               # selection widgets
               fluidRow(
                 
                 # map picker
-                box(selectizeInput(inputId = "pick_map", 
+                box(width = 6, 
+                    selectizeInput(inputId = "pick_map", 
                                    label = "Pick Map", 
                                    choices = c("Color Map", "Plain Map", "Terrain Map", "Street Map", "Satellite Map"), 
                                    selected = "Color Map", 
-                                   multiple = FALSE), 
-                    width = 6),
+                                   multiple = FALSE)),
                 
                 # label picker
-                box(selectizeInput(inputId = "pick_labels", 
+                box(width = 6, 
+                    selectizeInput(inputId = "pick_labels", 
                                    label = "Pick Labels", 
                                    choices = c("Borders", "Text"), 
                                    selected = c("Borders","Text"), 
-                                   multiple = TRUE), 
-                    width = 6) 
+                                   multiple = TRUE)) 
                 
               ), 
               
               fluidRow(
                 
                 # text box whose sole purpose is actually just to add spacing to the bottom of the window
-                box(htmlOutput(outputId = "overview_text", 
-                               inline = FALSE), 
-                    width = 6), 
+                box(width = 6, 
+                    htmlOutput(outputId = "overview_text", 
+                               inline = FALSE)), 
                 
                 # select number of points to graph on the map
-                box(numericInput(inputId = "sample_num", 
+                box(width = 6, 
+                    numericInput(inputId = "sample_num", 
                                  label = "Maximum number of points to display on map", 
                                  value = init_sample_size, 
                                  min = min_sample_size, 
-                                 max = max_sample_size), 
-                    width = 6)
+                                 max = max_sample_size))
               )
       ), 
       
@@ -160,36 +160,36 @@ shinyUI(dashboardPage(
               ), 
               
               fluidRow(
-                box(sliderInput(inputId = "WW1_hist_slider", 
+                box(width = 6, 
+                    sliderInput(inputId = "WW1_hist_slider", 
                                 label = "# of bins", 
                                 value = WW1_init_bins, 
                                 min = WW1_min_bins, 
                                 max = WW1_max_bins, 
-                                step = 1), 
-                    width = 6), 
+                                step = 1)), 
                 
-                box(selectizeInput(inputId = "WW1_sandbox_ind", 
+                box(width = 6, 
+                    selectizeInput(inputId = "WW1_sandbox_ind", 
                                    label = "Which independent variable?", 
                                    choices = c("Year", WW1_all_choices), 
                                    selected = c("Year"), 
-                                   multiple = FALSE), 
-                    width = 6)
+                                   multiple = FALSE))
               ), 
               
               fluidRow(
-                box(selectizeInput(inputId = "WW1_sandbox_group", 
+                box(width = 6, 
+                    selectizeInput(inputId = "WW1_sandbox_group", 
                                    label = "Group by what?", 
                                    choices = c("None", WW1_categorical_choices), 
                                    selected = c("None"), 
-                                   multiple = FALSE), 
-                    width = 6), 
+                                   multiple = FALSE)), 
                 
-                box(selectizeInput(inputId = "WW1_sandbox_dep", 
+                box(width = 6, 
+                    selectizeInput(inputId = "WW1_sandbox_dep", 
                                    label = "Which dependent variable?", 
                                    choices = WW1_continuous_choices, 
                                    selected = c("Number of Attacking Aircraft"), 
-                                   multiple = FALSE), 
-                    width = 6)
+                                   multiple = FALSE))
               )
       ),
       
@@ -204,36 +204,36 @@ shinyUI(dashboardPage(
               ), 
               
               fluidRow(
-                box(sliderInput(inputId = "WW2_hist_slider", 
+                box(width = 6, 
+                    sliderInput(inputId = "WW2_hist_slider", 
                                 label = "# of bins", 
                                 value = WW2_init_bins, 
                                 min = WW2_min_bins, 
                                 max = WW2_max_bins, 
-                                step = 1), 
-                    width = 6), 
+                                step = 1)), 
                 
-                box(selectizeInput(inputId = "WW2_sandbox_ind", 
+                box(width = 6, 
+                    selectizeInput(inputId = "WW2_sandbox_ind", 
                                    label = "Which independent variable?", 
                                    choices = c("Year", WW2_all_choices), 
                                    selected = c("Year"), 
-                                   multiple = FALSE), 
-                    width = 6)
+                                   multiple = FALSE))
               ), 
               
               fluidRow(
-                box(selectizeInput(inputId = "WW2_sandbox_group", 
+                box(width = 6, 
+                    selectizeInput(inputId = "WW2_sandbox_group", 
                                    label = "Group by what?", 
                                    choices = c("None", WW2_categorical_choices), 
                                    selected = c("None"), 
-                                   multiple = FALSE), 
-                    width = 6), 
+                                   multiple = FALSE)), 
                 
-                box(selectizeInput(inputId = "WW2_sandbox_dep", 
+                box(width = 6, 
+                    selectizeInput(inputId = "WW2_sandbox_dep", 
                                    label = "Which dependent variable?", 
                                    choices = WW2_continuous_choices, 
                                    selected = c("Number of Attacking Aircraft"), 
-                                   multiple = FALSE), 
-                    width = 6)
+                                   multiple = FALSE))
               )
       ),
       
@@ -248,36 +248,36 @@ shinyUI(dashboardPage(
               ), 
               
               fluidRow(
-                box(sliderInput(inputId = "Korea_hist_slider", 
+                box(width = 6, 
+                    sliderInput(inputId = "Korea_hist_slider", 
                                 label = "# of bins", 
                                 value = Korea_init_bins, 
                                 min = Korea_min_bins, 
                                 max = Korea_max_bins, 
-                                step = 1), 
-                    width = 6), 
+                                step = 1)), 
                 
-                box(selectizeInput(inputId = "Korea_sandbox_ind", 
+                box(width = 6, 
+                    selectizeInput(inputId = "Korea_sandbox_ind", 
                                    label = "Which independent variable?", 
                                    choices = c("Year", Korea_all_choices), 
                                    selected = c("Year"), 
-                                   multiple = FALSE), 
-                    width = 6)
+                                   multiple = FALSE))
               ), 
               
               fluidRow(
-                box(selectizeInput(inputId = "Korea_sandbox_group", 
+                box(width = 6, 
+                    selectizeInput(inputId = "Korea_sandbox_group", 
                                    label = "Group by what?", 
                                    choices = c("None", Korea_categorical_choices), 
                                    selected = c("None"), 
-                                   multiple = FALSE), 
-                    width = 6), 
+                                   multiple = FALSE)), 
                 
-                box(selectizeInput(inputId = "Korea_sandbox_dep", 
+                box(width = 6, 
+                    selectizeInput(inputId = "Korea_sandbox_dep", 
                                    label = "Which dependent variable?", 
                                    choices = Korea_continuous_choices, 
                                    selected = c("Number of Attacking Aircraft"), 
-                                   multiple = FALSE), 
-                    width = 6)
+                                   multiple = FALSE))
               )
       ),
       
@@ -292,36 +292,36 @@ shinyUI(dashboardPage(
               ), 
               
               fluidRow(
-                box(sliderInput(inputId = "Vietnam_hist_slider", 
+                box(width = 6, 
+                    sliderInput(inputId = "Vietnam_hist_slider", 
                                 label = "# of bins", 
                                 value = Vietnam_init_bins, 
                                 min = Vietnam_min_bins, 
                                 max = Vietnam_max_bins, 
-                                step = 1), 
-                    width = 6), 
+                                step = 1)), 
                 
-                box(selectizeInput(inputId = "Vietnam_sandbox_ind", 
+                box(width = 6, 
+                    selectizeInput(inputId = "Vietnam_sandbox_ind", 
                                    label = "Which independent variable?", 
                                    choices = c("Year", Vietnam_all_choices), 
                                    selected = c("Year"), 
-                                   multiple = FALSE), 
-                    width = 6)
+                                   multiple = FALSE))
               ), 
               
               fluidRow(
-                box(selectizeInput(inputId = "Vietnam_sandbox_group", 
+                box(width = 6, 
+                    selectizeInput(inputId = "Vietnam_sandbox_group", 
                                    label = "Group by what?", 
                                    choices = c("None", Vietnam_categorical_choices), 
                                    selected = c("None"), 
-                                   multiple = FALSE), 
-                    width = 6), 
+                                   multiple = FALSE)), 
                 
-                box(selectizeInput(inputId = "Vietnam_sandbox_dep", 
+                box(width = 6, 
+                    selectizeInput(inputId = "Vietnam_sandbox_dep", 
                                    label = "Which dependent variable?", 
                                    choices = Vietnam_continuous_choices, 
                                    selected = c("Number of Attacking Aircraft"), 
-                                   multiple = FALSE), 
-                    width = 6)
+                                   multiple = FALSE))
               )
       ),
       
@@ -332,9 +332,9 @@ shinyUI(dashboardPage(
               
               # title
               fluidRow(
-                box(htmlOutput(outputId = "pilot_title", 
-                               inline = FALSE), 
-                    width = 12)
+                box(width = 12, 
+                    htmlOutput(outputId = "pilot_title", 
+                               inline = FALSE))
               )
       ),
       
@@ -345,9 +345,9 @@ shinyUI(dashboardPage(
               
               # title
               fluidRow(
-                box(htmlOutput(outputId = "commander_title", 
-                               inline = FALSE), 
-                    width = 12)
+                box(width = 12, 
+                    htmlOutput(outputId = "commander_title", 
+                               inline = FALSE))
               )
       ),
       
@@ -358,28 +358,28 @@ shinyUI(dashboardPage(
               
               # title
               fluidRow(
-                box(htmlOutput(outputId = "civilian_title", 
-                               inline = FALSE), 
-                    width = 12)
+                box(width = 12, 
+                    htmlOutput(outputId = "civilian_title", 
+                               inline = FALSE))
               ),
               
               # map
               fluidRow(
-                box(leafletOutput("civilian_map", 
+                box(width  = map_width, 
+                    height = map_height, 
+                    leafletOutput("civilian_map", 
                                   width  = "100%", 
-                                  height = map_height), 
-                    width  = map_width, 
-                    height = map_height)
+                                  height = map_height))
               ), 
               
               # priority picker
               fluidRow(
-                box(selectizeInput(inputId = "civilian_priority",
+                box(width = 12, 
+                    selectizeInput(inputId = "civilian_priority",
                                    label = "I am most concerned about:",
                                    choices = c("The number of planes flying", "The number of bombs dropped", "The intensity of the bombing"),
                                    selected = c("The intensity of the bombing"), 
-                                   multiple = FALSE), 
-                    width = 12)
+                                   multiple = FALSE))
               )
       )
     )
