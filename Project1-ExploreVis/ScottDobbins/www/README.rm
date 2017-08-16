@@ -1,0 +1,194 @@
+# @author Scott Dobbins
+# @version 0.9.7.2
+# @date 2017-07-29 20:00
+
+
+### Overview ###
+
+This Shiny app is designed to demonstrate for the user the course of various 20th century wars and give the user a feel of the scale of these historical events. It is designed to be useful to the curious passer-by and the amateur historian (or student) alike, and contains many different ways for visualizing and investigating the data. 
+
+
+### Use Instructions ###
+
+The left panel tabs allow the user to navigate between different fuctionalities within the app, and the left panel dropdown boxes allow the user to control which types of events to show (i.e. to filter the data according to their wishes--it affects not just the overview panel but all panels). 
+
+The overview panel graphs out individual bombing events. The dropdown boxes at the bottom allow for graphing points on different map skins and with different label and border settings. When there are more events than can reasonably be graphed simultaneously (as is often the case), the graphed data represent a sub-sample of the overall data, and the number of sample points to graph can be selected at the bottom as well. 
+
+The data inspection panel allows the user to investigate (a subset of) the bombing data on their own. Clicking the column heads allows sorting in either ascending or descending order by that particular column. 
+
+The data panels for World War One, World War Two, the Korean War, and the Vietnam War allow further exploration of the relationships between different aspects of the bombing data. On the left side is a histogram plot that shows how the number of missions flown per unit time changed over the course of the war. On the right side is a sandbox-style plot that allows the user to plot out direct relationships between (nearly) any two variables (which are selected using the dropdown boxes at the bottom). Groupings affect both the histogram plot and the sandbox-style plot. 
+
+The pilot panel (in future releases) links to a video describing what flying bombing missions was like during World War 2 (for reference). 
+
+The commander panel (in future releases) shows what planing maps of each war looked like. 
+
+The civilian panel graphs out bombing intensity according to a few metrics which may be selected at the bottom. 
+
+
+### Script Contents ###
+
+ui.R	
+	The User Interface (UI) for the Shiny app
+	Describes what the app contains and where to put everything
+
+server.R
+	The server-side implementation of the app (the "brains" behind what the app does)
+	Describes all app reactivity and functionality
+
+global.R
+	Everything shared by both ui.R and server.R
+	Contains (and sources) all data processing and helper functions
+
+labels.R
+	The app contains a lot of labels, which are all placed here
+	Contains all textual data referenced by the app
+
+reader.R
+	Manual input of data required many details, all described here
+	Contains all specifics for manually reading in the raw data
+
+cleaner.R
+	Cleans the raw data into a usable form
+	A script of executed steps to clean specific problems in the raw data
+
+WW2_weapon_cleaning.R
+	The world war two weapon data was particularly dirty, 
+	so it's cleaning was isolated from the general cleaning script (cleaner.R)
+
+processor.R
+	Processes the cleaned data into a form that best fits the app
+	A script of executed steps to drop irrelevant data and to prepare tooltips
+
+saver.R
+	Writes the cleaned and processed data to disk for later fast read access
+
+downsampler.R
+	Samples the data from each war to fit size requirements for an online app
+
+helper.R
+	Contains an arsenal of helper functions used to clean and display the data
+ 
+parameters.R
+	Isolates commonly changed parameters that alter app behavior 
+	into one small editable file
+
+filepaths.R
+	Listing filepath components for accessing and saving specific files 
+	was a task deserving of its own file
+
+busywork.R
+	Contains largely behind-the-scences tasks that are necessary 
+	but not of interest to the other files (mostly completes filepath information)
+
+utils.R
+	Contains functions (as of now, just one function) commonly used 
+	across all the author's R projects for debugging and convenience purposes
+
+
+### Used Package Citations ###
+
+# R
+@Manual{,
+    title = {R: A Language and Environment for Statistical Computing},
+    author = {{R Core Team}},
+    organization = {R Foundation for Statistical Computing},
+    address = {Vienna, Austria},
+    year = {2017},
+    url = {https://www.R-project.org/},
+  }
+
+# shiny
+@Manual{,
+    title = {shiny: Web Application Framework for R},
+    author = {Winston Chang and Joe Cheng and JJ Allaire and Yihui Xie and Jonathan McPherson},
+    year = {2017},
+    note = {R package version 1.0.3},
+    url = {https://CRAN.R-project.org/package=shiny},
+  }
+
+# shinydashboard
+@Manual{,
+    title = {shinydashboard: Create Dashboards with 'Shiny'},
+    author = {Winston Chang and Barbara {Borges Ribeiro}},
+    year = {2017},
+    note = {R package version 0.6.1},
+    url = {https://CRAN.R-project.org/package=shinydashboard},
+  }
+
+# leaflet
+@Manual{,
+    title = {leaflet: Create Interactive Web Maps with the JavaScript 'Leaflet' Library},
+    author = {Joe Cheng and Bhaskar Karambelkar and Yihui Xie},
+    year = {2017},
+    note = {R package version 1.1.0.9000},
+    url = {http://rstudio.github.io/leaflet/},
+  }
+
+# leaflet.extras
+@Manual{,
+    title = {leaflet.extras: Extra Functionality for 'leaflet' Package},
+    author = {Bhaskar Karambelkar},
+    year = {2017},
+    note = {R package version 0.2},
+    url = {https://CRAN.R-project.org/package=leaflet.extras},
+  }
+
+# ggplot2
+@Book{,
+    author = {Hadley Wickham},
+    title = {ggplot2: Elegant Graphics for Data Analysis},
+    publisher = {Springer-Verlag New York},
+    year = {2009},
+    isbn = {978-0-387-98140-6},
+    url = {http://ggplot2.org},
+  }
+
+# data.table
+# note: I used data.table v1.10.5, which was in development at the time of my use
+@Manual{,
+    title = {data.table: Extension of `data.frame`},
+    author = {Matt Dowle and Arun Srinivasan},
+    year = {2017},
+    note = {R package version 1.10.5},
+    url = {http://r-datatable.com},
+  }
+
+# dplyr
+@Manual{,
+    title = {dplyr: A Grammar of Data Manipulation},
+    author = {Hadley Wickham and Romain Francois and Lionel Henry and Kirill Müller},
+    year = {2017},
+    note = {R package version 0.7.2},
+    url = {https://CRAN.R-project.org/package=dplyr},
+  }
+
+# DT
+@Manual{,
+    title = {DT: A Wrapper of the JavaScript Library 'DataTables'},
+    author = {Yihui Xie},
+    year = {2016},
+    note = {R package version 0.2},
+    url = {https://CRAN.R-project.org/package=DT},
+  }
+
+
+### Data Sources ###
+
+World War 1
+data source: data.mil
+data origin URL: https://insight.livestories.com/s/v2/world-war-i/5be11be2-83c7-4d20-b5bc-05b3dc325d7e/
+
+World War 2
+data source: data.mil
+data origin URL: https://insight.livestories.com/s/v2/world-war-ii/3262351e-df74-437c-8624-0c3b623064b5/
+
+Korea
+data source: data.mil
+data origin URL: https://insight.livestories.com/s/v2/korea/ff390af4-7ee7-4742-a404-2c3490f6ed96/
+
+Vietnam
+data source: data.mil
+data origin URL: https://insight.livestories.com/s/v2/vietnam/48973b96-8add-4898-9b33-af2a676b10bb/
+
+
+### END ###
