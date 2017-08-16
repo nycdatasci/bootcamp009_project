@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.8
-# @date 2017-08-11 23:30
+# @version 0.9.8.1
+# @date 2017-08-15 21:00
 
 
 ### Developer Control -------------------------------------------------------
@@ -42,11 +42,19 @@ title_width <- 360
 map_height <- 640
 map_width <- 1024
 
-# colors
-WW1_color <- "darkblue"
-WW2_color <- "darkred"
-Korea_color <- "yellow"
-Vietnam_color <- "darkgreen"
+# colors (on map)
+WW1_color <- 'darkblue'
+WW2_color <- 'darkred'
+Korea_color <- 'yellow'
+Vietnam_color <- 'darkgreen'
+
+# background colors (in DataTable)
+WW1_background <- 'skyblue'
+WW2_background <- 'indianred'
+Korea_background <- 'khaki'
+Vietnam_background <- 'olivedrab'
+example_background <- 'snow'
+font_weight <- 'bold'
 
 # graph parameters
 point_weight <- 5

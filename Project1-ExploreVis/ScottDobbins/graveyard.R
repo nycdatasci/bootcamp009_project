@@ -1331,4 +1331,586 @@ grem <- function(pattern, x, replacement = NULL, ...) {
 
 #KB-29 technically exists, and is modified B-29 available in 1948, so theoretically possible, but it's just a refueling aircraft--probably an OCR error for RB-29, but I'm not sure
 
+    if (WW1_selected()) {
+      result <- append(result, as.character(unique(filter_selection(WW1_clean,
+                                                                    start_date,
+                                                                    end_date,
+                                                                    countries,
+                                                                    aircrafts,
+                                                                    weapons)[[column]])))
+    }
+    if (WW2_selected()) {
+      result <- append(result, as.character(unique(filter_selection(WW2_clean,
+                                                                    start_date,
+                                                                    end_date,
+                                                                    countries,
+                                                                    aircrafts,
+                                                                    weapons)[[column]])))
+    }
+    if (Korea_selected()) {
+      result <- append(result, as.character(unique(filter_selection(Korea_clean2,
+                                                                    start_date,
+                                                                    end_date,
+                                                                    countries,
+                                                                    aircrafts,
+                                                                    weapons)[[column]])))
+    }
+    if (Vietnam_selected()) {
+      result <- append(result, as.character(unique(filter_selection(Vietnam_clean,
+                                                                    start_date,
+                                                                    end_date,
+                                                                    countries,
+                                                                    aircrafts,
+                                                                    weapons)[[column]])))
+    }
+
+  WW1_selected <- reactive(WW1_string %c% input$which_war)
+  
+  WW2_selected <- reactive(WW2_string %c% input$which_war)
+  
+  Korea_selected <- reactive(Korea_string %c% input$which_war)
+  
+  Vietnam_selected <- reactive(Vietnam_string %c% input$which_war)
+
+  WW1_selection <- reactive({
+    if (all(length(input$dateRange) == 2L, 
+            length(input$country)   >= 1L, 
+            length(input$aircraft)  >= 1L, 
+            length(input$weapon)    >= 1L)) {
+      filter_selection(WW1_clean, 
+                       input$dateRange[1], 
+                       input$dateRange[2], 
+                       input$country, 
+                       input$aircraft, 
+                       input$weapon)
+    } else {
+      WW1_clean
+    }
+  })
+  
+  WW2_selection <- reactive({
+    if (all(length(input$dateRange) == 2L, 
+            length(input$country)   >= 1L, 
+            length(input$aircraft)  >= 1L, 
+            length(input$weapon)    >= 1L)) {
+      filter_selection(WW2_clean, 
+                       input$dateRange[1], 
+                       input$dateRange[2], 
+                       input$country, 
+                       input$aircraft, 
+                       input$weapon)
+    } else {
+      WW2_clean
+    }
+  })
+  
+  Korea_selection <- reactive({
+    if (all(length(input$dateRange) == 2L, 
+            length(input$country)   >= 1L, 
+            length(input$aircraft)  >= 1L, 
+            length(input$weapon)    >= 1L)) {
+      filter_selection(Korea_clean2, 
+                       input$dateRange[1], 
+                       input$dateRange[2], 
+                       input$country, 
+                       input$aircraft, 
+                       input$weapon)
+    } else {
+      Korea_clean2
+    }
+  })
+  
+  Vietnam_selection <- reactive({
+    if (all(length(input$dateRange) == 2L, 
+            length(input$country)   >= 1L, 
+            length(input$aircraft)  >= 1L, 
+            length(input$weapon)    >= 1L)) {
+      filter_selection(Vietnam_clean, 
+                       input$dateRange[1], 
+                       input$dateRange[2], 
+                       input$country, 
+                       input$aircraft, 
+                       input$weapon)
+    } else {
+      Vietnam_clean
+    }
+  })
+
+  WW1_sample <- reactive({
+    if (WW1_missions_reactive() < input$sample_num) {
+      WW1_selection()
+    } else {
+      sample_n(WW1_selection(), input$sample_num, replace = FALSE)
+    }
+  })
+  
+  WW2_sample <- reactive({
+    if (WW2_missions_reactive() < input$sample_num) {
+      WW2_selection()
+    } else {
+      sample_n(WW2_selection(), input$sample_num, replace = FALSE)
+    }
+  })
+  
+  Korea_sample <- reactive({
+    if (Korea_missions_reactive() < input$sample_num) {
+      Korea_selection()
+    } else {
+      sample_n(Korea_selection(), input$sample_num, replace = FALSE)
+    }
+  })
+  
+  Vietnam_sample <- reactive({
+    if (Vietnam_missions_reactive() < input$sample_num) {
+      Vietnam_selection()
+    } else {
+      sample_n(Vietnam_selection(), input$sample_num, replace = FALSE)
+    }
+  })
+
+  WW1_missions_reactive <- reactive({
+    if (WW1_selected()) {
+      WW1_selection()[, .N]
+    } else 0
+  })
+  
+  WW2_missions_reactive <- reactive({
+    if (WW2_selected()) {
+      WW2_selection()[, .N]
+    } else 0
+  })
+  
+  Korea_missions_reactive <- reactive({
+    if (Korea_selected()) {
+      Korea_selection()[, .N]
+    } else 0
+  })
+  
+  Vietnam_missions_reactive <- reactive({
+    if (Vietnam_selected()) {
+      Vietnam_selection()[, .N]
+    } else 0
+  })
+
+  WW1_flights_reactive <- reactive({
+    if (WW1_selected()) {
+      WW1_selection()[, sum(Aircraft_Attacking_Num, na.rm = TRUE)]
+    } else 0
+  })
+  
+  WW2_flights_reactive <- reactive({
+    if (WW2_selected()) {
+      WW2_selection()[, sum(Aircraft_Attacking_Num, na.rm = TRUE)]
+    } else 0
+  })
+  
+  Korea_flights_reactive <- reactive({
+    if (Korea_selected()) {
+      Korea_selection()[, sum(Aircraft_Attacking_Num, na.rm = TRUE)]
+    } else 0
+  })
+  
+  Vietnam_flights_reactive <- reactive({
+    if (Vietnam_selected()) {
+      Vietnam_selection()[, sum(Aircraft_Attacking_Num, na.rm = TRUE)]
+    } else 0
+  })
+
+  WW1_bombs_reactive <- reactive({
+    if (WW1_selected()) {
+      WW1_selection()[, sum(Weapon_Expended_Num, na.rm = TRUE)]
+    } else 0
+  })
+  
+  WW2_bombs_reactive <- reactive({
+    if (WW2_selected()) {
+      WW2_selection()[, sum(Weapon_Expended_Num, na.rm = TRUE)]
+    } else 0
+  })
+  
+  Korea_bombs_reactive <- reactive({
+    if (Korea_selected()) {
+      Korea_selection()[, sum(Weapon_Expended_Num, na.rm = TRUE)]
+    } else 0
+  })
+  
+  Vietnam_bombs_reactive <- reactive({
+    if (Vietnam_selected()) {
+      Vietnam_selection()[, sum(Weapon_Expended_Num, na.rm = TRUE)]
+    } else 0
+  })
+
+  WW1_weight_reactive <- reactive({
+    if (WW1_selected()) {
+      WW1_selection()[, sum(Weapon_Weight_Pounds, na.rm = TRUE)]
+    } else 0
+  })
+  
+  WW2_weight_reactive <- reactive({
+    if (WW2_selected()) {
+      WW2_selection()[, sum(as.numeric(Weapon_Weight_Pounds), na.rm = TRUE)]
+    } else 0
+  })
+  
+  Korea_weight_reactive <- reactive({
+    if (Korea_selected()) {
+      Korea_selection()[, sum(Weapon_Weight_Pounds, na.rm = TRUE)]
+    } else 0
+  })
+  
+  Vietnam_weight_reactive <- reactive({
+    if (Vietnam_selected()) {
+      Vietnam_selection()[, sum(as.numeric(Weapon_Weight_Pounds), na.rm = TRUE)]
+    } else 0
+  })
+
+  output$table <- DT::renderDataTable({
+    if (WW1_selected()) {
+      datatable(data = WW1_selection() %>% select(WW1_datatable_columns), 
+                rownames = FALSE, 
+                colnames = WW1_datatable_colnames) %>%
+        formatStyle(columns = WW1_datatable_columns, 
+                    background = WW1_background, 
+                    fontWeight = font_weight)
+    } else if (WW2_selected()) {
+      datatable(data = WW2_selection() %>% select(WW2_datatable_columns), 
+                rownames = FALSE, 
+                colnames = WW2_datatable_colnames) %>%
+        formatStyle(columns = WW2_datatable_columns, 
+                    background = WW2_background, 
+                    fontWeight = font_weight)
+    } else if (Korea_selected()) {
+      datatable(data = Korea_selection() %>% select(Korea_datatable_columns), 
+                rownames = FALSE, 
+                colnames = Korea_datatable_colnames) %>%
+        formatStyle(columns = Korea_datatable_columns, 
+                    background = Korea_background, 
+                    fontWeight = font_weight)
+    } else if (Vietnam_selected()) {
+      datatable(data = Vietnam_selection() %>% select(Vietnam_datatable_columns), 
+                rownames = FALSE, 
+                colnames = Vietnam_datatable_colnames) %>%
+        formatStyle(columns = Vietnam_datatable_columns, 
+                    background = Vietnam_background, 
+                    fontWeight = font_weight)
+    } else {
+      datatable(data = data.table(Example = list("Pick a war"), Data = list("to see its data")), 
+                rownames = FALSE) %>%
+        formatStyle(columns = 1:2, 
+                    background = example_background, 
+                    fontWeight = font_weight)
+    }
+  })
+
+  # WW1 histogram
+  output$WW1_hist <- renderPlot({
+    if (input$WW1_sandbox_group == "None") {
+      WW1_hist_plot <- ggplot(mapping = aes(x = WW1_selection()[["Mission_Date"]])) +
+        geom_histogram(bins = input$WW1_hist_slider)
+    } else {
+      group_category <- WW1_categorical[[input$WW1_sandbox_group]]
+      WW1_hist_plot <- ggplot(mapping = aes(x     = WW1_selection()[["Mission_Date"]],
+                                            fill = WW1_selection()[[group_category]])) +
+        geom_freqpoly(bins = input$WW1_hist_slider) +
+        guides(color = guide_legend(title = input$WW1_sandbox_group))
+    }
+    WW1_hist_plot +
+      ggtitle("World War One Histogram") +
+      xlab("Date") +
+      ylab("Number of Missions") +
+      theme_bw()
+  })
+
+  output$WW2_hist <- renderPlot({
+    if (input$WW2_sandbox_group == "None") {
+      WW2_hist_plot <- ggplot(mapping = aes(x = WW2_selection()[["Mission_Date"]])) + 
+        geom_histogram(bins = input$WW2_hist_slider)
+    } else {
+      group_category <- WW2_categorical[[input$WW2_sandbox_group]]
+      WW2_hist_plot <- ggplot(mapping = aes(x     = WW2_selection()[["Mission_Date"]], 
+                                            color = WW2_selection()[[group_category]])) + 
+        geom_freqpoly(bins = input$WW2_hist_slider) + 
+        guides(color = guide_legend(title = input$WW2_sandbox_group))
+    }
+    WW2_hist_plot + 
+      ggtitle("World War Two Histogram") + 
+      xlab("Date") + 
+      ylab("Number of Missions") + 
+      theme_bw()
+  })
+
+  output$Korea_hist <- renderPlot({
+    if (input$Korea_sandbox_group == "None") {
+      Korea_hist_plot <- ggplot(mapping = aes(x = Korea_selection()[["Mission_Date"]])) + 
+        geom_histogram(bins = input$Korea_hist_slider)
+    } else {
+      group_category <- Korea_categorical[[input$Korea_sandbox_group]]
+      Korea_hist_plot <- ggplot(mapping = aes(x     = Korea_selection()[["Mission_Date"]], 
+                                              color = Korea_selection()[[group_category]])) + 
+        geom_freqpoly(bins = input$Korea_hist_slider) + 
+        guides(color = guide_legend(title = input$Korea_sandbox_group))
+    }
+    Korea_hist_plot + 
+      ggtitle("Korean War Histogram") + 
+      xlab("Date") + 
+      ylab("Number of Missions") + 
+      theme_bw()
+  })
+
+  output$Vietnam_hist <- renderPlot({
+    if (input$Vietnam_sandbox_group == "None") {
+      Vietnam_hist_plot <- ggplot(mapping = aes(x = Vietnam_selection()[["Mission_Date"]])) + 
+        geom_histogram(bins = input$Vietnam_hist_slider)
+    } else {
+      group_category <- Vietnam_categorical[[input$Vietnam_sandbox_group]]
+      Vietnam_hist_plot <- ggplot(mapping = aes(x     = Vietnam_selection()[["Mission_Date"]], 
+                                                color = Vietnam_selection()[[group_category]])) + 
+        geom_freqpoly(bins = input$Vietnam_hist_slider) + 
+        guides(color = guide_legend(title = input$Vietnam_sandbox_group))
+    }
+    Vietnam_hist_plot + 
+      ggtitle("Vietnam War Histogram") + 
+      xlab("Date") + 
+      ylab("Number of Missions") + 
+      theme_bw()
+  })
+
+  output$WW1_sandbox <- renderPlot({
+    if (input$WW1_sandbox_ind == "Year") {
+      plot_continuous <- WW1_continuous[[input$WW1_sandbox_dep]]
+      if (input$WW1_sandbox_group == "None") {
+        WW1_sandbox_plot <- ggplot(mapping = aes(x = WW1_selection()[["Year"]], 
+                                                 y = WW1_selection()[[plot_continuous]]))
+      } else {
+        group_category <- WW1_categorical[[input$WW1_sandbox_group]]
+        WW1_sandbox_plot <- ggplot(mapping = aes(x     = WW1_selection()[["Year"]], 
+                                                 y     = WW1_selection()[[plot_continuous]], 
+                                                 fill  = WW1_selection()[[group_category]])) + 
+          guides(fill = guide_legend(title = input$WW1_sandbox_group))
+      }
+      WW1_sandbox_plot <- WW1_sandbox_plot + geom_violin() + stat_summary(fun.y = quartile_points, geom = 'point', position = position_dodge(width = 0.9))
+    } else if (input$WW1_sandbox_ind %c% WW1_categorical_choices) {
+      plot_category <- WW1_categorical[[input$WW1_sandbox_ind]]
+      plot_continuous <- WW1_continuous[[input$WW1_sandbox_dep]]
+      if (input$WW1_sandbox_group == "None") {
+        WW1_sandbox_plot <- ggplot(mapping = aes(x = WW1_selection()[[plot_category]], 
+                                                 y = WW1_selection()[[plot_continuous]]))
+      } else {
+        group_category <- WW1_categorical[[input$WW1_sandbox_group]]
+        WW1_sandbox_plot <- ggplot(mapping = aes(x     = WW1_selection()[[plot_category]], 
+                                                 y     = WW1_selection()[[plot_continuous]], 
+                                                 fill  = WW1_selection()[[group_category]])) + 
+          guides(fill = guide_legend(title = input$WW1_sandbox_group))
+      }
+      WW1_sandbox_plot <- WW1_sandbox_plot + geom_violin() + stat_summary(fun.y = quartile_points, geom = 'point', position = position_dodge(width = 0.9))
+    } else {
+      plot_independent <- WW1_continuous[[input$WW1_sandbox_ind]]
+      plot_dependent <- WW1_continuous[[input$WW1_sandbox_dep]]
+      if (input$WW1_sandbox_group == "None") {
+        WW1_sandbox_plot <- ggplot(mapping = aes(x = WW1_selection()[[plot_independent]], 
+                                                 y = WW1_selection()[[plot_dependent]]))
+      } else {
+        group_category <- WW1_categorical[[input$WW1_sandbox_group]]
+        WW1_sandbox_plot <- ggplot(mapping = aes(x     = WW1_selection()[[plot_independent]], 
+                                                 y     = WW1_selection()[[plot_dependent]], 
+                                                 color = WW1_selection()[[group_category]])) + 
+          guides(color = guide_legend(title = input$WW1_sandbox_group))
+      }
+      WW1_sandbox_plot <- WW1_sandbox_plot + geom_point() + geom_smooth(method = 'lm')
+    }
+    WW1_sandbox_plot + 
+      ggtitle("World War One Sandbox") + 
+      xlab(input$WW1_sandbox_ind) + 
+      ylab(input$WW1_sandbox_dep) + 
+      theme_bw()
+  })
+
+  output$WW2_sandbox <- renderPlot({
+    if (input$WW2_sandbox_ind == "Year") {
+      plot_continuous <- WW2_continuous[[input$WW2_sandbox_dep]]
+      if (input$WW2_sandbox_group == "None") {
+        WW2_sandbox_plot <- ggplot(mapping = aes(x = WW2_selection()[["Year"]], 
+                                                 y = WW2_selection()[[plot_continuous]]))
+      } else {
+        group_category <- WW2_categorical[[input$WW2_sandbox_group]]
+        WW2_sandbox_plot <- ggplot(mapping = aes(x     = WW2_selection()[["Year"]], 
+                                                 y     = WW2_selection()[[plot_continuous]], 
+                                                 group = WW2_selection()[[group_category]], 
+                                                 fill  = WW2_selection()[[group_category]])) + 
+          guides(fill = guide_legend(title = input$WW2_sandbox_group))
+      }
+      WW2_sandbox_plot <- WW2_sandbox_plot + geom_violin() + stat_summary(fun.y = quartile_points, geom = 'point')
+    } else if (input$WW2_sandbox_ind %c% WW2_categorical_choices) {
+      plot_category <- WW2_categorical[[input$WW2_sandbox_ind]]
+      plot_continuous <- WW2_continuous[[input$WW2_sandbox_dep]]
+      if (input$WW2_sandbox_group == "None") {
+        WW2_sandbox_plot <- ggplot(mapping = aes(x = WW2_selection()[[plot_category]], 
+                                                 y = WW2_selection()[[plot_continuous]]))
+      } else {
+        group_category <- WW2_categorical[[input$WW2_sandbox_group]]
+        WW2_sandbox_plot <- ggplot(mapping = aes(x     = WW2_selection()[[plot_category]], 
+                                                 y     = WW2_selection()[[plot_continuous]], 
+                                                 group = WW2_selection()[[group_category]], 
+                                                 fill  = WW2_selection()[[group_category]])) + 
+          guides(fill = guide_legend(title = input$WW2_sandbox_group))
+      }
+      WW2_sandbox_plot <- WW2_sandbox_plot + geom_violin() + stat_summary(fun.y = quartile_points, geom = 'point')
+    } else {
+      plot_independent <- WW2_continuous[[input$WW2_sandbox_ind]]
+      plot_dependent <- WW2_continuous[[input$WW2_sandbox_dep]]
+      if (input$WW2_sandbox_group == "None") {
+        WW2_sandbox_plot <- ggplot(mapping = aes(x = WW2_selection()[[plot_independent]], 
+                                                 y = WW2_selection()[[plot_dependent]]))
+      } else {
+        group_category <- WW2_categorical[[input$WW2_sandbox_group]]
+        WW2_sandbox_plot <- ggplot(mapping = aes(x     = WW2_selection()[[plot_independent]], 
+                                                 y     = WW2_selection()[[plot_dependent]], 
+                                                 color = WW2_selection()[[group_category]])) + 
+          guides(color = guide_legend(title = input$WW2_sandbox_group))
+      }
+      WW2_sandbox_plot <- WW2_sandbox_plot + geom_point() + geom_smooth(method = 'lm')
+    }
+    WW2_sandbox_plot + 
+      ggtitle("World War Two Sandbox") + 
+      xlab(input$WW2_sandbox_ind) + 
+      ylab(input$WW2_sandbox_dep) + 
+      theme_bw()
+  })
+
+  output$Korea_sandbox <- renderPlot({
+    if (input$Korea_sandbox_ind == "Year") {
+      plot_continuous <- Korea_continuous[[input$Korea_sandbox_dep]]
+      if (input$Korea_sandbox_group == "None") {
+        Korea_sandbox_plot <- ggplot(mapping = aes(x = Korea_selection()[["Year"]], 
+                                                   y = Korea_selection()[[plot_continuous]]))
+      } else {
+        group_category <- Korea_categorical[[input$Korea_sandbox_group]]
+        Korea_sandbox_plot <- ggplot(mapping = aes(x     = Korea_selection()[["Year"]], 
+                                                   y     = Korea_selection()[[plot_continuous]], 
+                                                   group = Korea_selection()[[group_category]], 
+                                                   fill  = Korea_selection()[[group_category]])) + 
+          guides(fill = guide_legend(title = input$Korea_sandbox_group))
+      }
+      Korea_sandbox_plot <- Korea_sandbox_plot + geom_violin() + stat_summary(fun.y = quartile_points, geom = 'point')
+    } else if (input$Korea_sandbox_ind %c% Korea_categorical_choices) {
+      plot_category <- Korea_categorical[[input$Korea_sandbox_ind]]
+      plot_continuous <- Korea_continuous[[input$Korea_sandbox_dep]]
+      if (input$Korea_sandbox_group == "None") {
+        Korea_sandbox_plot <- ggplot(mapping = aes(x = Korea_selection()[[plot_category]], 
+                                                   y = Korea_selection()[[plot_continuous]]))
+      } else {
+        group_category <- Korea_categorical[[input$Korea_sandbox_group]]
+        Korea_sandbox_plot <- ggplot(mapping = aes(x     = Korea_selection()[[plot_category]], 
+                                                   y     = Korea_selection()[[plot_continuous]], 
+                                                   group = Korea_selection()[[group_category]], 
+                                                   fill  = Korea_selection()[[group_category]])) + 
+          guides(fill = guide_legend(title = input$Korea_sandbox_group))
+      }
+      Korea_sandbox_plot <- Korea_sandbox_plot + geom_violin() + stat_summary(fun.y = quartile_points, geom = 'point')
+    } else {
+      plot_independent <- Korea_continuous[[input$Korea_sandbox_ind]]
+      plot_dependent <- Korea_continuous[[input$Korea_sandbox_dep]]
+      if (input$Korea_sandbox_group == "None") {
+        Korea_sandbox_plot <- ggplot(mapping = aes(x = Korea_selection()[[plot_independent]], 
+                                                   y = Korea_selection()[[plot_dependent]]))
+      } else {
+        group_category <- Korea_categorical[[input$Korea_sandbox_group]]
+        Korea_sandbox_plot <- ggplot(mapping = aes(x     = Korea_selection()[[plot_independent]], 
+                                                   y     = Korea_selection()[[plot_dependent]], 
+                                                   color = Korea_selection()[[group_category]])) + 
+          guides(color = guide_legend(title = input$Korea_sandbox_group))
+      }
+      Korea_sandbox_plot <- Korea_sandbox_plot + geom_point() + geom_smooth(method = 'lm')
+    }
+    Korea_sandbox_plot + 
+      ggtitle("Korean War Sandbox") + 
+      xlab(input$Korea_sandbox_ind) + 
+      ylab(input$Korea_sandbox_dep) + 
+      theme_bw()
+  })
+
+  output$Vietnam_sandbox <- renderPlot({
+    if (input$Vietnam_sandbox_ind == "Year") {
+      plot_continuous <- Vietnam_continuous[[input$Vietnam_sandbox_dep]]
+      if (input$Vietnam_sandbox_group == "None") {
+        Vietnam_sandbox_plot <- ggplot(mapping = aes(x = Vietnam_selection()[["Year"]], 
+                                                     y = Vietnam_selection()[[plot_continuous]]))
+      } else {
+        group_category <- Vietnam_categorical[[input$Vietnam_sandbox_group]]
+        Vietnam_sandbox_plot <- ggplot(mapping = aes(x     = Vietnam_selection()[["Year"]], 
+                                                     y     = Vietnam_selection()[[plot_continuous]], 
+                                                     group = Vietnam_selection()[[group_category]], 
+                                                     fill  = Vietnam_selection()[[group_category]])) + 
+          guides(fill = guide_legend(title = input$Vietnam_sandbox_group))
+      }
+      Vietnam_sandbox_plot <- Vietnam_sandbox_plot + geom_violin() + stat_summary(fun.y = quartile_points, geom = 'point')
+    } else if (input$Vietnam_sandbox_ind %c% Vietnam_categorical_choices) {
+      plot_category <- Vietnam_categorical[[input$Vietnam_sandbox_ind]]
+      plot_continuous <- Vietnam_continuous[[input$Vietnam_sandbox_dep]]
+      if (input$Vietnam_sandbox_group == "None") {
+        Vietnam_sandbox_plot <- ggplot(mapping = aes(x = Vietnam_selection()[[plot_category]], 
+                                                     y = Vietnam_selection()[[plot_continuous]]))
+      } else {
+        group_category <- Vietnam_categorical[[input$Vietnam_sandbox_group]]
+        Vietnam_sandbox_plot <- ggplot(mapping = aes(x     = Vietnam_selection()[[plot_category]], 
+                                                     y     = Vietnam_selection()[[plot_continuous]], 
+                                                     group = Vietnam_selection()[[group_category]], 
+                                                     fill  = Vietnam_selection()[[group_category]])) + 
+          guides(fill = guide_legend(title = input$Vietnam_sandbox_group))
+      }
+      Vietnam_sandbox_plot <- Vietnam_sandbox_plot + geom_violin() + stat_summary(fun.y = quartile_points, geom = 'point')
+    } else {
+      plot_independent <- Vietnam_continuous[[input$Vietnam_sandbox_ind]]
+      plot_dependent <- Vietnam_continuous[[input$Vietnam_sandbox_dep]]
+      if (input$Vietnam_sandbox_group == "None") {
+        Vietnam_sandbox_plot <- ggplot(mapping = aes(x = Vietnam_selection()[[plot_independent]], 
+                                                     y = Vietnam_selection()[[plot_dependent]]))
+      } else {
+        group_category <- Vietnam_categorical[[input$Vietnam_sandbox_group]]
+        Vietnam_sandbox_plot <- ggplot(mapping = aes(x     = Vietnam_selection()[[plot_independent]], 
+                                                     y     = Vietnam_selection()[[plot_dependent]], 
+                                                     color = Vietnam_selection()[[group_category]])) + 
+          guides(color = guide_legend(title = input$Vietnam_sandbox_group))
+      }
+      Vietnam_sandbox_plot <- Vietnam_sandbox_plot + geom_point() + geom_smooth(method = 'lm')
+    }
+    Vietnam_sandbox_plot + 
+      ggtitle("Vietnam War Sandbox") + 
+      xlab(input$Vietnam_sandbox_ind) + 
+      ylab(input$Vietnam_sandbox_dep) + 
+      theme_bw()
+  })
+
+clear_WW1_overview <- function() {
+    overview_proxy %>% clearGroup(group = "WW1_overview")
+  }
+
+  draw_WW1_overview <- function(proxy) {
+    WW1_opacity <- calculate_opacity(min(WW1_missions_reactive(), input$sample_num), input$overview_map_zoom)
+    proxy %>% addCircles(data = WW1_sample(),
+                         lat = ~Target_Latitude,
+                         lng = ~Target_Longitude,
+                         color = WW1_color,
+                         weight = point_weight + input$overview_map_zoom,
+                         opacity = WW1_opacity,
+                         fill = point_fill,
+                         fillColor = WW1_color,
+                         fillOpacity = WW1_opacity,
+                         popup = ~tooltip,
+                         group = "WW1_overview")
+  }
+
+clear_WW1_civilian <- function() {
+    civilian_proxy %>% clearGroup(group = "WW1_heatmap")
+  }
+
+draw_WW1_civilian <- function() {
+    civilian_proxy %>% addHeatmap(lng = WW1_selection()$Target_Longitude, 
+                         lat = WW1_selection()$Target_Latitude, 
+                         blur = civilian_blur, 
+                         max = civilian_max, 
+                         radius = civilian_radius, 
+                         group = "WW1_heatmap")
+  }
+
 

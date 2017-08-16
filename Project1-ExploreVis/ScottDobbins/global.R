@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.8
-# @date 2017-08-11 23:30
+# @version 0.9.8.1
+# @date 2017-08-15 21:00
 
 
 ### Import Packages ---------------------------------------------------------
@@ -11,6 +11,7 @@ library(leaflet)        # map source
 library(leaflet.extras) # map extras
 library(ggplot2)        # plots and graphs
 library(assertthat)     # assertions for errors
+library(memoise)        # caching
 library(dplyr)          # data processing
 library(purrr)          # data processing
 library(lubridate)      # time processing
@@ -81,7 +82,9 @@ has_clean_data <- function() {
 
 if (use_parallel) {
   library(parallel)
-  cores <- detectCores(logical = TRUE)
+  all_cores <- detectCores(logical = TRUE)
+  real_cores_only <- detectCores(logical = FALSE)
+  cores <- real_cores_only
 } else {
   cores <- 1L
 }
@@ -137,11 +140,9 @@ if (!has_clean_data()) {
 
 ### Set Keys ----------------------------------------------------------------
 
-setkey(WW1_clean,     Mission_Date, Unit_Country, Aircraft_Type, Weapon_Type)
-setkey(WW2_clean,     Mission_Date, Unit_Country, Aircraft_Type, Weapon_Type)
-setkey(Korea_clean1,  Mission_Date, Unit_Country, Aircraft_Type, Weapon_Type)
-setkey(Korea_clean2,  Mission_Date, Unit_Country, Aircraft_Type, Weapon_Type)
-setkey(Vietnam_clean, Mission_Date, Unit_Country, Aircraft_Type, Weapon_Type)
+keys <- c("Mission_Date", "Unit_Country", "Aircraft_Type", "Weapon_Type")
+walk(list(WW1_clean, WW2_clean, Korea_clean1, Korea_clean2, Vietnam_clean), 
+     ~setkeyv(., cols = keys))
 
 
 ### Create Samples ----------------------------------------------------------
@@ -153,3 +154,22 @@ if (debug_mode_on) {
   Korea_sample2 <-  sample_n(Korea_clean2,  debug_sample_size)
   Vietnam_sample <- sample_n(Vietnam_clean, debug_sample_size)
 }
+
+
+### More Globals ------------------------------------------------------------
+
+# for iteration
+war_data <- list(WW1_clean, WW2_clean, Korea_clean2, Vietnam_clean)
+setattr(war_data, "names", war_tags)
+
+war_color <- list(WW1_color, WW2_color, Korea_color, Vietnam_color)
+setattr(war_color, "names", war_tags)
+
+war_background <- list(WW1_background, WW2_background, Korea_background, Vietnam_background)
+setattr(war_background, "names", war_tags)
+
+war_datatable_columns <- list(WW1_datatable_columns, WW2_datatable_columns, Korea_datatable_columns, Vietnam_datatable_columns)
+setattr(war_datatable_columns, "names", war_tags)
+
+war_datatable_colnames <- list(WW1_datatable_colnames, WW2_datatable_colnames, Korea_datatable_colnames, Vietnam_datatable_colnames)
+setattr(war_datatable_colnames, "names", war_tags)

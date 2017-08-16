@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.8
-# @date 2017-08-11 23:30
+# @version 0.9.8.1
+# @date 2017-08-15 21:00
 
 
 ### Fix Dates ---------------------------------------------------------------
@@ -22,11 +22,11 @@ Vietnam_bombs[is.na(Mission_Date),
               `:=`(Mission_Date = paste(Year, Month, Day, sep = "-"))]
 
 cols <- c("Year", "Month", "Day")
-WW1_bombs[, (cols) := mclapply(.SD, factor, mc.cores = cores), .SDcols = cols]
-WW2_bombs[, (cols) := mclapply(.SD, factor, mc.cores = cores), .SDcols = cols]
-Korea_bombs1[, (cols) := mclapply(.SD, factor, mc.cores = cores), .SDcols = cols]
-Korea_bombs2[, (cols) := mclapply(.SD, factor, mc.cores = cores), .SDcols = cols]
-Vietnam_bombs[, (cols) := mclapply(.SD, factor, mc.cores = cores), .SDcols = cols]
+WW1_bombs[, (cols) := lapply(.SD, factor), .SDcols = cols]
+WW2_bombs[, (cols) := lapply(.SD, factor), .SDcols = cols]
+Korea_bombs1[, (cols) := lapply(.SD, factor), .SDcols = cols]
+Korea_bombs2[, (cols) := lapply(.SD, factor), .SDcols = cols]
+Vietnam_bombs[, (cols) := lapply(.SD, factor), .SDcols = cols]
 
 Korea_bombs1[["Year"]] %>% 
   format_levels(function(x) paste0("19", x))
@@ -61,11 +61,8 @@ Vietnam_bombs[, Mission_Date := ymd(Mission_Date)]
 
 debug_message("setting keys")
 
-setkey(WW1_bombs,     Mission_Date)
-setkey(WW2_bombs,     Mission_Date)
-setkey(Korea_bombs1,  Mission_Date)
-setkey(Korea_bombs2,  Mission_Date)
-setkey(Vietnam_bombs, Mission_Date)
+walk(list(WW1_bombs, WW2_bombs, Korea_bombs1, Korea_bombs2, Vietnam_bombs), 
+     ~setkeyv(., "Mission_Date"))
 
 
 ### WW1 Edits ---------------------------------------------------------------
@@ -79,12 +76,12 @@ cols <- c("ID",
           "Weapon_Expended_Num", 
           "Casualties_Friendly", 
           "Bomb_Altitude_Feet")
-WW1_bombs[, (cols) := mclapply(.SD, as.integer, mc.cores = cores), .SDcols = cols]
+WW1_bombs[, (cols) := lapply(.SD, as.integer), .SDcols = cols]
 
 # general fixes, numerics
 cols <- c("Aircraft_Bombload_Pounds", 
           "Weapon_Weight_Pounds")
-WW1_bombs[, (cols) := mclapply(.SD, round_to_int, mc.cores = cores), .SDcols = cols]
+WW1_bombs[, (cols) := lapply(.SD, round_to_int), .SDcols = cols]
 
 # specific fixes, numerics
 WW1_bombs[Aircraft_Attacking_Num == 0L | Aircraft_Attacking_Num >= 99L, 
@@ -101,10 +98,10 @@ WW1_bombs[Bomb_Altitude_Feet == 0L,
 WW1_bombs[Bomb_Altitude_Feet > WW1_altitude_max_feet, 
           `:=`(Bomb_Altitude_Feet = WW1_altitude_max_feet)]
 
-WW1_bombs[!between(Target_Latitude, -90, 90), 
+WW1_bombs[Target_Latitude %!between% c(-90, 90), 
           `:=`(Target_Latitude = NA_real_)]
 
-WW1_bombs[!between(Target_Longitude, -180, 180), 
+WW1_bombs[Target_Longitude %!between% c(-180, 180), 
           `:=`(Target_Latitude = NA_real_)]
 
 WW1_bombs[Target_Latitude == 0 & Target_Longitude == 0, 
@@ -188,7 +185,7 @@ cols <- c("Aircraft_Attacking_Num",
           "Aircraft_Fail_WX_Num", 
           "Aircraft_Fail_Mech_Num", 
           "Aircraft_Fail_Misc_Num")
-WW2_bombs[, (cols) := mclapply(.SD, as.integer, mc.cores = cores), .SDcols = cols]
+WW2_bombs[, (cols) := lapply(.SD, as.integer), .SDcols = cols]
 
 # quick fixes
 WW2_bombs %>% 
@@ -217,6 +214,8 @@ WW2_bombs[, Weapon_Frag_Unit_Weight := as.integer(if_else(Weapon_Frag_Unit_Weigh
 WW2_bombs[grepl(pattern = ":", Unit_Squadron), 
           `:=`(Bomb_Time = Unit_Squadron, 
                Unit_Squadron = "")]
+WW2_bombs[["Unit_Squadron"]] %>% 
+  drop_similar_levels(drop = ":", exact = TRUE)
 
 WW2_bombs[Sighting_Method_Code == "PFF", 
           `:=`(Sighting_Method_Code = "", 
@@ -227,11 +226,9 @@ WW2_bombs[Sighting_Method_Code == "VISUAL",
 WW2_bombs[Sighting_Method_Code == "" & 
             Sighting_Method_Explanation == "VISUAL", 
           `:=`(Sighting_Method_Code = "1")]
-WW2_bombs[Sighting_Method_Code == "0" | 
-            Sighting_Method_Code == "7" | 
-            Sighting_Method_Code == "9", 
-          `:=`(Sighting_Method_Code = "", 
-               Sighting_Method_Explanation = "")]
+WW2_bombs[["Sighting_Method_Code"]] %>% 
+  drop_levels(drop = c("0", "9", "PFF", "VISUAL")) %>% 
+  recode_levels(changes = c("FFF" = "F.F.F."))
 
 WW2_bombs[(!near(Bomb_Altitude * 100, Bomb_Altitude_Feet) | (is.na(Bomb_Altitude) & !is.na(Bomb_Altitude_Feet))) & 
             is.na(Weapon_Expl_Num) & 
@@ -279,9 +276,9 @@ WW2_bombs[, Target_Priority_Code := as.integer(if_else(Target_Priority_Code == "
                                                        NA_character_, 
                                                        Target_Priority_Code))] # gets forced to character somehow
 
-WW2_bombs[!between(Target_Latitude, -90, 90), 
+WW2_bombs[Target_Latitude %!between% c(-90, 90), 
           `:=`(Target_Latitude = NA_real_)]
-WW2_bombs[!between(Target_Longitude, -180, 180), 
+WW2_bombs[Target_Longitude %!between% c(-180, 180), 
           `:=`(Target_Latitude = NA_real_)]
 WW2_bombs[Target_Latitude == 0 & Target_Longitude == 0, 
           `:=`(Target_Latitude = NA_real_, 
@@ -301,14 +298,14 @@ WW2_bombs[Weapon_Incd_Type == "100 LB WP (WHITE PHOSPHROUS)" &
             is.na(Weapon_Incd_Tons), 
           `:=`(Weapon_Incd_Tons = 1)]
 
-WW2_bombs[Weapon_Expl_Unit_Weight %like% " KG", 
+WW2_bombs[Weapon_Expl_Unit_Weight %exactlylike% " KG", 
           `:=`(Weapon_Expl_Unit_Weight = round_to_int(Weapon_Expl_Unit_Weight * 2.2))]
-WW2_bombs[Weapon_Incd_Unit_Weight %like% " KG", 
+WW2_bombs[Weapon_Incd_Unit_Weight %exactlylike% " KG", 
           `:=`(Weapon_Incd_Unit_Weight = round_to_int(Weapon_Incd_Unit_Weight * 2.2))]
-WW2_bombs[Weapon_Frag_Unit_Weight %like% " KG", 
+WW2_bombs[Weapon_Frag_Unit_Weight %exactlylike% " KG", 
           `:=`(Weapon_Frag_Unit_Weight = round_to_int(Weapon_Frag_Unit_Weight * 2.2))]
 
-# general fixes, times
+# general fixes, times #*** fix the below two using levels
 WW2_bombs[, Bomb_Time := format_military_times(Bomb_Time)]
 
 # specific fixes, times
@@ -321,6 +318,7 @@ WW2_bombs %>% keep(is.factor) %>%
 
 # editing string levels
 WW2_bombs[["Unit_Squadron"]] %>% 
+  drop_levels(drop = "0.458333333") %>% 
   recode_similar_levels(changes = c(" SQUADRON" = " (SQ?)\\b")) %>% 
   recode_similar_levels(exact = TRUE, 
                         changes = c("SQUADRON" = "SQDN", 
@@ -331,10 +329,6 @@ WW2_bombs[["Unit_Squadron"]] %>%
                                     "FLIGHT SQUADRON" = "FS", 
                                     "BOMBARDMENT GROUP" = "BG", 
                                     "BOMBARDMENT SQUADRON" = "BS"))
-
-WW2_bombs[["Weapon_Expl_Type"]] %>% 
-  recode_similar_levels(exact = TRUE, 
-                        changes = c("0 LB GP" = "0 GP"))
 
 WW2_bombs[["Unit_Service"]] %>% 
   recode_levels(changes = c("RAAF" = "RAAF/NEI"))
@@ -348,6 +342,8 @@ WW2_bombs[["Aircraft_Type"]] %>%
   format_levels(format_aircraft_types %,% proper_noun_phrase_aircraft_vectorized)
 
 WW2_bombs[["Weapon_Expl_Type"]] %>% 
+  recode_similar_levels(exact = TRUE, 
+                        changes = c("0 LB GP" = "0 GP")) %>% 
   recode_levels(changes = c("TORPEDO" = "TORPEDOES", 
                             "TORPEDO" = "TORPEDOES MISC", 
                             "40 LB EXPLOSIVE" = "UNK CODE 20 110 LB EXPLOSIVE", 
@@ -365,8 +361,8 @@ WW2_bombs[["Target_Type"]] %>%
   drop_similar_levels(drop = "\\b(UNID|UNDENT)") %>% 
   format_levels(cleanup_targets %,% tolower)
 
-WW2_bombs[grem(pattern = "[ NSEW]+", Target_City) %like% "^[0-9.]+$", 
-          `:=`(Target_City = "")] #*** later try to figure out how to do this with your new functions
+WW2_bombs[["Target_City"]] %>% 
+  drop_levels_formula(expr = (grem(., pattern = "[ NSEW]+") %like% "^[0-9.]+$"))
 
 WW2_bombs[["Target_Country"]] %>% 
   drop_similar_levels(drop = "UNKNOWN", exact = TRUE)
@@ -376,9 +372,6 @@ WW2_bombs[["Target_City"]] %>%
 
 WW2_bombs[["Target_Industry"]] %>% 
   drop_levels(drop = "UNIDENTIFIED TARGETS")
-
-WW2_bombs[["Unit_Squadron"]] %>% 
-  drop_levels(drop = "0.458333333")
 
 WW2_bombs %>% select("Target_Priority_Explanation", 
                      "Sighting_Method_Explanation", 
@@ -417,7 +410,7 @@ cols <- c("Aircraft_Dispatched_Num",
           "Enemy_Aircraft_Destroyed_Probable", 
           "Rocket_Num", 
           "Bullet_Rounds")
-Korea_bombs1[, (cols) := mclapply(.SD, as.integer, mc.cores = cores), .SDcols = cols]
+Korea_bombs1[, (cols) := lapply(.SD, as.integer), .SDcols = cols]
 
 # new columns
 Korea_bombs1[, Weapon_Weight_Pounds := round_to_int(Weapon_Weight_Tons * 2000)]
@@ -453,7 +446,7 @@ cols <- c("Aircraft_Attacking_Num",
           "Sortie_Duplicates", 
           "Aircraft_Aborted_Num", 
           "Aircraft_Bombload_Calculated_Pounds")
-Korea_bombs2[, (cols) := mclapply(.SD, as.integer, mc.cores = cores), .SDcols = cols]
+Korea_bombs2[, (cols) := lapply(.SD, as.integer), .SDcols = cols]
 
 # column error fixes
 Korea_bombs2[Bomb_Altitude_Feet_Range != "" & !(Bomb_Altitude_Feet_Range %like% "[0-9]+ ?- ?[0-9]*"), 
@@ -463,22 +456,24 @@ Korea_bombs2[Bomb_Altitude_Feet_Range == "" &
                Bomb_Damage_Assessment %like% "^[0-9]+$", 
              `:=`(Bomb_Altitude_Feet_Range = Bomb_Damage_Assessment, 
                   Bomb_Damage_Assessment = "")]
-Korea_bombs2[Target_Name %like% "ission" | 
-               Target_Name %like% "ccomplished" | 
-               Target_Name %like% "erformed" | 
-               Target_Name %like% "B[CO][APR]", 
+Korea_bombs2[Target_Name %like% "ission|ccomplished|erformed|B[CO][APR]", 
              `:=`(Bomb_Damage_Assessment = Target_Name, 
                   Target_Name = "")]
-Korea_bombs2[Target_Type %like% "ccomplished" | 
-               Target_Type %like% "erformed", 
+Korea_bombs2[["Target_Name"]] %>% 
+  drop_similar_levels(drop = c("ission|ccomplished|erformed|B[CO][APR]"))
+
+Korea_bombs2[Target_Type %exactlylike% "ccomplished|erformed", 
              `:=`(Bomb_Damage_Assessment = Target_Type, 
                   Target_Type = "")]
+Korea_bombs2[["Target_Type"]] %>% 
+  drop_similar_levels(drop = "ccomplished|erformed|UN[A-Z]*OWN") %>% 
+  format_levels(toupper %,% cleanup_targets %,% tolower)
 
 # new columns
 cols <- c("Bomb_Altitude_Feet_Low", 
           "Bomb_Altitude_Feet_High")
 Korea_bombs2[, (cols) := tstrsplit(Bomb_Altitude_Feet_Range, " ?- ?", keep = 1:2)]
-Korea_bombs2[, (cols) := mclapply(.SD, as.integer, mc.cores = cores), .SDcols = cols]
+Korea_bombs2[, (cols) := lapply(.SD, as.integer), .SDcols = cols]
 
 Korea_bombs2[, Weapon_Unit_Weight := grem(pattern = "[^0-9][ -~]*", Weapon_Type)]
 Korea_bombs2[, Weapon_Unit_Weight := as.integer(if_else(Weapon_Unit_Weight %like% "[0-9]+", 
@@ -523,9 +518,9 @@ Korea_bombs2[!(Aircraft_Lost_Num == "1" | Aircraft_Lost_Num == "2" | Aircraft_Lo
                   Bomb_Damage_Assessment = Aircraft_Lost_Num)]
 Korea_bombs2[, Aircraft_Lost_Num := as.integer(Aircraft_Lost_Num)] # cleaning data type due to bad data
 
-Korea_bombs2[!between(Target_Latitude, -90, 90), 
+Korea_bombs2[Target_Latitude %!between% c(-90, 90), 
              `:=`(Target_Latitude = NA_real_)]
-Korea_bombs2[!between(Target_Longitude, -180, 180), 
+Korea_bombs2[Target_Longitude %!between% c(-180, 180), 
              `:=`(Target_Latitude = NA_real_)]
 Korea_bombs2[Target_Latitude == 0 & Target_Longitude == 0, 
              `:=`(Target_Latitude = NA_real_, 
@@ -557,10 +552,6 @@ Korea_bombs2[["Nose_Fuze"]] %>%
   recode_levels(changes = c("Instantaneous" = "instantaneous")) %>% 
   drop_levels(drop = "Unknown to poor results.")
 
-Korea_bombs2[["Target_Type"]] %>% 
-  drop_similar_levels(drop = "UN[A-Z]*OWN") %>% 
-  format_levels(toupper %,% cleanup_targets %,% tolower)
-
 Korea_bombs2[["Bomb_Sighting_Method"]] %>% 
   format_levels(tolower)
 
@@ -577,7 +568,7 @@ cols <- c("ID",
           "Weapon_Jettisoned_Num", 
           "Weapon_Returned_Num", 
           "Weapon_Weight_Loaded")
-Vietnam_bombs[, (cols) := mclapply(.SD, as.integer, mc.cores = cores), .SDcols = cols]
+Vietnam_bombs[, (cols) := lapply(.SD, as.integer), .SDcols = cols]
 
 # specific fixes, numerics
 Vietnam_bombs[Aircraft_Attacking_Num == 0L | Aircraft_Attacking_Num >= 99L, 
@@ -599,9 +590,9 @@ Vietnam_bombs[is_NA_or_0L(Weapon_Expended_Num) &
                    Weapon_Jettisoned_Num = NA_integer_, 
                    Weapon_Returned_Num = NA_integer_)]
 
-Vietnam_bombs[!between(Target_Latitude, -90, 90), 
+Vietnam_bombs[Target_Latitude %!between% c(-90, 90), 
               `:=`(Target_Latitude = NA_real_)]
-Vietnam_bombs[!between(Target_Longitude, -180, 180), 
+Vietnam_bombs[Target_Longitude %!between% c(-180, 180), 
               `:=`(Target_Latitude = NA_real_)]
 Vietnam_bombs[Target_Latitude == 0 & Target_Longitude == 0, 
               `:=`(Target_Latitude = NA_real_, 

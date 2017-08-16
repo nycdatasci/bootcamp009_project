@@ -1,15 +1,23 @@
 # @author Scott Dobbins
-# @version 0.9.8
-# @date 2017-08-11 23:30
+# @version 0.9.8.1
+# @date 2017-08-15 21:00
 
 
 ### Overview Tab ------------------------------------------------------------
 
+# war tags
+WW1 <- "WW1"
+WW2 <- "WW2"
+Korea <- "Korea"
+Vietnam <- "Vietnam"
+war_tags <- c(WW1, WW2, Korea, Vietnam)
+
 # war labels
-WW1_string = "World War I (1914-1918)"
-WW2_string = "World War II (1939-1945)"
-Korea_string = "Korean War (1950-1953)"
-Vietnam_string = "Vietnam War (1955-1975)"
+WW1_label = "World War I (1914-1918)"
+WW2_label = "World War II (1939-1945)"
+Korea_label = "Korean War (1950-1953)"
+Vietnam_label = "Vietnam War (1955-1975)"
+war_labels <- c(WW1_label, WW2_label, Korea_label, Vietnam_label)
 
 
 ### Data Tab ----------------------------------------------------------------
@@ -17,7 +25,7 @@ Vietnam_string = "Vietnam War (1955-1975)"
 # columns
 WW1_datatable_columns <-     c("Mission_Date", "Unit_Country", "Target_Country", "Target_City", "Target_Type", "Aircraft_Type", "Aircraft_Attacking_Num", "Weapon_Type", "Weapon_Expended_Num", "Weapon_Weight_Pounds")
 WW2_datatable_columns <-     c("Mission_Date", "Unit_Country", "Target_Country", "Target_City", "Target_Type", "Aircraft_Type", "Aircraft_Attacking_Num", "Weapon_Type", "Weapon_Expended_Num", "Weapon_Weight_Pounds")
-Korea_datatable_columns2 <-  c("Mission_Date", "Unit_Country", "Target_Name",                   "Target_Type", "Aircraft_Type", "Aircraft_Attacking_Num", "Weapon_Type", "Weapon_Expended_Num", "Weapon_Weight_Pounds")
+Korea_datatable_columns <-  c("Mission_Date", "Unit_Country", "Target_Name",                   "Target_Type", "Aircraft_Type", "Aircraft_Attacking_Num", "Weapon_Type", "Weapon_Expended_Num", "Weapon_Weight_Pounds")
 Vietnam_datatable_columns <- c("Mission_Date", "Unit_Country", "Target_Country",                "Target_Type", "Aircraft_Type", "Aircraft_Attacking_Num", "Weapon_Type", "Weapon_Expended_Num", "Weapon_Weight_Pounds")
 
 # column names
@@ -218,3 +226,56 @@ Vietnam_continuous = list("Number of Attacking Aircraft" = "Aircraft_Attacking_N
                           "Number of Bombs Jettisoned" = "Weapon_Jettisoned_Num", 
                           "Number of Bombs Returned" = "Weapon_Returned_Num", 
                           "Flight Hours" = "Flight_Hours")
+
+
+### Lookup Tables -----------------------------------------------------------
+
+war_categorical <- list(WW1_categorical, WW2_categorical, Korea_categorical, Vietnam_categorical)
+setattr(war_categorical, "names", war_tags)
+
+war_categorical_choices <- list(WW1_categorical_choices, WW2_categorical_choices, Korea_categorical_choices, Vietnam_categorical_choices)
+setattr(war_categorical_choices, "names", war_tags)
+
+war_continuous <- list(WW1_continuous, WW2_continuous, Korea_continuous, Vietnam_continuous)
+setattr(war_continuous, "names", war_tags)
+
+war_continuous_choices <- list(WW1_continuous_choices, WW2_continuous_choices, Korea_continuous_choices, Vietnam_continuous_choices)
+setattr(war_continuous_choices, "names", war_tags)
+
+
+### Graph Titles ------------------------------------------------------------
+
+WW1_histogram_title <- "World War One Histogram"
+WW2_histogram_title <- "World War Two Histogram"
+Korea_histogram_title <- "Korean War Histogram"
+Vietnam_histogram_title <- "Vietnam War Histogram"
+
+war_histogram_title <- list(WW1_histogram_title, WW2_histogram_title, Korea_histogram_title, Vietnam_histogram_title)
+setattr(war_histogram_title, "names", war_tags)
+
+WW1_sandbox_title <- "World War One Sandbox"
+WW2_sandbox_title <- "World War Two Sandbox"
+Korea_sandbox_title <- "Korean War Sandbox"
+Vietnam_sandbox_title <- "Vietnam War Sandbox"
+
+war_sandbox_title <- list(WW1_sandbox_title, WW2_sandbox_title, Korea_sandbox_title, Vietnam_sandbox_title)
+setattr(war_sandbox_title, "names", war_tags)
+
+
+### Map Layers --------------------------------------------------------------
+
+WW1_overview <- "WW1_overview"
+WW2_overview <- "WW2_overview"
+Korea_overview <- "Korea_overview"
+Vietnam_overview <- "Vietnam_overview"
+
+war_overview <- list(WW1_overview, WW2_overview, Korea_overview, Vietnam_overview)
+setattr(war_overview, "names", war_tags)
+
+WW1_civilian <- "WW1_civilian"
+WW2_civilian <- "WW2_civilian"
+Korea_civilian <- "Korea_civilian"
+Vietnam_civilian <- "Vietnam_civilian"
+
+war_civilian <- list(WW1_civilian, WW2_civilian, Korea_civilian, Vietnam_civilian)
+setattr(war_civilian, "names", war_tags)

@@ -123,6 +123,9 @@ Complete version
 
 ### Future change notepad:
 
+## after I functionalize the code, I may not even have to name all the individual reactive components at all, instead just referencing them through the list with the war_tag
+
+
 Data Quality:
 # some Weapon_Expl_Nums may be overwritten improperly by Bomb_Altitude kind of stuff (Bomb_Altitude = 10, Bomb_Altitude_Feet = 1000, Weapon_Expl_Num = 100 specifically)
 # there are some altitude ranges in Korea_bombs2$Aircraft_Total_Weight
@@ -148,12 +151,11 @@ Sandboxes/Graphics:
 # maybe use coord_flip() to help category names not overlap
 
 Programming Style:
-# change levels functions so that loading of data.table is not required and having installed data.table is sufficient
-# functionalize histogram and sandbox code
 # further functionalize a lot of repeated code
 # move all label changes into labs() function
 # fix the fact that the app saves locally when it should save externally
 # maybe further functionalize cleaner.R cleaning sections for each war
+# undo duplications in testing code with mega-list of all data.table columns from all wars
 
 Programming Quality:
 # merge together Korea1 and Korea2 after cleaning

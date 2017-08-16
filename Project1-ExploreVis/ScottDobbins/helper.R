@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.8
-# @date 2017-08-11 23:30
+# @version 0.9.8.1
+# @date 2017-08-15 21:00
 
 
 ### Local Values ------------------------------------------------------------
@@ -663,4 +663,8 @@ ordered_empty_at_end <- function(column, empty_string) {
   } else {
     return (ordered(column, levels = ordered_levels))
   }
+}
+
+refactor_and_order <- function(column, empty_string) {
+  return (ordered_empty_at_end(column = drop_missing_levels(column), empty_string = empty_string))
 }

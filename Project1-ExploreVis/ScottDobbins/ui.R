@@ -1,6 +1,76 @@
 # @author Scott Dobbins
-# @version 0.9.8
-# @date 2017-08-11 23:30
+# @version 0.9.8.1
+# @date 2017-08-15 21:00
+
+
+### Constructors ------------------------------------------------------------
+
+# plot_outputs <- function(war_tag) {
+#   fluidRow(box(plotOutput("war_hist")), 
+#            box(plotOutput("war_sandbox")))
+# }
+# 
+# hist_slider <- function(war_tag) {
+#   box(width = 12, 
+#       #height = 200, 
+#       sliderInput(inputId = "war_hist_slider", 
+#                   label = "# of bins", 
+#                   value = war_init_bins, 
+#                   min = war_min_bins, 
+#                   max = war_max_bins, 
+#                   step = 1))
+# }
+# 
+# transformation_ver <- function(war_tag) {
+#   box(width = 12, 
+#       #height = 100, 
+#       selectizeInput(inputId = "war_transformation_ver", 
+#                      label = "Apply vertical transformation?", 
+#                      choices = c("None", "Logarithm"), 
+#                      selected = "None", 
+#                      multiple = FALSE))
+# }
+# 
+# transformation_hor <- function(war_tag) {
+#   box(width = 12, 
+#       #height = 100, 
+#       selectizeInput(inputId = "war_transformation_hor", 
+#                      label = "Apply horizontal transformation?", 
+#                      choices = c("None", "Logarithm"), 
+#                      selected = "None", 
+#                      multiple = FALSE))
+# }
+# 
+# sandbox_ind <- function(war_tag) {
+#   box(width = 12, 
+#       #height = 100, 
+#       selectizeInput(inputId = "war_sandbox_ind", 
+#                      label = "Which independent variable?", 
+#                      choices = c("None (All Data)", "Year", war_all_choices), 
+#                      selected = c("Year"), 
+#                      multiple = FALSE))
+# }
+# 
+# sandbox_dep <- function(war_tag) {
+#   box(width = 12, 
+#       #height = 100, 
+#       selectizeInput(inputId = "war_sandbox_dep", 
+#                      label = "Which dependent variable?", 
+#                      choices = war_continuous_choices, 
+#                      selected = c("Number of Attacking Aircraft"), 
+#                      multiple = FALSE))
+# }
+# 
+# sandbox_group <- function(war_tag) {
+#   box(width = 12, 
+#       #height = 100, 
+#       selectizeInput(inputId = "war_sandbox_group", 
+#                      label = "Group by what?", 
+#                      choices = c("None", war_categorical_choices), 
+#                      selected = c("None"), 
+#                      multiple = FALSE)
+#   )
+# }
 
 
 ### UI Component ------------------------------------------------------------
@@ -33,7 +103,7 @@ shinyUI(dashboardPage(
                    # war picker
                    selectizeInput(inputId = "which_war", 
                                   label = "Which wars?", 
-                                  choices = c(WW1_string, WW2_string, Korea_string, Vietnam_string), 
+                                  choices = c(WW1_label, WW2_label, Korea_label, Vietnam_label), 
                                   selected = c(), 
                                   multiple = TRUE, 
                                   width = sidebar_width), 
@@ -148,11 +218,11 @@ shinyUI(dashboardPage(
       tabItem(tabName = "data",
               fluidRow(box(DT::dataTableOutput("table"), width = 12))
       ),
-      
+
 
 ### WW1 ---------------------------------------------------------------------
 
-      tabItem(tabName = "WW1",
+      tabItem(tabName = WW1,
               
               fluidRow(
                 box(plotOutput("WW1_hist")), 
@@ -160,37 +230,67 @@ shinyUI(dashboardPage(
               ), 
               
               fluidRow(
-                box(width = 6, 
-                    sliderInput(inputId = "WW1_hist_slider", 
-                                label = "# of bins", 
-                                value = WW1_init_bins, 
-                                min = WW1_min_bins, 
-                                max = WW1_max_bins, 
-                                step = 1)), 
+                column(width = 6, 
+                       
+                       box(width = 12, 
+                           #height = 200, 
+                           sliderInput(inputId = "WW1_hist_slider", 
+                                       label = "# of bins", 
+                                       value = WW1_init_bins, 
+                                       min = WW1_min_bins, 
+                                       max = WW1_max_bins, 
+                                       step = 1)
+                           ), 
+                       
+                       box(width = 12, 
+                           #height = 100, 
+                           selectizeInput(inputId = "WW1_transformation_ver", 
+                                          label = "Apply vertical transformation?", 
+                                          choices = c("None", "Logarithm"), 
+                                          selected = "None", 
+                                          multiple = FALSE)
+                           ), 
+                       
+                       box(width = 12, 
+                           #height = 100, 
+                           selectizeInput(inputId = "WW1_transformation_hor", 
+                                          label = "Apply horizontal transformation?", 
+                                          choices = c("None", "Logarithm"), 
+                                          selected = "None", 
+                                          multiple = FALSE)
+                           )
+                       ), 
                 
-                box(width = 6, 
-                    selectizeInput(inputId = "WW1_sandbox_ind", 
-                                   label = "Which independent variable?", 
-                                   choices = c("Year", WW1_all_choices), 
-                                   selected = c("Year"), 
-                                   multiple = FALSE))
-              ), 
-              
-              fluidRow(
-                box(width = 6, 
-                    selectizeInput(inputId = "WW1_sandbox_group", 
-                                   label = "Group by what?", 
-                                   choices = c("None", WW1_categorical_choices), 
-                                   selected = c("None"), 
-                                   multiple = FALSE)), 
-                
-                box(width = 6, 
-                    selectizeInput(inputId = "WW1_sandbox_dep", 
-                                   label = "Which dependent variable?", 
-                                   choices = WW1_continuous_choices, 
-                                   selected = c("Number of Attacking Aircraft"), 
-                                   multiple = FALSE))
-              )
+                column(width = 6, 
+                       
+                       box(width = 12, 
+                           #height = 100, 
+                           selectizeInput(inputId = "WW1_sandbox_ind", 
+                                      label = "Which independent variable?", 
+                                      choices = c("None (All Data)", "Year", WW1_all_choices), 
+                                      selected = c("Year"), 
+                                      multiple = FALSE)
+                           ), 
+                       
+                       box(width = 12, 
+                           #height = 100, 
+                           selectizeInput(inputId = "WW1_sandbox_dep", 
+                                          label = "Which dependent variable?", 
+                                          choices = WW1_continuous_choices, 
+                                          selected = c("Number of Attacking Aircraft"), 
+                                          multiple = FALSE)
+                           ), 
+                       
+                       box(width = 12, 
+                           #height = 100, 
+                           selectizeInput(inputId = "WW1_sandbox_group", 
+                                          label = "Group by what?", 
+                                          choices = c("None", WW1_categorical_choices), 
+                                          selected = c("None"), 
+                                          multiple = FALSE)
+                           )
+                       )
+                )
       ),
       
 
@@ -204,36 +304,66 @@ shinyUI(dashboardPage(
               ), 
               
               fluidRow(
-                box(width = 6, 
-                    sliderInput(inputId = "WW2_hist_slider", 
-                                label = "# of bins", 
-                                value = WW2_init_bins, 
-                                min = WW2_min_bins, 
-                                max = WW2_max_bins, 
-                                step = 1)), 
+                column(width = 6, 
+                       
+                       box(width = 12, 
+                           #height = 200, 
+                           sliderInput(inputId = "WW2_hist_slider", 
+                                       label = "# of bins", 
+                                       value = WW2_init_bins, 
+                                       min = WW2_min_bins, 
+                                       max = WW2_max_bins, 
+                                       step = 1)
+                       ), 
+                       
+                       box(width = 12, 
+                           #height = 100, 
+                           selectizeInput(inputId = "WW2_transformation_ver", 
+                                          label = "Apply vertical transformation?", 
+                                          choices = c("None", "Logarithm"), 
+                                          selected = "None", 
+                                          multiple = FALSE)
+                       ), 
+                       
+                       box(width = 12, 
+                           #height = 100, 
+                           selectizeInput(inputId = "WW2_transformation_hor", 
+                                          label = "Apply horizontal transformation?", 
+                                          choices = c("None", "Logarithm"), 
+                                          selected = "None", 
+                                          multiple = FALSE)
+                       )
+                ), 
                 
-                box(width = 6, 
-                    selectizeInput(inputId = "WW2_sandbox_ind", 
-                                   label = "Which independent variable?", 
-                                   choices = c("Year", WW2_all_choices), 
-                                   selected = c("Year"), 
-                                   multiple = FALSE))
-              ), 
-              
-              fluidRow(
-                box(width = 6, 
-                    selectizeInput(inputId = "WW2_sandbox_group", 
-                                   label = "Group by what?", 
-                                   choices = c("None", WW2_categorical_choices), 
-                                   selected = c("None"), 
-                                   multiple = FALSE)), 
-                
-                box(width = 6, 
-                    selectizeInput(inputId = "WW2_sandbox_dep", 
-                                   label = "Which dependent variable?", 
-                                   choices = WW2_continuous_choices, 
-                                   selected = c("Number of Attacking Aircraft"), 
-                                   multiple = FALSE))
+                column(width = 6, 
+                       
+                       box(width = 12, 
+                           #height = 100, 
+                           selectizeInput(inputId = "WW2_sandbox_ind", 
+                                          label = "Which independent variable?", 
+                                          choices = c("None (All Data)", "Year", WW2_all_choices), 
+                                          selected = c("Year"), 
+                                          multiple = FALSE)
+                       ), 
+                       
+                       box(width = 12, 
+                           #height = 100, 
+                           selectizeInput(inputId = "WW2_sandbox_dep", 
+                                          label = "Which dependent variable?", 
+                                          choices = WW2_continuous_choices, 
+                                          selected = c("Number of Attacking Aircraft"), 
+                                          multiple = FALSE)
+                       ), 
+                       
+                       box(width = 12, 
+                           #height = 100, 
+                           selectizeInput(inputId = "WW2_sandbox_group", 
+                                          label = "Group by what?", 
+                                          choices = c("None", WW2_categorical_choices), 
+                                          selected = c("None"), 
+                                          multiple = FALSE)
+                       )
+                )
               )
       ),
       
@@ -248,36 +378,66 @@ shinyUI(dashboardPage(
               ), 
               
               fluidRow(
-                box(width = 6, 
-                    sliderInput(inputId = "Korea_hist_slider", 
-                                label = "# of bins", 
-                                value = Korea_init_bins, 
-                                min = Korea_min_bins, 
-                                max = Korea_max_bins, 
-                                step = 1)), 
+                column(width = 6, 
+                       
+                       box(width = 12, 
+                           #height = 200, 
+                           sliderInput(inputId = "Korea_hist_slider", 
+                                       label = "# of bins", 
+                                       value = Korea_init_bins, 
+                                       min = Korea_min_bins, 
+                                       max = Korea_max_bins, 
+                                       step = 1)
+                       ), 
+                       
+                       box(width = 12, 
+                           #height = 100, 
+                           selectizeInput(inputId = "Korea_transformation_ver", 
+                                          label = "Apply vertical transformation?", 
+                                          choices = c("None", "Logarithm"), 
+                                          selected = "None", 
+                                          multiple = FALSE)
+                       ), 
+                       
+                       box(width = 12, 
+                           #height = 100, 
+                           selectizeInput(inputId = "Korea_transformation_hor", 
+                                          label = "Apply horizontal transformation?", 
+                                          choices = c("None", "Logarithm"), 
+                                          selected = "None", 
+                                          multiple = FALSE)
+                       )
+                ), 
                 
-                box(width = 6, 
-                    selectizeInput(inputId = "Korea_sandbox_ind", 
-                                   label = "Which independent variable?", 
-                                   choices = c("Year", Korea_all_choices), 
-                                   selected = c("Year"), 
-                                   multiple = FALSE))
-              ), 
-              
-              fluidRow(
-                box(width = 6, 
-                    selectizeInput(inputId = "Korea_sandbox_group", 
-                                   label = "Group by what?", 
-                                   choices = c("None", Korea_categorical_choices), 
-                                   selected = c("None"), 
-                                   multiple = FALSE)), 
-                
-                box(width = 6, 
-                    selectizeInput(inputId = "Korea_sandbox_dep", 
-                                   label = "Which dependent variable?", 
-                                   choices = Korea_continuous_choices, 
-                                   selected = c("Number of Attacking Aircraft"), 
-                                   multiple = FALSE))
+                column(width = 6, 
+                       
+                       box(width = 12, 
+                           #height = 100, 
+                           selectizeInput(inputId = "Korea_sandbox_ind", 
+                                          label = "Which independent variable?", 
+                                          choices = c("None (All Data)", "Year", Korea_all_choices), 
+                                          selected = c("Year"), 
+                                          multiple = FALSE)
+                       ), 
+                       
+                       box(width = 12, 
+                           #height = 100, 
+                           selectizeInput(inputId = "Korea_sandbox_dep", 
+                                          label = "Which dependent variable?", 
+                                          choices = Korea_continuous_choices, 
+                                          selected = c("Number of Attacking Aircraft"), 
+                                          multiple = FALSE)
+                       ), 
+                       
+                       box(width = 12, 
+                           #height = 100, 
+                           selectizeInput(inputId = "Korea_sandbox_group", 
+                                          label = "Group by what?", 
+                                          choices = c("None", Korea_categorical_choices), 
+                                          selected = c("None"), 
+                                          multiple = FALSE)
+                       )
+                )
               )
       ),
       
@@ -292,36 +452,66 @@ shinyUI(dashboardPage(
               ), 
               
               fluidRow(
-                box(width = 6, 
-                    sliderInput(inputId = "Vietnam_hist_slider", 
-                                label = "# of bins", 
-                                value = Vietnam_init_bins, 
-                                min = Vietnam_min_bins, 
-                                max = Vietnam_max_bins, 
-                                step = 1)), 
+                column(width = 6, 
+                       
+                       box(width = 12, 
+                           #height = 200, 
+                           sliderInput(inputId = "Vietnam_hist_slider", 
+                                       label = "# of bins", 
+                                       value = Vietnam_init_bins, 
+                                       min = Vietnam_min_bins, 
+                                       max = Vietnam_max_bins, 
+                                       step = 1)
+                       ), 
+                       
+                       box(width = 12, 
+                           #height = 100, 
+                           selectizeInput(inputId = "Vietnam_transformation_ver", 
+                                          label = "Apply vertical transformation?", 
+                                          choices = c("None", "Logarithm"), 
+                                          selected = "None", 
+                                          multiple = FALSE)
+                       ), 
+                       
+                       box(width = 12, 
+                           #height = 100, 
+                           selectizeInput(inputId = "Vietnam_transformation_hor", 
+                                          label = "Apply horizontal transformation?", 
+                                          choices = c("None", "Logarithm"), 
+                                          selected = "None", 
+                                          multiple = FALSE)
+                       )
+                ), 
                 
-                box(width = 6, 
-                    selectizeInput(inputId = "Vietnam_sandbox_ind", 
-                                   label = "Which independent variable?", 
-                                   choices = c("Year", Vietnam_all_choices), 
-                                   selected = c("Year"), 
-                                   multiple = FALSE))
-              ), 
-              
-              fluidRow(
-                box(width = 6, 
-                    selectizeInput(inputId = "Vietnam_sandbox_group", 
-                                   label = "Group by what?", 
-                                   choices = c("None", Vietnam_categorical_choices), 
-                                   selected = c("None"), 
-                                   multiple = FALSE)), 
-                
-                box(width = 6, 
-                    selectizeInput(inputId = "Vietnam_sandbox_dep", 
-                                   label = "Which dependent variable?", 
-                                   choices = Vietnam_continuous_choices, 
-                                   selected = c("Number of Attacking Aircraft"), 
-                                   multiple = FALSE))
+                column(width = 6, 
+                       
+                       box(width = 12, 
+                           #height = 100, 
+                           selectizeInput(inputId = "Vietnam_sandbox_ind", 
+                                          label = "Which independent variable?", 
+                                          choices = c("None (All Data)", "Year", Vietnam_all_choices), 
+                                          selected = c("Year"), 
+                                          multiple = FALSE)
+                       ), 
+                       
+                       box(width = 12, 
+                           #height = 100, 
+                           selectizeInput(inputId = "Vietnam_sandbox_dep", 
+                                          label = "Which dependent variable?", 
+                                          choices = Vietnam_continuous_choices, 
+                                          selected = c("Number of Attacking Aircraft"), 
+                                          multiple = FALSE)
+                       ), 
+                       
+                       box(width = 12, 
+                           #height = 100, 
+                           selectizeInput(inputId = "Vietnam_sandbox_group", 
+                                          label = "Group by what?", 
+                                          choices = c("None", Vietnam_categorical_choices), 
+                                          selected = c("None"), 
+                                          multiple = FALSE)
+                       )
+                )
               )
       ),
       

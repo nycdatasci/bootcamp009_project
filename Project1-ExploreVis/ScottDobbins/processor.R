@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.8
-# @date 2017-08-11 23:30
+# @version 0.9.8.1
+# @date 2017-08-15 21:00
 
 
 ### WW1 ---------------------------------------------------------------------
@@ -23,7 +23,7 @@ WW1_clean[, `:=`(ID = NULL,
 
 # format columns
 cols <- colnames(keep(WW1_clean, is.factor))
-WW1_clean[, (cols) := mclapply(.SD, ordered_empty_at_end, empty_text, mc.cores = cores), .SDcols = cols]
+WW1_clean[, (cols) := lapply(.SD, refactor_and_order, empty_text), .SDcols = cols]
 
 
 ### WW2 ---------------------------------------------------------------------
@@ -76,7 +76,7 @@ WW2_clean[, Weapon_Type := factor(if_else(Weapon_Expl_Type != empty_text,
 
 # reformat columns
 cols <- colnames(keep(WW2_clean, is.factor))
-WW2_clean[, (cols) := mclapply(.SD, ordered_empty_at_end, empty_text, mc.cores = cores), .SDcols = cols]
+WW2_clean[, (cols) := lapply(.SD, refactor_and_order, empty_text), .SDcols = cols]
 
 
 ### Korea 1 -----------------------------------------------------------------
@@ -100,7 +100,7 @@ Korea_clean1[, Weapon_Type := factor(empty_text)]
 
 # format columns
 cols <- colnames(keep(Korea_clean1, is.factor))
-Korea_clean1[, (cols) := mclapply(.SD, ordered_empty_at_end, empty_text, mc.cores = cores), .SDcols = cols]
+Korea_clean1[, (cols) := lapply(.SD, refactor_and_order, empty_text), .SDcols = cols]
 
 
 ### Korea 2 -----------------------------------------------------------------
@@ -133,7 +133,7 @@ Korea_clean2[, Bomb_Altitude_Feet := if_else(is.na(Bomb_Altitude_Feet_High),
 
 # format columns
 cols <- colnames(keep(Korea_clean2, is.factor))
-Korea_clean2[, (cols) := mclapply(.SD, ordered_empty_at_end, empty_text, mc.cores = cores), .SDcols = cols]
+Korea_clean2[, (cols) := lapply(.SD, refactor_and_order, empty_text), .SDcols = cols]
 
 
 ### Vietnam -----------------------------------------------------------------
@@ -163,7 +163,7 @@ Vietnam_clean[, `:=`(Reference_Source_ID = NULL,
 
 # format columns
 cols <- colnames(keep(Vietnam_clean, is.factor))
-Vietnam_clean[, (cols) := mclapply(.SD, ordered_empty_at_end, empty_text, mc.cores = cores), .SDcols = cols]
+Vietnam_clean[, (cols) := lapply(.SD, refactor_and_order, empty_text), .SDcols = cols]
 
 
 ### prepare tooltip rows ###

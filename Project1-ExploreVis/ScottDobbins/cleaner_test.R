@@ -1,23 +1,23 @@
 # @author Scott Dobbins
-# @version 0.9.8
-# @date 2017-08-11 23:30
+# @version 0.9.8.1
+# @date 2017-08-15 21:00
 
 
 ### Context -----------------------------------------------------------------
 
 context("Cleaning raw data")
 
-debug_message("unit testing bomb data")
+debug_message("unit testing cleaned bomb data")
 
 
-### Diversity ---------------------------------------------------------------
+### Cardinality -------------------------------------------------------------
 
 test_that("no data column is completely empty or identical across all rows", {
-  WW1_bombs %>% map_int(~expect_gt(diversity(.), 1L))
-  WW2_bombs %>% map_int(~expect_gt(diversity(.), 1L))
-  Korea_bombs1 %>% select(-Takeoff_Latitude, -Takeoff_Longitude) %>% map_int(~expect_gt(diversity(.), 1L))
-  Korea_bombs2 %>% select(-Reference_Source) %>% map_int(~expect_gt(diversity(.), 1L))
-  Vietnam_bombs %>% select(-Weapon_Class2) %>% map_int(~expect_gt(diversity(.), 1L))
+  WW1_bombs %>% map_int(~expect_gt(cardinality(.), 1L))
+  WW2_bombs %>% map_int(~expect_gt(cardinality(.), 1L))
+  Korea_bombs1 %>% select(-Takeoff_Latitude, -Takeoff_Longitude) %>% map_int(~expect_gt(cardinality(.), 1L))
+  Korea_bombs2 %>% select(-Reference_Source) %>% map_int(~expect_gt(cardinality(.), 1L))
+  Vietnam_bombs %>% select(-Weapon_Class2) %>% map_int(~expect_gt(cardinality(.), 1L))
 })
 
 
@@ -91,35 +91,57 @@ test_that("no zero values for essential integer columns", {
   expect_equal(Vietnam_bombs[Weapon_Weight_Pounds == 0L, .N], 0L)
 })
 
+
+### Completeness ------------------------------------------------------------
+
 test_that("no string values are NA", {
-  WW1_bombs %>% keep(is.character) %>% map_int(~expect_equal(sum(is.na(.)), 0L))
-  WW2_bombs %>% keep(is.character) %>% map_int(~expect_equal(sum(is.na(.)), 0L))
-  Korea_bombs1 %>% keep(is.character) %>% map_int(~expect_equal(sum(is.na(.)), 0L))
-  Korea_bombs2 %>% keep(is.character) %>% map_int(~expect_equal(sum(is.na(.)), 0L))
-  Vietnam_bombs %>% keep(is.character) %>% map_int(~expect_equal(sum(is.na(.)), 0L))
+  WW1_bombs %>% keep(is.character) %>% map_lgl(~expect_false(anyNA(.)))
+  WW2_bombs %>% keep(is.character) %>% map_lgl(~expect_false(anyNA(.)))
+  Korea_bombs1 %>% keep(is.character) %>% map_lgl(~expect_false(anyNA(.)))
+  Korea_bombs2 %>% keep(is.character) %>% map_lgl(~expect_false(anyNA(.)))
+  Vietnam_bombs %>% keep(is.character) %>% map_lgl(~expect_false(anyNA(.)))
   
-  WW1_bombs %>% keep(is.factor) %>% map_int(~expect_equal(sum(is.na(.)), 0L))
-  WW2_bombs %>% keep(is.factor) %>% map_int(~expect_equal(sum(is.na(.)), 0L))
-  Korea_bombs1 %>% keep(is.factor) %>% map_int(~expect_equal(sum(is.na(.)), 0L))
-  Korea_bombs2 %>% keep(is.factor) %>% map_int(~expect_equal(sum(is.na(.)), 0L))
-  Vietnam_bombs %>% keep(is.factor) %>% map_int(~expect_equal(sum(is.na(.)), 0L))
+  WW1_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(anyNA(.)))
+  WW2_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(anyNA(.)))
+  Korea_bombs1 %>% keep(is.factor) %>% map_lgl(~expect_false(anyNA(.)))
+  Korea_bombs2 %>% keep(is.factor) %>% map_lgl(~expect_false(anyNA(.)))
+  Vietnam_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(anyNA(.)))
 })
+
+test_that("there are no NA levels in factors", {
+  WW1_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(anyNA(levels(.))))
+  WW2_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(anyNA(levels(.))))
+  Korea_bombs1 %>% keep(is.factor) %>% map_lgl(~expect_false(anyNA(levels(.))))
+  Korea_bombs2 %>% keep(is.factor) %>% map_lgl(~expect_false(anyNA(levels(.))))
+  Vietnam_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(anyNA(levels(.))))
+})
+
+test_that("no missing levels exist", {
+  WW1_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(any(tabulate(.) == 0L)))
+  WW2_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(any(tabulate(.) == 0L)))
+  Korea_bombs1 %>% keep(is.factor) %>% map_lgl(~expect_false(any(tabulate(.) == 0L)))
+  Korea_bombs2 %>% keep(is.factor) %>% map_lgl(~expect_false(any(tabulate(.) == 0L)))
+  Vietnam_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(any(tabulate(.) == 0L)))
+})
+
+
+### Formatting --------------------------------------------------------------
 
 test_that("all times formatted properly", {
   expect_equal(WW1_bombs[Takeoff_Time != "" & Takeoff_Time %!like% "^[0-9]{2}:[0-9]{2}$", .N], 0L)
   
   expect_equal(WW2_bombs[Bomb_Time != "" & Bomb_Time %!like% "^[0-9]{1,2}:[0-9]{2}$", .N], 0L)
   
-  levels(Vietnam_bombs[["Bomb_Time_Start"]]) %>% (expect_equal(sum(. != "" & . %!like% "^[0-9]{1,2}:[0-9]{2}$"), 0L))
+  levels(Vietnam_bombs[["Bomb_Time_Start"]]) %>% (expect_false(any(. != "" & . %!like% "^[0-9]{1,2}:[0-9]{2}$")))
   expect_equal(Vietnam_bombs[Bomb_Time_Finish != "" & Bomb_Time_Finish %!like% "^[0-9]{1,2}:[0-9]{2}$", .N], 0L)
 })
 
 test_that("no double whitespace in factor columns", {
-  WW1_bombs %>% keep(is.factor) %>% map_int(~expect_equal(sum(grepl(levels(.), pattern = "\\s{2,}")), 0L))
-  WW2_bombs %>% keep(is.factor) %>% map_int(~expect_equal(sum(grepl(levels(.), pattern = "\\s{2,}")), 0L))
-  Korea_bombs1 %>% keep(is.factor) %>% map_int(~expect_equal(sum(grepl(levels(.), pattern = "\\s{2,}")), 0L))
-  Korea_bombs2 %>% keep(is.factor) %>% map_int(~expect_equal(sum(grepl(levels(.), pattern = "\\s{2,}")), 0L))
-  Vietnam_bombs %>% keep(is.factor) %>% map_int(~expect_equal(sum(grepl(levels(.), pattern = "\\s{2,}")), 0L))
+  WW1_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = "\\s{2,}"))))
+  WW2_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = "\\s{2,}"))))
+  Korea_bombs1 %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = "\\s{2,}"))))
+  Korea_bombs2 %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = "\\s{2,}"))))
+  Vietnam_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = "\\s{2,}"))))
 })
 
 test_that("no quotation marks in text columns", {
@@ -148,4 +170,23 @@ test_that("no backslashes in text columns", {
   Korea_bombs1 %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = "\\\\", fixed = TRUE))))
   Korea_bombs2 %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = "\\\\", fixed = TRUE))))
   Vietnam_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = "\\\\", fixed = TRUE))))
+})
+
+
+### Names -------------------------------------------------------------------
+
+test_that("none of the levels have names", {
+  WW1_bombs %>% keep(is.factor) %>% walk(~expect_null(names(levels(.))))
+  WW2_bombs %>% keep(is.factor) %>% walk(~expect_null(names(levels(.))))
+  Korea_bombs1 %>% keep(is.factor) %>% walk(~expect_null(names(levels(.))))
+  Korea_bombs2 %>% keep(is.factor) %>% walk(~expect_null(names(levels(.))))
+  Vietnam_bombs %>% keep(is.factor) %>% walk(~expect_null(names(levels(.))))
+})
+
+test_that("none of the data has names", {
+  WW1_bombs %>% walk(~expect_null(names(.)))
+  WW2_bombs %>% walk(~expect_null(names(.)))
+  Korea_bombs1 %>% walk(~expect_null(names(.)))
+  Korea_bombs2 %>% walk(~expect_null(names(.)))
+  Vietnam_bombs %>% walk(~expect_null(names(.)))
 })

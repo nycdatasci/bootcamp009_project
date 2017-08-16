@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.8
-# @date 2017-08-11 23:30
+# @version 0.9.8.1
+# @date 2017-08-15 21:00
 
 
 ### Complete pounds ---------------------------------------------------------
@@ -76,13 +76,13 @@ WW2_bombs[!is_NA_or_0L(Weapon_Expl_Num) &
             is_NA_or_0(Weapon_Expl_Tons), 
           `:=`(Weapon_Expl_Pounds = round_to_int(Weapon_Expl_Num * Weapon_Expl_Unit_Weight), 
                Weapon_Expl_Tons = Weapon_Expl_Num * Weapon_Expl_Unit_Weight / 2000)]
-# if only num and pounds are defined, update unit weight (and type) and tons
+# if only num and pounds are defined, update unit weight (and type if undefined) and tons
 WW2_bombs[!is_NA_or_0L(Weapon_Expl_Num) & 
             is.na(Weapon_Expl_Unit_Weight) & 
             !is_NA_or_0L(Weapon_Expl_Pounds) & 
             is_NA_or_0(Weapon_Expl_Tons), 
           `:=`(Weapon_Expl_Unit_Weight = round_to_int(Weapon_Expl_Pounds / Weapon_Expl_Num), 
-               Weapon_Expl_Type = paste0(as.character(round(Weapon_Expl_Pounds / Weapon_Expl_Num)), " LB HE"), 
+               Weapon_Expl_Type = if_else(Weapon_Expl_Type == "", paste0(as.character(round(Weapon_Expl_Pounds / Weapon_Expl_Num)), " LB HE"), as.character(Weapon_Expl_Type)), 
                Weapon_Expl_Tons = Weapon_Expl_Num * Weapon_Expl_Unit_Weight / 2000)]
 # if only unit weight and pounds are defined, update num and tons
 WW2_bombs[is_NA_or_0L(Weapon_Expl_Num) & 
@@ -123,13 +123,13 @@ WW2_bombs[!is_NA_or_0L(Weapon_Expl_Num) &
           `:=`(Weapon_Expl_Num = round_to_int(Weapon_Expl_Tons * 2000 / Weapon_Expl_Unit_Weight), 
                Weapon_Expl_Pounds = round_to_int(Weapon_Expl_Tons * 2000))]
 
-# if num and tons are defined, update unit weight and pounds
+# if num and tons are defined, update unit weight (and type if undefined) and pounds
 WW2_bombs[!is_NA_or_0L(Weapon_Expl_Num) & 
             is.na(Weapon_Expl_Unit_Weight) & 
             is_NA_or_0L(Weapon_Expl_Pounds) & 
             !is_NA_or_0(Weapon_Expl_Tons), 
           `:=`(Weapon_Expl_Unit_Weight = round_to_int(Weapon_Expl_Tons * 2000 / Weapon_Expl_Num), 
-               Weapon_Expl_Type = paste0(as.character(round(Weapon_Expl_Tons * 2000 / Weapon_Expl_Num)), " LB HE"), 
+               Weapon_Expl_Type = if_else(Weapon_Expl_Type == "", paste0(as.character(round(Weapon_Expl_Tons * 2000 / Weapon_Expl_Num)), " LB HE"), as.character(Weapon_Expl_Type)), 
                Weapon_Expl_Pounds = round_to_int(Weapon_Expl_Tons * 2000))]
 # if unit weight and tons are defined, update num and pounds
 WW2_bombs[is_NA_or_0L(Weapon_Expl_Num) & 
@@ -185,13 +185,13 @@ WW2_bombs[!is_NA_or_0L(Weapon_Incd_Num) &
             is_NA_or_0(Weapon_Incd_Tons), 
           `:=`(Weapon_Incd_Pounds = round_to_int(Weapon_Incd_Num * Weapon_Incd_Unit_Weight), 
                Weapon_Incd_Tons = Weapon_Incd_Num * Weapon_Incd_Unit_Weight / 2000)]
-# if only num and pounds are defined, update unit weight (and type) and tons
+# if only num and pounds are defined, update unit weight (and type if undefined) and tons
 WW2_bombs[!is_NA_or_0L(Weapon_Incd_Num) & 
             is.na(Weapon_Incd_Unit_Weight) & 
             !is_NA_or_0L(Weapon_Incd_Pounds) & 
             is_NA_or_0(Weapon_Incd_Tons), 
           `:=`(Weapon_Incd_Unit_Weight = round_to_int(Weapon_Incd_Pounds / Weapon_Incd_Num), 
-               Weapon_Incd_Type = paste0(as.character(round(Weapon_Incd_Pounds / Weapon_Incd_Num)), " LB INCENDIARY"), 
+               Weapon_Incd_Type = if_else(Weapon_Incd_Type == "", paste0(as.character(round(Weapon_Incd_Pounds / Weapon_Incd_Num)), " LB INCENDIARY"), as.character(Weapon_Incd_Type)), 
                Weapon_Incd_Tons = Weapon_Incd_Num * Weapon_Incd_Unit_Weight / 2000)]
 # if only unit weight and pounds are defined, update num and tons
 WW2_bombs[is_NA_or_0L(Weapon_Incd_Num) & 
@@ -232,13 +232,13 @@ WW2_bombs[!is_NA_or_0L(Weapon_Incd_Num) &
           `:=`(Weapon_Incd_Num = round_to_int(Weapon_Incd_Tons * 2000 / Weapon_Incd_Unit_Weight), 
                Weapon_Incd_Pounds = round_to_int(Weapon_Incd_Tons * 2000))]
 
-# if num and tons are defined, update unit weight and pounds
+# if num and tons are defined, update unit weight (and type if undefined) and pounds
 WW2_bombs[!is_NA_or_0L(Weapon_Incd_Num) & 
             is.na(Weapon_Incd_Unit_Weight) & 
             is_NA_or_0L(Weapon_Incd_Pounds) & 
             !is_NA_or_0(Weapon_Incd_Tons), 
           `:=`(Weapon_Incd_Unit_Weight = round_to_int(Weapon_Incd_Tons * 2000 / Weapon_Incd_Num), 
-               Weapon_Incd_Type = paste0(as.character(round(Weapon_Incd_Tons * 2000 / Weapon_Incd_Num)), " LB INCENDIARY"), 
+               Weapon_Incd_Type = if_else(Weapon_Incd_Type == "", paste0(as.character(round(Weapon_Incd_Tons * 2000 / Weapon_Incd_Num)), " LB INCENDIARY"), as.character(Weapon_Incd_Type)), 
                Weapon_Incd_Pounds = round_to_int(Weapon_Incd_Tons * 2000))]
 # if unit weight and tons are defined, update num and pounds
 WW2_bombs[is_NA_or_0L(Weapon_Incd_Num) & 
@@ -294,13 +294,13 @@ WW2_bombs[!is_NA_or_0L(Weapon_Frag_Num) &
             is_NA_or_0(Weapon_Frag_Tons), 
           `:=`(Weapon_Frag_Pounds = round_to_int(Weapon_Frag_Num * Weapon_Frag_Unit_Weight), 
                Weapon_Frag_Tons = Weapon_Frag_Num * Weapon_Frag_Unit_Weight / 2000)]
-# if only num and pounds are defined, update unit weight (and type) and tons
+# if only num and pounds are defined, update unit weight (and type if undefined) and tons
 WW2_bombs[!is_NA_or_0L(Weapon_Frag_Num) & 
             is.na(Weapon_Frag_Unit_Weight) & 
             !is_NA_or_0L(Weapon_Frag_Pounds) & 
             is_NA_or_0(Weapon_Frag_Tons), 
           `:=`(Weapon_Frag_Unit_Weight = round_to_int(Weapon_Frag_Pounds / Weapon_Frag_Num), 
-               Weapon_Frag_Type = paste0(as.character(round(Weapon_Frag_Pounds / Weapon_Frag_Num)), " LB FRAG"), 
+               Weapon_Frag_Type = if_else(Weapon_Frag_Type == "", paste0(as.character(round(Weapon_Frag_Pounds / Weapon_Frag_Num)), " LB FRAG"), as.character(Weapon_Frag_Type)), 
                Weapon_Frag_Tons = Weapon_Frag_Num * Weapon_Frag_Unit_Weight / 2000)]
 # if only unit weight and pounds are defined, update num and tons
 WW2_bombs[is_NA_or_0L(Weapon_Frag_Num) & 
@@ -341,13 +341,13 @@ WW2_bombs[!is_NA_or_0L(Weapon_Frag_Num) &
           `:=`(Weapon_Frag_Num = round_to_int(Weapon_Frag_Tons * 2000 / Weapon_Frag_Unit_Weight), 
                Weapon_Frag_Pounds = round_to_int(Weapon_Frag_Tons * 2000))]
 
-# if num and tons are defined, update unit weight and pounds
+# if num and tons are defined, update unit weight (and type if undefined) and pounds
 WW2_bombs[!is_NA_or_0L(Weapon_Frag_Num) & 
             is.na(Weapon_Frag_Unit_Weight) & 
             is_NA_or_0L(Weapon_Frag_Pounds) & 
             !is_NA_or_0(Weapon_Frag_Tons), 
           `:=`(Weapon_Frag_Unit_Weight = round_to_int(Weapon_Frag_Tons * 2000 / Weapon_Frag_Num), 
-               Weapon_Frag_Type = paste0(as.character(round(Weapon_Frag_Tons * 2000 / Weapon_Frag_Num)), " LB FRAG"), 
+               Weapon_Frag_Type = if_else(Weapon_Frag_Type == "", paste0(as.character(round(Weapon_Frag_Tons * 2000 / Weapon_Frag_Num)), " LB FRAG"), as.character(Weapon_Frag_Type)), 
                Weapon_Frag_Pounds = round_to_int(Weapon_Frag_Tons * 2000))]
 # if unit weight and tons are defined, update num and pounds
 WW2_bombs[is_NA_or_0L(Weapon_Frag_Num) & 
@@ -375,12 +375,12 @@ WW2_bombs[is_NA_or_0(Weapon_Weight_Tons) &
             !is_NA_or_0L(Weapon_Weight_Pounds), 
           `:=`(Weapon_Weight_Tons = Weapon_Weight_Pounds / 2000)]
 
-WW2_bombs[ifelse(is.na(Weapon_Expl_Tons), 0, Weapon_Expl_Tons) + 
-            ifelse(is.na(Weapon_Incd_Tons), 0, Weapon_Incd_Tons) + 
-            ifelse(is.na(Weapon_Frag_Tons), 0, Weapon_Frag_Tons) > Weapon_Weight_Tons, 
-          `:=`(Weapon_Weight_Tons = ifelse(is.na(Weapon_Expl_Tons), 0, Weapon_Expl_Tons) + 
-                 ifelse(is.na(Weapon_Incd_Tons), 0, Weapon_Incd_Tons) + 
-                 ifelse(is.na(Weapon_Frag_Tons), 0, Weapon_Frag_Tons))]
+WW2_bombs[if_else(is.na(Weapon_Expl_Tons), 0, Weapon_Expl_Tons) + 
+            if_else(is.na(Weapon_Incd_Tons), 0, Weapon_Incd_Tons) + 
+            if_else(is.na(Weapon_Frag_Tons), 0, Weapon_Frag_Tons) > Weapon_Weight_Tons, 
+          `:=`(Weapon_Weight_Tons = if_else(is.na(Weapon_Expl_Tons), 0, Weapon_Expl_Tons) + 
+                 if_else(is.na(Weapon_Incd_Tons), 0, Weapon_Incd_Tons) + 
+                 if_else(is.na(Weapon_Frag_Tons), 0, Weapon_Frag_Tons))]
 
 # update missing ton values if others are known
 WW2_bombs[is.na(Weapon_Expl_Tons) & 
@@ -518,9 +518,9 @@ WW2_bombs[is_NA_or_0(Weapon_Weight_Tons) &
             !is.na(Weapon_Incd_Tons) & 
             !is.na(Weapon_Frag_Tons) & 
             (Weapon_Expl_Tons != 0 | Weapon_Incd_Tons != 0 | Weapon_Frag_Tons != 0), 
-          `:=`(Weapon_Weight_Tons = ifelse(is.na(Weapon_Expl_Tons), 0, Weapon_Expl_Tons) + 
-                 ifelse(is.na(Weapon_Incd_Tons), 0, Weapon_Incd_Tons) + 
-                 ifelse(is.na(Weapon_Frag_Tons), 0, Weapon_Frag_Tons))]
+          `:=`(Weapon_Weight_Tons = if_else(is.na(Weapon_Expl_Tons), 0, Weapon_Expl_Tons) + 
+                                    if_else(is.na(Weapon_Incd_Tons), 0, Weapon_Incd_Tons) + 
+                                    if_else(is.na(Weapon_Frag_Tons), 0, Weapon_Frag_Tons))]
 
 WW2_bombs[!near(Weapon_Weight_Pounds / 2000, Weapon_Weight_Tons, tol = near_tolerance) | 
             (!is.na(Weapon_Weight_Tons) & is.na(Weapon_Weight_Pounds)), 
