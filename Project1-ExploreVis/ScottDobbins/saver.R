@@ -1,29 +1,30 @@
 # @author Scott Dobbins
-# @version 0.9.8.1
-# @date 2017-08-15 21:00
+# @version 0.9.8.3
+# @date 2017-08-24 22:30
 
 
 ### Save Data ---------------------------------------------------------------
 
-debug_message("writing WW1")
-fwrite(x = WW1_bombs,  file = WW1_bombs_filepath,  quote = TRUE, nThread = cores)
-fwrite(x = WW1_clean,  file = WW1_clean_filepath,  quote = TRUE, nThread = cores)
-fwrite(x = WW1_unique, file = WW1_unique_filepath, quote = TRUE, nThread = cores)
+debug_message("saving cleaned bomb data")
+for (war_data_tag in war_data_tags) {
+  fwrite(bomb_data[[war_data_tag]], 
+         file = war_bombs_filepath[[war_data_tag]], 
+         quote = TRUE)
+}
 
-debug_message("writing WW2")
-fwrite(x = WW2_bombs,  file = WW2_bombs_filepath,  quote = TRUE, nThread = cores)
-fwrite(x = WW2_clean,  file = WW2_clean_filepath,  quote = TRUE, nThread = cores)
-fwrite(x = WW2_unique, file = WW2_unique_filepath, quote = TRUE, nThread = cores)
+debug_message("saving processed clean data")
+for (war_data_tag in war_data_tags) {
+  fwrite(clean_data[[war_data_tag]], 
+         file = war_clean_filepath[[war_data_tag]], 
+         quote = TRUE)
+}
 
-debug_message("writing Korea")
-fwrite(x = Korea_bombs2,  file = Korea_bombs2_filepath,  quote = TRUE, nThread = cores)
-fwrite(x = Korea_clean2,  file = Korea_clean2_filepath,  quote = TRUE, nThread = cores)
-fwrite(x = Korea_unique2, file = Korea_unique2_filepath, quote = TRUE, nThread = cores)
-
-debug_message("writing Vietnam")
-fwrite(x = Vietnam_bombs,  file = Vietnam_bombs_filepath,  quote = TRUE, nThread = cores)
-fwrite(x = Vietnam_clean,  file = Vietnam_clean_filepath,  quote = TRUE, nThread = cores)
-fwrite(x = Vietnam_unique, file = Vietnam_unique_filepath, quote = TRUE, nThread = cores)
+debug_message("saving unique targets data")
+for (war_data_tag in war_data_tags) {
+  fwrite(unique_data[[war_data_tag]], 
+         file = war_unique_filepath[[war_data_tag]], 
+         quote = TRUE)
+}
 
 debug_message("saving workspace")
 save.image(file = paste0(save_path, Sys.Date(), save_extension))

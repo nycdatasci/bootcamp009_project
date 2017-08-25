@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.8.1
-# @date 2017-08-15 21:00
+# @version 0.9.8.3
+# @date 2017-08-24 22:30
 
 
 ### Save Filepaths ----------------------------------------------------------
@@ -48,17 +48,39 @@ Vietnam_weapons_glossary_filepath <- paste0(Vietnam_directory, glossary_infix, w
 # processed bomb data
 WW1_bombs_filepath     <- paste0(local_save_directory, WW1_bombs_filename)
 WW2_bombs_filepath     <- paste0(local_save_directory, WW2_bombs_filename)
+Korea_bombs1_filepath  <- paste0(local_save_directory, Korea_bombs1_filename)
 Korea_bombs2_filepath  <- paste0(local_save_directory, Korea_bombs2_filename)
 Vietnam_bombs_filepath <- paste0(local_save_directory, Vietnam_bombs_filename)
+war_bombs_filepath <- list(WW1_bombs_filepath, 
+                           WW2_bombs_filepath, 
+                           Korea_bombs1_filepath, 
+                           Korea_bombs2_filepath, 
+                           Vietnam_bombs_filepath)
 
 # filtered bomb data
 WW1_clean_filepath     <- paste0(local_save_directory, WW1_clean_filename)
 WW2_clean_filepath     <- paste0(local_save_directory, WW2_clean_filename)
+Korea_clean1_filepath  <- paste0(local_save_directory, Korea_clean1_filename)
 Korea_clean2_filepath  <- paste0(local_save_directory, Korea_clean2_filename)
 Vietnam_clean_filepath <- paste0(local_save_directory, Vietnam_clean_filename)
+war_clean_filepath <- list(WW1_clean_filepath, 
+                           WW2_clean_filepath, 
+                           Korea_clean1_filepath, 
+                           Korea_clean2_filepath, 
+                           Vietnam_clean_filepath)
 
 # unique target bomb data
 WW1_unique_filepath     <- paste0(local_save_directory, WW1_unique_filename)
 WW2_unique_filepath     <- paste0(local_save_directory, WW2_unique_filename)
+Korea_unique1_filepath  <- paste0(local_save_directory, Korea_unique1_filename)
 Korea_unique2_filepath  <- paste0(local_save_directory, Korea_unique2_filename)
 Vietnam_unique_filepath <- paste0(local_save_directory, Vietnam_unique_filename)
+war_unique_filepath <- list(WW1_unique_filepath, 
+                            WW2_unique_filepath, 
+                            Korea_unique1_filepath, 
+                            Korea_unique2_filepath, 
+                            Vietnam_unique_filepath)
+
+# setting names
+walk(list(war_bombs_filepath, war_clean_filepath, war_unique_filepath), 
+     ~setattr(., "names", c("WW1", "WW2", "Korea1", "Korea2", "Vietnam")))

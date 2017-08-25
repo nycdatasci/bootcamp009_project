@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.8
-# @date 2017-08-11 23:30
+# @version 0.9.8.1
+# @date 2017-08-15 21:00
 
 
 ### Version History ###
@@ -123,26 +123,24 @@ Complete version
 
 ### Future change notepad:
 
-## after I functionalize the code, I may not even have to name all the individual reactive components at all, instead just referencing them through the list with the war_tag
+#*#* see if you can use Map and Reduce in code; basically, get rid of some for loops
 
+#*#*#* read through R Graphics Cookbook to fix ggplot2/ggvis graphs and such
 
-Data Quality:
-# some Weapon_Expl_Nums may be overwritten improperly by Bomb_Altitude kind of stuff (Bomb_Altitude = 10, Bomb_Altitude_Feet = 1000, Weapon_Expl_Num = 100 specifically)
-# there are some altitude ranges in Korea_bombs2$Aircraft_Total_Weight
-# duplicates appear in dataset (check for duplicates: same aircraft type, same day, same target area and type, same weapons and same num_attacking_aircraft)
-# there's a 9:00 am and an 11:00 am in Unit_Squadron of WW2--check for other misplaced values
-# check bomb_altitude and bomb_altitude_feet in WW2
-# make sure types of bombs are formatted, cleaned, and processed
-# make sure all fields with codes have their relevant explanation/text and all relevant texts that are 1:1 with a code if they have the code (like WW2 Sighting_Method_Code and Sighting_Method_Explanation etc); complete country, target priority, target industry, etc. codes where possible (WW2 and potentially others); update country and other codes when knowable (generate list of code to description matches and fill in as possible)
-# plenty of O vs 0 mistakes in Vietnam (and maybe other database) callsigns; Korea1 callsign has nothing; Korea2 callsign has nothing except one data leak; very few callsigns in WW2; WW1 callsigns are just aircraft types
+#*#*#*#* some WW2 bombs are encoded by weight of explosive, and others by gross weight
+
+#*#*#*#*#* speed up fix_missing_values code
+
+#*#*#*#*#*#*#* generate minimal reproducible example whereby the processor clean_data walking refactor_and_order step alters levels (by adding names) in bombs_data tables even though the two aren't (shouldn't be) linked
 
 Data Processing:
 # also do some num * per-unit-weight = total-weight calculation verification for Korea 2 and others
 # perhaps update WW2 (and potentially other wars') weapons types that include clusters to just be counted as singlets but with a mention that they were originally in clusters
-# be careful about "squadron division" sounding funny in tooltips
 # change Weapon_Unit_Weight in Vietnam to something like Weapon_Unit_Total_Weight and then create new column Weapon_Unit_Weight that reads from Weapon_Type and then fills in if possible from Weapon_Unit_Total_Weight if the read value is blank
 
 Sandboxes/Graphics:
+# can make histogram semi-transparent with alpha and still do fill-based grouping in geom_histogram with position = 'identity'; maybe depending on number of groups, pick alpha and switch between geom_polyfreq and geom_histogram; I bet fill-based grouping would also work in geom_polyfreq
+# show mean with diamond (shape 23)
 # fix formatting of title, axes, background, and legend in sandbox
 # make histograms able to plot density of num_missions (this is just a normal histogram), num_aircraft, num_bombs, and weight_bombs
 # fix categories with an overwhelming number of choices by allowing the graphing of top or bottom (or evenly spaced sorted sample of) <x> choices
@@ -155,7 +153,6 @@ Programming Style:
 # move all label changes into labs() function
 # fix the fact that the app saves locally when it should save externally
 # maybe further functionalize cleaner.R cleaning sections for each war
-# undo duplications in testing code with mega-list of all data.table columns from all wars
 
 Programming Quality:
 # merge together Korea1 and Korea2 after cleaning
@@ -166,9 +163,6 @@ Programming Quality:
 # see if broom can fix issues with the vectorized strsplit helper functions I made
 # maybe change local absolute paths to relative paths--use basename/dirname to help with filepaths stuff / use file.path to make filepaths platform independent (path.expand may help as well)
 # maybe fix proper_noun_phrase_vectorized by filtering down amount of data that needs to be processed at each step: first check if the given line is empthy, then check if the line is only one word long (doesn't contain any of the split characters) and then check for each character before each step (or keep large vectors of logicals about whether each symbol is contained in each row and use those)
-# please somehow isolate the selection reactive function from senseless updates (adding or subtracting "all") on every filtering factor
-# see if you can fix how long it takes Vietnam data to be sampled (sub-sample further?)
-# I like the functionality of the filter_selection() function, but it seems slower than having separate functions for each war
 
 Small Improvements:
 # add Unit_Country to all tooltips / also include type of bombs
@@ -186,6 +180,7 @@ Significant Improvements:
 # maybe put background of flags with low alpha over territories they controlled
 # also include vague categories like "incendiary", "fragmentary", and "high explosive" (as in WW2) as possible selections in weapons drop down (depending on what wars and countries are selected); provide fragmentary, incendiary, and high explosive columns in non-WW2 databases as well
 # maybe also add a kinetic weapon column for WW2 and others
+# rewrite type-specific if_else in Rcpp so that it only calculates the values it needs (or just write your own if.else in R that automatically reshuffles the code to do everything <- `true`, everything[places where not TRUE] <- `false`)
 
 Misc/Other Projects:
 # broom for list-columns of models etc

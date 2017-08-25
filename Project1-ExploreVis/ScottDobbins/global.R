@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.8.1
-# @date 2017-08-15 21:00
+# @version 0.9.8.3
+# @date 2017-08-24 22:30
 
 
 ### Import Packages ---------------------------------------------------------
@@ -65,15 +65,15 @@ quartile_points <- function(x) {
 
 # for necessity of loading or generating app data
 has_bombs_data <- function() {
-  return (exists("WW1_bombs") &
-            exists("WW2_bombs") &
-            exists("Korea_bombs2") &
+  return (exists("WW1_bombs") &&
+            exists("WW2_bombs") &&
+            exists("Korea_bombs2") &&
             exists("Vietnam_bombs"))
 }
 has_clean_data <- function() {
-  return (exists("WW1_clean") &
-            exists("WW2_clean") &
-            exists("Korea_clean2") &
+  return (exists("WW1_clean") &&
+            exists("WW2_clean") &&
+            exists("Korea_clean2") &&
             exists("Vietnam_clean"))
 }
 
@@ -160,16 +160,25 @@ if (debug_mode_on) {
 
 # for iteration
 war_data <- list(WW1_clean, WW2_clean, Korea_clean2, Vietnam_clean)
-setattr(war_data, "names", war_tags)
 
+# DataTable
 war_color <- list(WW1_color, WW2_color, Korea_color, Vietnam_color)
-setattr(war_color, "names", war_tags)
-
 war_background <- list(WW1_background, WW2_background, Korea_background, Vietnam_background)
-setattr(war_background, "names", war_tags)
-
 war_datatable_columns <- list(WW1_datatable_columns, WW2_datatable_columns, Korea_datatable_columns, Vietnam_datatable_columns)
-setattr(war_datatable_columns, "names", war_tags)
-
 war_datatable_colnames <- list(WW1_datatable_colnames, WW2_datatable_colnames, Korea_datatable_colnames, Vietnam_datatable_colnames)
-setattr(war_datatable_colnames, "names", war_tags)
+
+# war data
+war_init_bins <- list(WW1_init_bins, WW2_init_bins, Korea_init_bins, Vietnam_init_bins)
+war_min_bins <- list(WW1_min_bins, WW2_min_bins, Korea_min_bins, Vietnam_min_bins)
+war_max_bins <- list(WW1_max_bins, WW2_max_bins, Korea_max_bins, Vietnam_max_bins)
+
+# set names
+walk(list(war_data, 
+          war_color, 
+          war_background, 
+          war_datatable_columns, 
+          war_datatable_colnames, 
+          war_init_bins, 
+          war_min_bins, 
+          war_max_bins), 
+     ~setattr(., "names", war_tags))

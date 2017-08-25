@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.8.1
-# @date 2017-08-15 21:00
+# @version 0.9.8.3
+# @date 2017-08-24 22:30
 
 
 ### Files -------------------------------------------------------------------
@@ -8,7 +8,7 @@
 save_name <- "Shiny_"
 save_name_downsampled <- "Shiny_downsampled_"
 save_extension <- ".RData"
-most_recent_save_date <- "2017-08-11"
+most_recent_save_date <- "2017-08-15"
 
 
 ### Filepath Parameters -----------------------------------------------------

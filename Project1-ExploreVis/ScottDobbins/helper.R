@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.8.1
-# @date 2017-08-15 21:00
+# @version 0.9.8.3
+# @date 2017-08-24 22:30
 
 
 ### Local Values ------------------------------------------------------------
@@ -18,7 +18,7 @@ countries <- unique(c(WW1_countries, WW2_countries, Korea_countries, Vietnam_cou
 services <- unique(c(WW1_service, WW2_service, Korea_service, Vietnam_service))
 roman_numerals <- c("I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII")
 
-upper_case_abbreviations <- c("AAA", "HQ", "RR")
+upper_case_abbreviations <- c("AAA", "HQ", "RR", "USS")
 upper_case_abbreviations_lower <- tolower(upper_case_abbreviations)
 upper_case_set <- unique(c(directions, countries, services, roman_numerals, upper_case_abbreviations))
 upper_case_set_lower <- tolower(upper_case_set)
@@ -29,7 +29,7 @@ Korea_aircraft_letters <- c()
 Vietnam_aircraft_letters <- c()
 aircraft_letters <- unique(c(WW1_aircraft_letters, WW2_aircraft_letters, Korea_aircraft_letters, Vietnam_aircraft_letters, roman_numerals))
 
-stop_words <- c("and", "at", "aux", "di", "el", "in", "la", "le", "no", "not", "of", "on", "or", "the", "to", "sur")
+stop_words <- c("and", "at", "aux", "di", "el", "en", "in", "la", "le", "les", "no", "not", "of", "on", "or", "the", "to", "sur")
 measurement_units <- c("km", "m", "cm", "mm", "mi", "in", "ft", "kg")
 ordinal_markers <- c("st", "nd", "rd", "th")
 
@@ -38,6 +38,291 @@ lower_case_set_upper <- toupper(lower_case_set)
 
 unusual_plural_set <- c("anti-aircraft", "aircraft", "ammunition", "ammo", "personnel")
 vowel_set <- c("a", "e", "i", "o", "u")
+
+
+### Named Vectors -----------------------------------------------------------
+
+months <- c("January" = 1L, 
+            "February" = 2L, 
+            "March" = 3L, 
+            "April" = 4L, 
+            "May" = 5L, 
+            "June" = 6L, 
+            "July" = 7L, 
+            "August" = 8L, 
+            "September" = 9L, 
+            "October" = 10L, 
+            "November" = 11L, 
+            "December" = 12L)
+
+visibility_categorizations <- c("good" = "good|clear|excellent|undercast", 
+                                "poor" = "poor|clouds|overcast", 
+                                "fair" = "fair|layers|scattered", 
+                                "poor" = "very")
+
+target_categorizations <- c("town"           = "town|business|city|house|huts|market|monastery|town|urban|village", 
+                            "factory"        = "factory|assembly|blast|construction|engine|furnace|gasoline|hydroelectric|manufacturing|plant|power|refinery|works", 
+                            "airfield"       = "airfield|airdrome|runway", 
+                            "aircraft"       = "aircraft|airframes|mig|seaplanes", 
+                            "headquarters"   = "communications|compound|facility|government|headquarters|management", 
+                            "defenses"       = "defenses|anti-aircraft|battery|defensive|emplacement|gun|installation|pillbox|tower", 
+                            "base"           = "base|aresenal|barracks|buildings|camp", 
+                            "harbor"         = "harbor|barges|boats|coastal|dock|ferry|jetty|shipyard|vessels|waterfront|wharf", 
+                            "munitions"      = "munitions|ammunition|explosive", 
+                            "infrastructure" = "bridge|canal|river crossing|tunnel", 
+                            "rail"           = "rail|junction|marshalling|railroad|railway|station|trains|yard", 
+                            "road"           = "road|highway|locomotives|transportation|trucks|vehicles", 
+                            "supplies"       = "supplies|dump|equipment|rations|shipping|storage|warehouse", 
+                            "troops"         = "troops|artillery|concentration|enemy|japanese|personnel|support", 
+                            "area"           = "area|hill|location|place|point|position|tactical|target")
+
+target_rules <- c(                        "/?ETC", 
+                                          "[?.]", 
+                  " "                   = " +-? *", 
+                  "ADMINISTRATIVE"      = "\\b(ADM(IN[A-Z]*)?)\\b", 
+                  "AIRCRAFT"            = "\\b(AC|A C)(RFT)?\\b", 
+                  "AIRDROME"            = "\\b(AERO?D?|AIRODROM|AIRDROM|AIDROM|AIR DROM)[A-Z]*\\b", 
+                  "AIRFIELD"            = "\\b(AIR FIELDS?|AIRFLD|AIRFIEL|AIRFIELDS)\\b", 
+                  "AIRFRAMES"           = "\\b(AIR FRAMES?)\\b", 
+                  "AMMUNITION"          = "\\b(AMMO|AMMUN[A-Z]*)\\b", 
+                  "ANTI-AIRCRAFT"       = "\\b(AA|ANTIAIRCRAFT|ANTI AIRCRAFT|ANTI AIR CRAFT)\\b", 
+                  "AREA"                = "\\b(ARES?|ABEAS?|APEAS?|AREAS)\\b", 
+                  "ARSENAL"             = "\\b(ARSENALS)\\b", 
+                  "ARTILLERY"           = "\\b(ARTILLER)\\b", 
+                  "ASSEMBLY"            = "\\b(ASSBLY)\\b", 
+                  "BARGES"              = "\\b(BRAGES?|BARGE)\\b", 
+                  "BARRACKS"            = "\\b(BR?KS?|BARRAC.*)\\b", 
+                  "BASE"                = "\\b(BASFS?|BASES)\\b", 
+                  "BATTERY"             = "\\b(BTY|BRTY|BTRY)\\b", 
+                  "BEARINGS"            = "\\b(BEARING)\\b", 
+                  "BLAST"               = "\\b(BLST)\\b", 
+                  "BOATS"               = "\\b(BOAT)\\b", 
+                  "BRIDGE"              = "\\b(BR|BR?D?GE?S?|BRID ES?|8RIDGES?|GRIDGES?|BOIDGES?|BIRDGES?|BRIDGES)\\b", 
+                  "BUILDINGS"           = "\\b(BLDGS?|BUILD|BUILOING|BUILDING)\\b", 
+                  "BUNKER"              = "\\b(BNKR)\\b", 
+                  "BUSINESS"            = "\\b(BUSIHESS)\\b", 
+                  "CAMP"                = "\\b(CAMPS)\\b", 
+                  "CANAL"               = "\\b(CANAI|CANALS)\\b", 
+                  "CENTER"              = "\\b(CENTRE?|CENTERS)\\b", 
+                  "CHEMICAL"            = "\\b(CHEM)\\b", 
+                  "CITY"                = "\\b(CIIY)\\b", 
+                  "CIVILIAN"            = "\\b(CIV)\\b", 
+                  "COASTAL"             = "\\b(COAST|COASTAL[A-Z]*)\\b", 
+                  "COMMERCIAL"          = "\\b(COM)\\b", 
+                  "COMMAND"             = "\\b(COMM|COMD)\\b", 
+                  "COMMUNICATIONS"      = "\\b(COMMUNICATION)\\b", 
+                  "COMPONENTS"          = "\\b(COMPONENT)\\b", 
+                  "COMPOUND"            = "\\b(CONPOUNDS?|CPMPOUNDS?|COMPOU[A-Z]*)\\b", 
+                  "CONCENTRATION"       = "\\b(CONCT?S?|CONCENT[A-Z]*|CONSTRATIONS?|CONTRATIONS?|CQNCENTRATIONS?)\\b", 
+                  "CONSTRUCTION"        = "\\b(CONST)\\b", 
+                  "DEFENSES"            = "\\b(DEFENCE?S|DEFENSE)\\b", 
+                  "DEFENSIVE"           = "\\b(DEF)\\b", 
+                  "DOCK"                = "\\b(DDCKS?|DOCKS)\\b", 
+                  "DUMP"                = "\\b(DIMPS?|DOOPS?|DUMPS)\\b", 
+                  "ELECTRIC"            = "\\b(ELCT|ELECT?)\\b", 
+                  "EMPLACEMENT"         = "\\b(EMP|EMPL|EMPLACEMENTO|EMPLACEMENTS|IMPLACEMENTS?)\\b", 
+                  "ENEMY"               = "\\b(EN|ENEMIES)\\b", 
+                  "ENGINE"              = "\\b(ENG)\\b", 
+                  "EQUIPMENT"           = "\\b(EQUIPT?)\\b", 
+                  "EXPLOSIVE"           = "\\b(EXPLOSIVES)\\b", 
+                  "FACILITY"            = "\\b(FACILIT[A-Z]*)\\b", 
+                  "FACTORY"             = "\\b(FAC?T?|FCTY|FACTO|FACTOR[A-Z]+)\\b", 
+                  "FERRY"               = "\\b(FERRIES)\\b", 
+                  "GASOLINE"            = "\\b(GAS)\\b", 
+                  "GOVERNMENT"          = "\\b(GOVT|GOVERMENT)\\b", 
+                  "GUN"                 = "\\b(GUM)\\b", 
+                  "HARBOR"              = "\\b(HARBDR|HARBOURS?|HARBORS)\\b", 
+                  "HEADQUARTERS"        = "\\b(HDOS?|HDQR?S?|HQ ?S?|HEADQUARTER)\\b", 
+                  "HEAVY"               = "\\b(HVY)\\b", 
+                  "HIGHWAY"             = "\\b(HWY?S?|HTGHWAYS?|HIWAYS?|HIGHWAYS)\\b", 
+                  "HILL"                = "\\b(HILLSIDE|HILLS)\\b", 
+                  "HOUSES"              = "\\b(HOUSES)\\b", 
+                  "HUTS"                = "\\b(HUYS?|HUT)\\b", 
+                  "HYDROELECTRIC"       = "\\b(HYDRIELECTRIC|HYDRO ELECTRIC)\\b", 
+                  "INSTALLATION"        = "\\b(INST[A-Z]*)\\b", 
+                  "JAPANESE"            = "\\b(JAPS?|JAPANSE)\\b", 
+                  "JETTY"               = "\\b(JETTIES)\\b", 
+                  "JUNCTION"            = "\\b(JTNS?|JCTS?|JUNC|JUNCT[A-Z]*)\\b", 
+                  "LAUNCHER"            = "\\b(LNCHR)\\b", 
+                  "LIGHT"               = "\\b(LGT)\\b", 
+                  "LOCATION"            = "\\b(LOCS?)\\b", 
+                  "LOCOMOTIVES"         = "\\b(LOCOS?|LOCOMOTIVE)\\b", 
+                  "LOOKOUT"             = "\\b(LKOUT)\\b", 
+                  "MANAGEMENT"          = "\\b(MGMT)\\b", 
+                  "MANUFACTURING"       = "\\b(MFG)\\b", 
+                  "MARKET"              = "\\b(MKT)\\b", 
+                  "MARSHALL"            = "\\b(MARSHALLIN ?G)\\b", 
+                  "MARSHALLING YARD"    = "\\b(M[/ ]Y(ARD)?)\\b", 
+                  "MISCELLANEOUS"       = "\\b(MISCEL[A-Z]*)\\b", 
+                  "MONASTERY"           = "\\b(MONASTARY)\\b", 
+                  "MUNITIONS"           = "\\b(MUNITION)\\b", 
+                  "PARK/STOP"           = "\\b(PRK[ /]ST)\\b", 
+                  "PARK"                = "\\b(PRK)\\b", 
+                  "PERSONNEL"           = "\\b(PERONN?EL|PERSONN[A-Z]*)\\b", 
+                  "PETROL"              = "\\b(POL)\\b", 
+                  "PILLBOXES"           = "\\b(PILL BOX[A-Z]*)\\b", 
+                  "PLACE"               = "\\b(PL)\\b", 
+                  "PLANT"               = "\\b(PLTS?|PLANTS)\\b", 
+                  "POINT"               = "\\b(PT|POINTS)\\b", 
+                  "POPULATION"          = "\\b(POP[A-Z]*N)\\b", 
+                  "POSITION"            = "\\b(POS|P0SI[A-Z]*|PDSI[A-Z]*|POSI[A-Z]*|POSTIONS?)\\b", 
+                  "\\1 \\2"             = "\\b(POWER)([A-Z]+)\\b", 
+                  "POWER"               = "\\b(PWR)\\b", 
+                  "RAILROAD"            = "\\b(R ?R|HAILROAD|RAIL ROAD|RAILROADS)\\b", 
+                  "RAILWAY"             = "\\b(RLWY|RAILWAYS)\\b", 
+                  "RATIONS"             = "\\b(RATION)\\b", 
+                  "RED"                 = "\\bRED[A-Z]*", 
+                  "REFINERY"            = "\\b(REF)\\b", 
+                  "REPORTED"            = "\\b(RPTD)\\b", 
+                  "RIVER CROSSING"      = "\\b(RIV[A-Z]* CR[A-Z]*|RIV[A-Z]* CROSS NG)\\b", 
+                  "ROAD"                = "\\b(RD)\\b", 
+                  "ROCKET"              = "\\b(RCKT)\\b", 
+                  "RUNWAY"              = "\\b(RWY|RWAY|RUNWAYS)\\b", 
+                  "SEAPLANES"           = "\\b(SEAPIANES?|SEA PLANES?|SEAPLANE)\\b", 
+                  "SHIPPING"            = "\\b(SHIPP[A-Z]*)\\b", 
+                  "SHIPYARD"            = "\\b(SHIPVARDS?|SHIP YARDS?)\\b", 
+                  "SIDING"              = "\\b(SIDINQS?|SIDINGS)\\b", 
+                  "SOREHEAD"            = "\\bSOREHEAD?[A-Z]*", 
+                  "STATION"             = "\\b(STAS?|STNS?|STATIONS)\\b", 
+                  "STORAGE"             = "\\b(STOR|STGE)\\b", 
+                  "SUPPLIES"            = "\\b(BUPPLIES)\\b", 
+                  "SUPPORT"             = "\\b(SUPPOER)\\b", 
+                  "SUSPECTED"           = "\\b(SUSP)\\b", 
+                  "SYNTHETIC"           = "\\b(SYN)\\b", 
+                  "TACTICAL"            = "\\b(TA?CT)\\b", 
+                  "TANKS"               = "\\b(TNKS?|TANK)\\b", 
+                  "TARGET"              = "\\b(TGTS?|TARGETS)\\b", 
+                  "TOWER"               = "\\b(TOWENS)\\b", 
+                  "TOWN"                = "\\b(TDWNS?|TOWMS?|TOWNS)\\b", 
+                  "TRAILER"             = "\\b(TRLR)\\b", 
+                  "TRANSSHIPMENT POINT" = "\\b(TRANS POINT)\\b", 
+                  "TRANSSHIPMENT"       = "\\b(TRANSHIPMENT)\\b", 
+                  "TRANSPORTATION"      = "\\b(TRANS|TRANSPORT|TRASNPORT|TRANPORTATION)\\b", 
+                  "TROOPS"              = "\\b(IROOPS?|TOOOO|TROOP)\\b", 
+                  "TRUCKS"              = "\\b(TRK|TRUCK)\\b", 
+                  "TUNNEL"              = "\\b(TUNNELS)\\b", 
+                  "UNIDENTIFIED"        = "\\b(UNIDENT)\\b", 
+                  "UNKNOWN"             = "\\b(UNK)\\b", 
+                  "URBAN"               = "\\b(URSAN)\\b", 
+                  "VEHICLES"            = "\\b(VEHICLE)\\b", 
+                  "VESSELS"             = "\\b(VESSEL)\\b", 
+                  "VILLAGE"             = "\\b(VILIAGES?|VILLAGES)\\b", 
+                  "WAREHOUSE"           = "\\b(WARE[A-Z]? HOUSES?|WAREHOUSES)\\b", 
+                  "WATERFRONT"          = "\\b(WATER FRONT)\\b", 
+                  "WHARF"               = "\\b(WHARVES|WHARFS)\\b", 
+                  "WORKS"               = "\\b(WR?KS?)\\b", 
+                  "YARD"                = "\\b(YDS?|YARUS?|YARDS)\\b")
+
+Vietnam_operation_rules <- c(                    " ?[%&].*", 
+                                                 "NOT APPLICABLE|UNK", 
+                                                 "\\b(- )", 
+                                                 " ?(UT.*|QR.*|NRB.*)", 
+                             "\\2"             = "\\b(HJ|XT)([A-Z]+)", 
+                             " \\1"            = "[/&-](\\d)", 
+                             "\\1 \\2"         = "([A-Z])(\\d+)", 
+                             "HAWK"            = "AHWK|KAWK|HAWL|HAWKK", 
+                             "ROLLING THUNDER" = "ROLLING THUND?", 
+                             "SUN"             = "SVN", 
+                             "AEROSOL"         = "\\bAER[LOST]*[A-Z]*", 
+                             "ALASH"           = "\\bALA?SH[A-Z]*", 
+                             "AMTRACK"         = "\\bA?MTRACK[A-Z]*", 
+                             "ARGON"           = "\\b[AS]?RG[NOB]*[A-Z]*", 
+                             "BABBIT"          = "\\b(BABB|BABBUT)[A-Z]*", 
+                             "BAFFLE"          = "\\bJ?BAFFLE[A-Z]*", 
+                             "BERSERK"         = "\\b(RERSERK|BSRAERK|J?BE[FR]S[ERK]+[A-Z]*)", 
+                             "BLABBER"         = "\\bBLABBER[A-Z]*", 
+                             "BLADE"           = "\\bBLAD[A-Z]*", 
+                             "BLUE TREE"       = "\\bBLUE ?T[RE]EE[A-Z]*", 
+                             "BOBCAT"          = "\\bBOBCAT[A-Z]*", 
+                             "BRAVO"           = "\\bBRAV[A-Z]*", 
+                             "BUCKSHOT"        = "\\bBUC[KH]SHOT[A-Z]*", 
+                             "BULLWHIP"        = "\\bB?ULLWH[A-Z]*", 
+                             "CHARLIE"         = "\\bCHARLIE[A-Z]*", 
+                             "COBRA"           = "\\bC?OBRA[A-Z]*", 
+                             "COMBAT SKYSPOT"  = "\\bCOMBAT ?[SKYPORT]+[A-Z]*", 
+                             "COMBO"           = "\\bJ?C?OMBO[A-Z]*", 
+                             "COMFORT"         = "\\bC?OMFORT[A-Z]*", 
+                             "DAD"             = "\\bDAD[A-Z]*", 
+                             "DAMSEL"          = "\\bDA[MN][SEL]+[A-Z]*", 
+                             "DEVIL"           = "\\bDEVIL[A-Z]*", 
+                             "DOWNY"           = "\\bDOWNE?Y[A-Z]*", 
+                             "ECHO"            = "\\bECHO[A-Z]*", 
+                             "ELECTRA"         = "\\bJ?E?LECTRA", 
+                             "GINKO"           = "\\b[JX]G[I1]?NKO[A-Z]*", 
+                             "GOLF"            = "\\bGOLF[A-Z]*", 
+                             "HAGGLE"          = "\\b[HA]+GGLE[A-Z]*", 
+                             "HEMP"            = "\\bHEMP[A-Z]*", 
+                             "HILLSBRO"        = "\\bHILLSB[A-Z]*", 
+                             "HIPSTER"         = "\\bH?[UI]PST[A-Z]*", 
+                             "HOTEL"           = "\\bHOTEL[A-Z]*", 
+                             "ICON"            = "\\bI[OC]+N[A-Z]*", 
+                             "INDIA"           = "\\bINDIA[A-Z]*", 
+                             "JALOPY"          = "\\b[HJ]ALOPY[A-Z]*", 
+                             "JIM"             = "\\bJ[IU]M[A-Z]*", 
+                             "JULIET"          = "\\bJULIE[A-Z]*", 
+                             "JUNK"            = "\\bJ?[4J]UNK[A-Z]*", 
+                             "KING COBRA"      = "\\bK?ING COBRA[A-Z]*", 
+                             "KINGDOM"         = "\\b(K?I[NM]G[DL]|KINDOM)[A-Z]*", 
+                             "LAOS VIETNAM"    = "\\b[AJ]?L[A-Z0-9/]*[ 0]*[VI][A-Z0-9]*[TN][A-Z]*", 
+                             "LAOS VIETNAM"    = "\\bA[LAOUS]* VI[RTNAM]*[A-Z]*", 
+                             "LAOS"            = "\\bLA[OUS]+[A-Z]*", 
+                             "LASH"            = "\\bLAS[A-Z]*", 
+                             "LEOTARD"         = "\\bL[EO/]+TARD[A-Z]*", 
+                             "LIMA"            = "\\bLIMA[A-Z]*", 
+                             "MIKE"            = "\\bMIKE[A-Z]*", 
+                             "NAPALM"          = "\\b[J]?NAP[ALM]+[A-Z]*", 
+                             "NOVEMBER"        = "\\b(NOV[EMBR]+[A-Z]*|N\\/VEMBER[A-Z]*)", 
+                             "OSCAR"           = "\\bOSCAR[A-Z]*", 
+                             "OXFORD"          = "\\bOXFO[ERD]+[A-Z]*", 
+                             "PANAMA"          = "\\bPA?NAMA[A-Z]*", 
+                             "PAPA"            = "\\bPAPA[A-Z]*", 
+                             "PAVEN"           = "\\bPAVEN[A-Z]*", 
+                             "PETRO"           = "\\bPE[TY]RO[A-Z]*", 
+                             "PETTICOAT"       = "\\bP?ETTI[A-Z]*T[A-Z]*", 
+                             "POLKA DOT"       = "\\bPOLKADOT[A-Z]*", 
+                             "PULLOVER"        = "\\bULLOVER[A-Z]*", 
+                             "QUEBEC"          = "\\bQUEBIC[A-Z]*", 
+                             "RAMROD"          = "\\bR?AMROD[A-Z]*", 
+                             "RED CROWN"       = "\\bRED ?CR[OWN]+[A-Z]*", 
+                             "REDNECK"         = "\\bREDN[A-Z]*K[A-Z]*", 
+                             "ROMEO"           = "\\bRO[MEO]+[A-Z]*", 
+                             "REUBEN"          = "\\bR[EU]+BEN[A-Z]*", 
+                             "SABRE"           = "\\bS[AZ]B[RE]*[A-Z]*", 
+                             "SHADOW"          = "\\b[SW]HADOW[A-Z]*", 
+                             "SHELLAC"         = "\\bS?[HN]ELLAC[A-Z]*", 
+                             "SIERRA"          = "\\bS[IERA]{4,}[A-Z]*", 
+                             "SINFUL"          = "\\bSIN[DF]UL[A-Z]*", 
+                             "SLOVAK"          = "\\bSLOVA[CK]+[A-Z]*", 
+                             "SNAIL"           = "\\bSNAIL?[A-Z]*", 
+                             "SOUTH VIETNAM"   = "\\bS(VSTH)? VIETNAM[A-Z]*", 
+                             "STORMY"          = "\\b[GFJ]*STORM[ Y]+[A-Z]*", 
+                             "SUN DOG"         = "\\bSUN DO[BG][A-Z]*", 
+                             "THERMAL"         = "\\bT?HERMAL[A-Z]*", 
+                             "TIGER CUB"       = "\\bT?IGER CUB[A-Z]*", 
+                             "TRICYCLE"        = "\\bT?R[IU]C[UY]CLE[A-Z]*", 
+                             "TRUMP"           = "\\bTRUM?P[A-Z]*", 
+                             "UNIFORM"         = "\\bUNI[FORM]+[A-Z]*", 
+                             "VACCUUM"         = "\\bJ?VAC[CUM]+[A-Z]*", 
+                             "VERMIN"          = "\\bVERMIN[A-Z]*", 
+                             "VICE SQUAD"      = "\\bVICE ?SQ[UAD]+[A-Z]*", 
+                             "VIETNAM"         = "\\bA?VIETNAM[A-Z]*", 
+                             "YANKEE"          = "\\bYANKEE[A-Z]*", 
+                             "YELLOW JACKET"   = "\\bYELLOW JACK[A-Z]*", 
+                             "YOUNG TIGER"     = "\\b(Y?OUNG|YOUMG|YONUG|YPUNG) T[IU]GER[A-Z]*", 
+                             "YOYO"            = "\\bJ?(Y-Y-|YOYO|YOUO|UOUO|UOYO|OOYO)[A-Z]*", 
+                             "WATERBOY"        = "\\bWA?TERB[A-Z]*", 
+                             "WHISKEY"         = "\\bWHIS[KEY]+[A-Z]*", 
+                             "ZULU"            = "\\bZULU[A-Z]*", 
+                                                 " +$")
+
+Vietnam_operation_rules2 <- c(        " ?- ?.*", 
+                                      " ?\\d.*", 
+                                      " ?ZERO|ONE|TWO|THREE|FOUR|FIVE|SIX|SEVEN|EIGHT|NINE|SIXTY|([IVX]+\\b)", 
+                              "\\3" = "((ARC|FINE|SUN|[LR][IU]GHT) )?([A-Z]* ?[A-Z]*)( (DUPT|SUPR|SUPT))?", 
+                                      "SSY", 
+                                      " +$", 
+                                      " .{1,2}$", 
+                                      "^.{1,2}$")
 
 
 ### Capitalize Functions ----------------------------------------------------
@@ -261,14 +546,14 @@ aircraft_string <- function(numtype, division, empty = "") {
   if (division == empty) {
     return (paste0(numtype, " dropped"))
   } else {
-    return (paste0(numtype, " of the ", division, " division dropped"))
+    return (paste0(numtype, " of the ", division, " dropped"))
   }
 }
 
 aircraft_string_vectorized <- function(numtypes, divisions, empty = "") {
   return (if_else(divisions == empty, 
                   paste0(numtypes, " dropped"), 
-                  paste0(numtypes, " of the ", divisions, " division dropped")))
+                  paste0(numtypes, " of the ", divisions, " dropped")))
 }
 
 target_type_string <- function(type, empty = "") {
@@ -280,9 +565,15 @@ target_type_string <- function(type, empty = "") {
 }
 
 target_type_string_vectorized <- function(types, empty = "") {
-  return (if_else(types == empty, 
-                  "a target", 
-                  fix_articles_vectorized(types)))
+  if (is.factor(types)) {
+    return (if_else(types == empty, 
+                    "a target", 
+                    fix_articles_vectorized(as.character(types))))
+  } else {
+    return (if_else(types == empty, 
+                    "a target", 
+                    fix_articles_vectorized(types)))
+  }
 }
 
 target_area_string <- function(area, empty = "") {
@@ -410,7 +701,7 @@ add_commas_vectorized <- function(numbers) {
 }
 
 
-### Regexps -----------------------------------------------------------------
+### Formatting --------------------------------------------------------------
 
 format_aircraft_types <- function(types) {
   return (gsub(pattern = "([A-Za-z]+)[ ./]?(\\d+[A-Za-z]*)(.*)", replacement = "\\1-\\2", types))
@@ -449,8 +740,12 @@ format_day_periods <- function(periods) {
           "")))))
 }
 
-remove_parentheticals <- function(phrases) {
-  return (grem(pattern = " ?\\([^\\)]*\\)", phrases))
+remove_parentheticals <- function(strings) {
+  return (grem(pattern = " ?\\([^\\)]*\\)", strings))
+}
+
+fix_parentheses <- function(strings) {
+  return (gsub(pattern = "(\\w)\\(", replacement = "\\1 \\(", strings))
 }
 
 remove_quotes <- function(strings) {
@@ -467,189 +762,14 @@ remove_extra_whitespace <- function(strings) {
 
 remove_bad_formatting <- trimws %.% remove_extra_whitespace %.% remove_quotes %.% remove_nonASCII_chars
 
-
-### Targets -----------------------------------------------------------------
-
-cleanup_targets <- function(targets) {
-  targets <- gsub(pattern = " +-? *", replacement = " ", 
-             grem(pattern = "?", fixed = TRUE, targets))
-  targets <- gsub(pattern = "\\b(ADM(IN[A-Z]*)?)\\b", replacement = "ADMINISTRATIVE", 
-             gsub(pattern = "\\b(AC|A C)\\b", replacement = "AIRCRAFT", 
-             gsub(pattern = "\\b(AERO?D?[A-Z]*|AIRODROM[A-Z]*|AIRDROM[A-Z]*|AIDROM[A-Z]*|AIR DROM[A-Z]*)\\b", replacement = "AIRDROME", 
-             gsub(pattern = "\\b(AIR FIELDS?|AIRFIEL|AIRFIELDS)\\b", replacement = "AIRFIELD", 
-             gsub(pattern = "\\b(AIR FRAMES?)\\b", replacement = "AIRFRAME", 
-             gsub(pattern = "\\b(AMMO|AMMUN[A-Z]*)\\b", replacement = "AMMUNITION", 
-             gsub(pattern = "\\b(AA|ANTIAIRCRAFT|ANTI AIRCRAFT|ANTI AIR CRAFT)\\b", replacement = "ANTI-AIRCRAFT", 
-             gsub(pattern = "\\b(ARES?|ABEAS?|APEAS?|AREAS)\\b", replacement = "AREA", 
-             gsub(pattern = "\\b(ARSENALS)\\b", replacement = "ARSENAL", 
-             gsub(pattern = "\\b(ARTILLER)\\b", replacement = "ARTILLERY", 
-             gsub(pattern = "\\b(ASSBLY)\\b", replacement = "ASSEMBLY", 
-             gsub(pattern = "\\b(BRAGES?|BARGES)\\b", replacement = "BARGE", 
-             gsub(pattern = "\\b(BKS?|BARRAC.*)\\b", replacement = "BARRACKS", 
-             gsub(pattern = "\\b(BASFS?|BASES)\\b", replacement = "BASE", 
-             gsub(pattern = "\\b(BTY|BRTY|BTRY)\\b", replacement = "BATTERY", 
-             gsub(pattern = "\\b(BEARING)\\b", replacement = "BEARINGS", 
-             gsub(pattern = "\\b(BLST)\\b", replacement = "BLAST", 
-             gsub(pattern = "\\b(BOATS)\\b", replacement = "BOAT", 
-             gsub(pattern = "\\b(BR|BR?DGE?S?|BRID ES?|8RIDGES?|GRIDGES?|BOIDGES?|BIRDGES?|BRIDGES)\\b", replacement = "BRIDGE", 
-             gsub(pattern = "\\b(BLDGS?|BUILD|BUILOING|BUILDINGS)\\b", replacement = "BUILDING", 
-             gsub(pattern = "\\b(BUSIHESS)\\b", replacement = "BUSINESS", 
-             gsub(pattern = "\\b(CAMPS)\\b", replacement = "CAMP", 
-             gsub(pattern = "\\b(CANAI|CANALS)\\b", replacement = "CANAL", 
-             gsub(pattern = "\\b(CENTRE|CENTERS)\\b", replacement = "CENTER", 
-             gsub(pattern = "\\b(CHEM)\\b", replacement = "CHEMICAL", 
-             gsub(pattern = "\\b(CIIY)\\b", replacement = "CITY", 
-             gsub(pattern = "\\b(COAST|COASTAL[A-Z]*)\\b", replacement = "COASTAL", 
-             gsub(pattern = "\\b(COM)\\b", replacement = "COMMERCIAL", 
-             gsub(pattern = "\\b(COMM)\\b", replacement = "COMMAND", 
-             gsub(pattern = "\\b(COMMUNICATION)\\b", replacement = "COMMUNICATIONS", 
-             gsub(pattern = "\\b(COMPONENT)\\b", replacement = "COMPONENTS", 
-             gsub(pattern = "\\b(CONPOUNDS?|CPMPOUNDS?|COMPOU[A-Z]*)\\b", replacement = "COMPOUND", 
-             gsub(pattern = "\\b(CONCT?S?|CONCENT[A-Z]*|CONSTRATIONS?|CONTRATIONS?|CQNCENTRATIONS?)\\b", replacement = "CONCENTRATION", 
-             gsub(pattern = "\\b(CONST)\\b", replacement = "CONSTRUCTION", targets))))))))))))))))))))))))))))))))))
-  targets <- gsub(pattern = "\\b(DEFENCE?S|DEFENSE)\\b", replacement = "DEFENSES", 
-             gsub(pattern = "\\b(DEF)\\b", replacement = "DEFENSIVE", 
-             gsub(pattern = "\\b(DDCKS?|DOCKS)\\b", replacement = "DOCK", 
-             gsub(pattern = "\\b(DIMPS?|DOOPS?|DUMPS)\\b", replacement = "DUMP", 
-             gsub(pattern = "\\b(ELCT|ELECT?)\\b", replacement = "ELECTRIC", 
-             gsub(pattern = "\\b(EMP|EMPL|EMPLACEMENTO|EMPLACEMENTS|IMPLACEMENTS?)\\b", replacement = "EMPLACEMENT", 
-             gsub(pattern = "\\b(EN|ENEMIES)\\b", replacement = "ENEMY", 
-             gsub(pattern = "\\b(ENG)\\b", replacement = "ENGINE", 
-             gsub(pattern = "\\b(EQUIPT?)\\b", replacement = "EQUIPMENT", 
-             gsub(pattern = "\\b(EXPLOSIVES)\\b", replacement = "EXPLOSIVE", 
-             gsub(pattern = "\\b(FACILIT[A-Z]*)\\b", replacement = "FACILITY", 
-             gsub(pattern = "\\b(FAC?T?|FCTY|FACTO|FACTOR[A-Z]+)\\b", replacement = "FACTORY", 
-             gsub(pattern = "\\b(FERRIES)\\b", replacement = "FERRY", 
-             gsub(pattern = "\\b(GAS)\\b", replacement = "GASOLINE", 
-             gsub(pattern = "\\b(GOVT|GOVERMENT)\\b", replacement = "GOVERNMENT", 
-             gsub(pattern = "\\b(GUM)\\b", replacement = "GUN", 
-             gsub(pattern = "\\b(HARBDR|HARBOURS?|HARBORS)\\b", replacement = "HARBOR", 
-             gsub(pattern = "\\b(HDOS?|HDQR?S?|HQ ?S?|HEADQUARTER)\\b", replacement = "HEADQUARTERS", 
-             gsub(pattern = "\\b(HVY)\\b", replacement = "HEAVY", 
-             gsub(pattern = "\\b(HWY?S?|HTGHWAYS?|HIWAYS?|HIGHWAYS)\\b", replacement = "HIGHWAY", 
-             gsub(pattern = "\\b(HILLSIDE|HILLS)\\b", replacement = "HILL", 
-             gsub(pattern = "\\b(HOUSES)\\b", replacement = "HOUSE", 
-             gsub(pattern = "\\b(HUYS?|HUTS)\\b", replacement = "HUT", 
-             gsub(pattern = "\\b(HYDRIELECTRIC|HYDRO ELECTRIC)\\b", replacement = "HYDROELECTRIC", 
-             gsub(pattern = "\\b(INST[A-Z]*)\\b", replacement = "INSTALLATION", 
-             gsub(pattern = "\\b(JAPS?|JAPANSE)\\b", replacement = "JAPANESE", 
-             gsub(pattern = "\\b(JETTIES)\\b", replacement = "JETTY", 
-             gsub(pattern = "\\b(JTNS?|JCTS?|JUNC|JUNCT[A-Z]*)\\b", replacement = "JUNCTION", 
-             gsub(pattern = "\\b(LGT)\\b", replacement = "LIGHT", 
-             gsub(pattern = "\\b(LOCS?)\\b", replacement = "LOCATION", 
-             gsub(pattern = "\\b(LOCOS?|LOCOMOTIVES)\\b", replacement = "LOCOMOTIVE", 
-             gsub(pattern = "\\b(MGMT)\\b", replacement = "MANAGEMENT", 
-             gsub(pattern = "\\b(MFG)\\b", replacement = "MANUFACTURING", 
-             gsub(pattern = "\\b(MKT)\\b", replacement = "MARKET", 
-             gsub(pattern = "\\b(MARSHALLIN ?G)\\b", replacement = "MARSHALL", 
-             gsub(pattern = "\\b(M[/ ]Y(ARD)?)\\b", replacement = "MARSHALLING YARD", 
-             gsub(pattern = "\\b(MISCEL[A-Z]*)\\b", replacement = "MISCELLANEOUS", 
-             gsub(pattern = "\\b(MONASTARY)\\b", replacement = "MONASTERY", 
-             gsub(pattern = "\\b(MUNITION)\\b", replacement = "MUNITIONS", targets)))))))))))))))))))))))))))))))))))))))
-  targets <- gsub(pattern = "\\b(PERONN?EL|PERSONN[A-Z]*)\\b", replacement = "PERSONNEL", 
-             gsub(pattern = "\\b(PILL BOX[A-Z]*)\\b", replacement = "PILLBOXES", 
-             gsub(pattern = "\\b(PL)\\b", replacement = "PLACE", 
-             gsub(pattern = "\\b(PLTS?|PLANTS)\\b", replacement = "PLANT", 
-             gsub(pattern = "\\b(PT|POINTS)\\b", replacement = "POINT", 
-             gsub(pattern = "\\b(POS|P0SI[A-Z]*|PDSI[A-Z]*|POSI[A-Z]*|POSTIONS?)\\b", replacement = "POSITION", 
-             gsub(pattern = "\\b(POWER)([A-Z]+)\\b", replacement = "\\1 \\2", 
-             gsub(pattern = "\\b(R ?R|HAILROAD|RAIL ROAD|RAILROADS)\\b", replacement = "RAILROAD", 
-             gsub(pattern = "\\b(RLWY|RAILWAYS)\\b", replacement = "RAILWAY", 
-             gsub(pattern = "\\b(RATION)\\b", replacement = "RATIONS", 
-             gsub(pattern = "\\b(REF)\\b", replacement = "REFINERY", 
-             gsub(pattern = "\\b(RIV[A-Z]* CR[A-Z]*|RIV[A-Z]* CROSS NG)\\b", replacement = "RIVER CROSSING", 
-             gsub(pattern = "\\b(RD)\\b", replacement = "ROAD", 
-             gsub(pattern = "\\b(RWY|RWAY|RUNWAYS)\\b", replacement = "RUNWAY", 
-             gsub(pattern = "\\b(SEAPIANES?|SEA PLANES?|SEAPLANE)\\b", replacement = "SEAPLANES", 
-             gsub(pattern = "\\b(SHIPP[A-Z]*)\\b", replacement = "SHIPPING", 
-             gsub(pattern = "\\b(SHIPVARDS?|SHIP YARDS?)\\b", replacement = "SHIPYARD", 
-             gsub(pattern = "\\b(SIDINQS?|SIDINGS)\\b", replacement = "SIDING", 
-             gsub(pattern = "\\b(STAS?|STNS?|STATIONS)\\b", replacement = "STATION", 
-             gsub(pattern = "\\b(STOR|STGE)\\b", replacement = "STORAGE", 
-             gsub(pattern = "\\b(BUPPLIES)\\b", replacement = "SUPPLIES", 
-             gsub(pattern = "\\b(SUPPOER)\\b", replacement = "SUPPORT", 
-             gsub(pattern = "\\b(SYN)\\b", replacement = "SYNTHETIC", 
-             gsub(pattern = "\\b(TA?CT)\\b", replacement = "TACTICAL", 
-             gsub(pattern = "\\b(TGTS?|TARGETS)\\b", replacement = "TARGET", 
-             gsub(pattern = "\\b(TOWENS)\\b", replacement = "TOWER", 
-             gsub(pattern = "\\b(TDWNS?|TOWMS?|TOWNS)\\b", replacement = "TOWN", 
-             gsub(pattern = "\\b(TRANSPORT|TRASNPORT|TRANPORTATION)\\b", replacement = "TRANSPORTATION", 
-             gsub(pattern = "\\b(IROOPS?|TOOOO|TROOP)\\b", replacement = "TROOPS", 
-             gsub(pattern = "\\b(TRUCK)\\b", replacement = "TRUCKS", 
-             gsub(pattern = "\\b(TUNNELS)\\b", replacement = "TUNNEL", 
-             gsub(pattern = "\\b(URSAN)\\b", replacement = "URBAN", 
-             gsub(pattern = "\\b(VEHICLES)\\b", replacement = "VEHICLE", 
-             gsub(pattern = "\\b(VESSELS)\\b", replacement = "VESSEL", 
-             gsub(pattern = "\\b(VILIAGES?|VILLAGES)\\b", replacement = "VILLAGE", 
-             gsub(pattern = "\\b(WARE[A-Z]? HOUSES?|WAREHOUSES)\\b", replacement = "WAREHOUSE", 
-             gsub(pattern = "\\b(WATER FRONT)\\b", replacement = "WATERFRONT", 
-             gsub(pattern = "\\b(WHARVES|WHARFS)\\b", replacement = "WHARF", 
-             gsub(pattern = "\\b(WKS?)\\b", replacement = "WORKS", 
-             gsub(pattern = "\\b(YDS?|YARUS?|YARDS)\\b", replacement = "YARD", targets))))))))))))))))))))))))))))))))))))))))
-  return (targets)
-}
-
-
-### Month Number to Name ----------------------------------------------------
-
-month_num_to_name <- function(months) {
-  return (if_else(is.na(months), 
-                  "", 
-          if_else(months == "1", 
-                  "January", 
-          if_else(months == "2", 
-                  "February", 
-          if_else(months == "3", 
-                  "March", 
-          if_else(months == "4", 
-                  "April", 
-          if_else(months == "5", 
-                  "May", 
-          if_else(months == "6", 
-                  "June", 
-          if_else(months == "7", 
-                  "July", 
-          if_else(months == "8", 
-                  "August", 
-          if_else(months == "9", 
-                  "September", 
-          if_else(months == "10", 
-                  "October", 
-          if_else(months == "11", 
-                  "November", 
-          if_else(months == "12", 
-                  "December", 
-          ""))))))))))))))
-}
-
-month_num_padded_to_name <- function(months) {
-  return (if_else(is.na(months), 
-                  "", 
-          if_else(months == "01", 
-                  "January", 
-          if_else(months == "02", 
-                  "February", 
-          if_else(months == "03", 
-                  "March", 
-          if_else(months == "04", 
-                  "April", 
-          if_else(months == "05", 
-                  "May", 
-          if_else(months == "06", 
-                  "June", 
-          if_else(months == "07", 
-                  "July", 
-          if_else(months == "08", 
-                  "August", 
-          if_else(months == "09", 
-                  "September", 
-          if_else(months == "10", 
-                  "October", 
-          if_else(months == "11", 
-                  "November", 
-          if_else(months == "12", 
-                  "December", 
-          ""))))))))))))))
+month_num_to_name <- function(month_strings) {
+  month_ints <- as.integer(month_strings)
+  results <- rep("", length(month_strings))
+  month_names <- names(months)
+  for (month_name in month_names) {
+    results[month_ints == months[[month_name]]] <- month_name
+  }
+  return (results)
 }
 
 
@@ -658,13 +778,20 @@ month_num_padded_to_name <- function(months) {
 ordered_empty_at_end <- function(column, empty_string) {
   ordered_levels <- sort(levels(column))
   if ("" %c% ordered_levels) {
-    ordered_levels <- c(ordered_levels[ordered_levels != ""], empty_string)
+    ordered_levels <- c(ordered_levels %[!=]% "", empty_string)
     return (ordered(replace_level(column, from = "", to = empty_string), levels = ordered_levels))
+  } else if (empty_string %c% ordered_levels) {
+    ordered_levels <- c(ordered_levels %[!=]% empty_string, empty_string)
+    return (ordered(column, levels = ordered_levels))
   } else {
     return (ordered(column, levels = ordered_levels))
   }
 }
 
-refactor_and_order <- function(column, empty_string) {
-  return (ordered_empty_at_end(column = drop_missing_levels(column), empty_string = empty_string))
+refactor_and_order <- function(column, empty_string, drop_to = "") {
+  if (drop_to %c% missing_levels(column)) {
+    return (ordered_empty_at_end(column = droplevels(column), empty_string = empty_string))
+  } else {
+    return (ordered_empty_at_end(column = drop_missing_levels(column, to = drop_to), empty_string = empty_string))
+  }
 }

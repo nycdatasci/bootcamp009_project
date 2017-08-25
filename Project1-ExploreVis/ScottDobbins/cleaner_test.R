@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.8.1
-# @date 2017-08-15 21:00
+# @version 0.9.8.3
+# @date 2017-08-24 22:30
 
 
 ### Context -----------------------------------------------------------------
@@ -16,7 +16,7 @@ test_that("no data column is completely empty or identical across all rows", {
   WW1_bombs %>% map_int(~expect_gt(cardinality(.), 1L))
   WW2_bombs %>% map_int(~expect_gt(cardinality(.), 1L))
   Korea_bombs1 %>% select(-Takeoff_Latitude, -Takeoff_Longitude) %>% map_int(~expect_gt(cardinality(.), 1L))
-  Korea_bombs2 %>% select(-Reference_Source) %>% map_int(~expect_gt(cardinality(.), 1L))
+  Korea_bombs2 %>% select(-Unit_Country, -Reference_Source) %>% map_int(~expect_gt(cardinality(.), 1L))
   Vietnam_bombs %>% select(-Weapon_Class2) %>% map_int(~expect_gt(cardinality(.), 1L))
 })
 
@@ -24,17 +24,13 @@ test_that("no data column is completely empty or identical across all rows", {
 ### Text Length -------------------------------------------------------------
 
 test_that("no text column is excessively long", {
-  WW1_bombs %>% keep(is.character) %>% map_int(~expect_lt(max(nchar(levels(as.factor(.)))), max_string_length))
-  WW2_bombs %>% keep(is.character) %>% map_int(~expect_lt(max(nchar(levels(as.factor(.)))), max_string_length))
-  Korea_bombs1 %>% keep(is.character) %>% map_int(~expect_lt(max(nchar(levels(as.factor(.)))), max_string_length))
-  Korea_bombs2 %>% keep(is.character) %>% map_int(~expect_lt(max(nchar(levels(as.factor(.)))), max_string_length))
-  Vietnam_bombs %>% keep(is.character) %>% map_int(~expect_lt(max(nchar(levels(as.factor(.)))), max_string_length))
+  walk(bomb_data, 
+      function(dt) dt %>% keep(is.character) %>% 
+        map_int(~expect_lt(max(nchar(levels(as.factor(.)))), max_string_length)))
   
-  WW1_bombs %>% keep(is.factor) %>% map_int(~expect_lt(max(nchar(levels(.))), max_string_length))
-  WW2_bombs %>% keep(is.factor) %>% map_int(~expect_lt(max(nchar(levels(.))), max_string_length))
-  Korea_bombs1 %>% keep(is.factor) %>% map_int(~expect_lt(max(nchar(levels(.))), max_string_length))
-  Korea_bombs2 %>% keep(is.factor) %>% map_int(~expect_lt(max(nchar(levels(.))), max_string_length))
-  Vietnam_bombs %>% keep(is.factor) %>% map_int(~expect_lt(max(nchar(levels(.))), max_string_length))
+  walk(bomb_data, 
+       function(dt) dt %>% keep(is.factor) %>% 
+         map_int(~expect_lt(max(nchar(levels(.))), max_string_length)))
 })
 
 
@@ -95,33 +91,25 @@ test_that("no zero values for essential integer columns", {
 ### Completeness ------------------------------------------------------------
 
 test_that("no string values are NA", {
-  WW1_bombs %>% keep(is.character) %>% map_lgl(~expect_false(anyNA(.)))
-  WW2_bombs %>% keep(is.character) %>% map_lgl(~expect_false(anyNA(.)))
-  Korea_bombs1 %>% keep(is.character) %>% map_lgl(~expect_false(anyNA(.)))
-  Korea_bombs2 %>% keep(is.character) %>% map_lgl(~expect_false(anyNA(.)))
-  Vietnam_bombs %>% keep(is.character) %>% map_lgl(~expect_false(anyNA(.)))
+  walk(bomb_data, 
+       function(dt) dt %>% keep(is.character) %>% 
+         map_lgl(~expect_false(anyNA(.))))
   
-  WW1_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(anyNA(.)))
-  WW2_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(anyNA(.)))
-  Korea_bombs1 %>% keep(is.factor) %>% map_lgl(~expect_false(anyNA(.)))
-  Korea_bombs2 %>% keep(is.factor) %>% map_lgl(~expect_false(anyNA(.)))
-  Vietnam_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(anyNA(.)))
+  walk(bomb_data, 
+       function(dt) dt %>% keep(is.factor) %>% 
+         map_lgl(~expect_false(anyNA(.))))
 })
 
 test_that("there are no NA levels in factors", {
-  WW1_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(anyNA(levels(.))))
-  WW2_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(anyNA(levels(.))))
-  Korea_bombs1 %>% keep(is.factor) %>% map_lgl(~expect_false(anyNA(levels(.))))
-  Korea_bombs2 %>% keep(is.factor) %>% map_lgl(~expect_false(anyNA(levels(.))))
-  Vietnam_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(anyNA(levels(.))))
+  walk(bomb_data, 
+       function(dt) dt %>% keep(is.factor) %>% 
+         map_lgl(~expect_false(anyNA(levels(.)))))
 })
 
 test_that("no missing levels exist", {
-  WW1_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(any(tabulate(.) == 0L)))
-  WW2_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(any(tabulate(.) == 0L)))
-  Korea_bombs1 %>% keep(is.factor) %>% map_lgl(~expect_false(any(tabulate(.) == 0L)))
-  Korea_bombs2 %>% keep(is.factor) %>% map_lgl(~expect_false(any(tabulate(.) == 0L)))
-  Vietnam_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(any(tabulate(.) == 0L)))
+  walk(bomb_data, 
+       function(dt) dt %>% keep(is.factor) %>% 
+         map_lgl(~expect_false(any(tabulate_factor(.) == 0L))))
 })
 
 
@@ -137,56 +125,42 @@ test_that("all times formatted properly", {
 })
 
 test_that("no double whitespace in factor columns", {
-  WW1_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = "\\s{2,}"))))
-  WW2_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = "\\s{2,}"))))
-  Korea_bombs1 %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = "\\s{2,}"))))
-  Korea_bombs2 %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = "\\s{2,}"))))
-  Vietnam_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = "\\s{2,}"))))
+  walk(bomb_data, 
+       function(dt) dt %>% keep(is.factor) %>% 
+         map_lgl(~expect_false(any(grepl(levels(.), pattern = "\\s{2,}")))))
 })
 
 test_that("no quotation marks in text columns", {
-  WW1_bombs %>% keep(is.character) %>% map_lgl(~expect_false(any(grepl(., pattern = '\\"', fixed = TRUE))))
-  WW2_bombs %>% keep(is.character) %>% map_lgl(~expect_false(any(grepl(., pattern = '\\"', fixed = TRUE))))
-  Korea_bombs1 %>% keep(is.character) %>% map_lgl(~expect_false(any(grepl(., pattern = '\\"', fixed = TRUE))))
-  Korea_bombs2 %>% keep(is.character) %>% map_lgl(~expect_false(any(grepl(., pattern = '\\"', fixed = TRUE))))
-  Vietnam_bombs %>% keep(is.character) %>% map_lgl(~expect_false(any(grepl(., pattern = '\\"', fixed = TRUE))))
+  walk(bomb_data, 
+       function(dt) dt %>% keep(is.character) %>% 
+         map_lgl(~expect_false(any(grepl(., pattern = '\\"', fixed = TRUE)))))
   
-  WW1_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = '\\"', fixed = TRUE))))
-  WW2_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = '\\"', fixed = TRUE))))
-  Korea_bombs1 %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = '\\"', fixed = TRUE))))
-  Korea_bombs2 %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = '\\"', fixed = TRUE))))
-  Vietnam_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = '\\"', fixed = TRUE))))
+  walk(bomb_data, 
+       function(dt) dt %>% keep(is.factor) %>% 
+         map_lgl(~expect_false(any(grepl(levels(.), pattern = '\\"', fixed = TRUE)))))
 })
 
 test_that("no backslashes in text columns", {
-  WW1_bombs %>% keep(is.character) %>% map_lgl(~expect_false(any(grepl(., pattern = "\\\\", fixed = TRUE))))
-  WW2_bombs %>% keep(is.character) %>% map_lgl(~expect_false(any(grepl(., pattern = "\\\\", fixed = TRUE))))
-  Korea_bombs1 %>% keep(is.character) %>% map_lgl(~expect_false(any(grepl(., pattern = "\\\\", fixed = TRUE))))
-  Korea_bombs2 %>% keep(is.character) %>% map_lgl(~expect_false(any(grepl(., pattern = "\\\\", fixed = TRUE))))
-  Vietnam_bombs %>% keep(is.character) %>% map_lgl(~expect_false(any(grepl(., pattern = "\\\\", fixed = TRUE))))
+  walk(bomb_data, 
+       function(dt) dt %>% keep(is.character) %>% 
+         map_lgl(~expect_false(any(grepl(., pattern = "\\\\", fixed = TRUE)))))
   
-  WW1_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = "\\\\", fixed = TRUE))))
-  WW2_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = "\\\\", fixed = TRUE))))
-  Korea_bombs1 %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = "\\\\", fixed = TRUE))))
-  Korea_bombs2 %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = "\\\\", fixed = TRUE))))
-  Vietnam_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = "\\\\", fixed = TRUE))))
+  walk(bomb_data, 
+       function(dt) dt %>% keep(is.factor) %>% 
+         map_lgl(~expect_false(any(grepl(levels(.), pattern = "\\\\", fixed = TRUE)))))
 })
 
 
 ### Names -------------------------------------------------------------------
 
 test_that("none of the levels have names", {
-  WW1_bombs %>% keep(is.factor) %>% walk(~expect_null(names(levels(.))))
-  WW2_bombs %>% keep(is.factor) %>% walk(~expect_null(names(levels(.))))
-  Korea_bombs1 %>% keep(is.factor) %>% walk(~expect_null(names(levels(.))))
-  Korea_bombs2 %>% keep(is.factor) %>% walk(~expect_null(names(levels(.))))
-  Vietnam_bombs %>% keep(is.factor) %>% walk(~expect_null(names(levels(.))))
+  walk(bomb_data, 
+       function(dt) dt %>% keep(is.factor) %>% 
+         walk(~expect_null(names(levels(.)))))
 })
 
 test_that("none of the data has names", {
-  WW1_bombs %>% walk(~expect_null(names(.)))
-  WW2_bombs %>% walk(~expect_null(names(.)))
-  Korea_bombs1 %>% walk(~expect_null(names(.)))
-  Korea_bombs2 %>% walk(~expect_null(names(.)))
-  Vietnam_bombs %>% walk(~expect_null(names(.)))
+  walk(bomb_data, 
+       function(dt) dt %>% 
+         walk(~expect_null(names(.))))
 })

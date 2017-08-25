@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.8
-# @date 2017-08-11 23:30
+# @version 0.9.8.1
+# @date 2017-08-15 21:00
 
 ### Code Graveyard ###
 # where buggy or formerly useful but now unnecessary code lays to rest
@@ -1912,5 +1912,384 @@ draw_WW1_civilian <- function() {
                          radius = civilian_radius, 
                          group = "WW1_heatmap")
   }
+
+fix_map_base <- function(map_type) {
+    if (map_type == "Color Map") {
+      swap_map_base(type = "Stamen.Watercolor")
+    } else if (map_type == "Plain Map") {
+      swap_map_base(type = "CartoDB.PositronNoLabels")
+    } else if (map_type == "Terrain Map") {
+      swap_map_base(type = "Stamen.TerrainBackground")
+    } else if (map_type == "Street Map") {
+      swap_map_base(type = "HERE.basicMap", options = providerTileOptions(app_id = HERE_id, app_code = HERE_code))
+    } else if (input$pick_map == "Satellite Map") {
+      swap_map_base(type = "Esri.WorldImagery")
+    }
+  }
+
+  # country drop-down updater
+  update_countries <- function() {
+    debug_message("Countries choices updated")
+    country_choices <- c("All", possible_selectize_choices("Unit_Country"))
+    country_matches <- input$country %in% country_choices
+    if (any(country_matches)) {
+      countries_selected <- input$country[country_matches]
+    } else {
+      countries_selected <- "All"
+    }
+    updateSelectizeInput(session,
+                         inputId = "country",
+                         choices = country_choices,
+                         selected = countries_selected)
+  }
+
+  # aircraft drop-down updater
+  update_aircraft <- function() {
+    debug_message("Aircraft choices updated")
+    aircraft_choices <- c("All", possible_selectize_choices("Aircraft_Type"))
+    aircraft_matches <- input$aircraft %in% aircraft_choices
+    if (any(aircraft_matches)) {
+      aircraft_selected <- input$aircraft[aircraft_matches]
+    } else {
+      aircraft_selected <- "All"
+    }
+    updateSelectizeInput(session,
+                         inputId = "aircraft",
+                         choices = aircraft_choices,
+                         selected = aircraft_selected)
+  }
+
+  # weapon drop-down updater
+  update_weapons <- function() {
+    debug_message("Weapons choices updated")
+    weapon_choices <- c("All", possible_selectize_choices("Weapon_Type"))
+    weapon_matches <- input$weapon %in% weapon_choices
+    if (any(weapon_matches)) {
+      weapons_selected <- input$weapon[weapon_matches]
+    } else {
+      weapons_selected <- "All"
+    }
+    updateSelectizeInput(session,
+                         inputId = "weapon",
+                         choices = weapon_choices,
+                         selected = weapons_selected)
+  }
+
+  # handler for country selection
+  observeEvent(eventExpr = input$country, ignoreNULL = FALSE, ignoreInit = TRUE, handlerExpr = {
+    debug_message("country selected")
+    if (change_token %c% previous_countries_selection) {
+      previous_countries_selection <<- previous_countries_selection %d% change_token
+      redraw()
+      update_other_selectize_inputs("countries")
+    } else {
+      if (length(input$country) == 0L) {
+        previous_countries_selection <<- c("All", change_token)
+        updateSelectizeInput(session, inputId = "country", selected = "All")
+      } else {
+        diff_country <- previous_countries_selection %dd% input$country
+        selected <- length(input$country) > length(previous_countries_selection)
+        if ("All" %c% previous_countries_selection) {
+          previous_countries_selection <<- c(diff_country, change_token)
+          updateSelectizeInput(session, inputId = "country", selected = diff_country)
+        } else {
+          if ("All" %e% diff_country) {
+            previous_countries_selection <<- c("All", change_token)
+            updateSelectizeInput(session, inputId = "country", selected = "All")
+          } else {
+            previous_countries_selection <<- input$country
+            redraw()
+            update_other_selectize_inputs("countries")
+          }
+        }
+      }
+    }
+  })
+
+
+### Aircraft observer -------------------------------------------------------
+
+  # handler for aircraft selection
+  observeEvent(eventExpr = input$aircraft, ignoreNULL = FALSE, ignoreInit = TRUE, handlerExpr = {
+    debug_message("aircraft selected")
+    if (change_token %c% previous_aircrafts_selection) {
+      previous_aircrafts_selection <<- previous_aircrafts_selection %d% change_token
+      redraw()
+      update_other_selectize_inputs("aircraft")
+    } else {
+      if (length(input$aircraft) == 0L) {
+        previous_aircrafts_selection <<- c("All", change_token)
+        updateSelectizeInput(session, inputId = "aircraft", selected = "All")
+      } else {
+        diff_aircraft <- previous_aircrafts_selection %dd% input$aircraft
+        selected <- length(input$aircraft) > length(previous_aircrafts_selection)
+        if ("All" %c% previous_aircrafts_selection) {
+          previous_aircrafts_selection <<- c(diff_aircraft, change_token)
+          updateSelectizeInput(session, inputId = "aircraft", selected = diff_aircraft)
+        } else {
+          if ("All" %e% diff_aircraft) {
+            previous_aircrafts_selection <<- c("All", change_token)
+            updateSelectizeInput(session, inputId = "aircraft", selected = "All")
+          } else {
+            previous_aircrafts_selection <<- input$aircraft
+            redraw()
+            update_other_selectize_inputs("aircraft")
+          }
+        }
+      }
+    }
+  })
+
+
+### Weapon observer ---------------------------------------------------------
+
+  # handler for weapon selection
+  observeEvent(eventExpr = input$weapon, ignoreNULL = FALSE, ignoreInit = TRUE, handlerExpr = {
+    debug_message("weapon selected")
+    if (change_token %c% previous_weapons_selection) {
+      previous_weapons_selection <<- previous_weapons_selection %d% change_token
+      redraw()
+      update_other_selectize_inputs("weapons")
+    } else {
+      if (length(input$weapons) == 0L) {
+        previous_weapons_selection <<- c("All", change_token)
+        updateSelectizeInput(session, inputId = "weapons", selected = "All")
+      } else {
+        diff_weapon <- previous_weapons_selection %dd% input$weapons
+        selected <- length(input$weapons) > length(previous_weapons_selection)
+        if ("All" %c% previous_weapons_selection) {
+          previous_weapons_selection <<- c(diff_weapon, change_token)
+          updateSelectizeInput(session, inputId = "weapons", selected = diff_weapon)
+        } else {
+          if ("All" %e% diff_weapon) {
+            previous_weapons_selection <<- c("All", change_token)
+            updateSelectizeInput(session, inputId = "weapons", selected = "All")
+          } else {
+            previous_weapons_selection <<- input$weapons
+            redraw()
+            update_other_selectize_inputs("weapons")
+          }
+        }
+      }
+    }
+  })
+
+  previous_countries_selection <- c("All")
+  previous_aircrafts_selection <- c("All")
+  previous_weapons_selection <- c("All")
+
+WW1_bombs[,     Month_name := Month]
+WW2_bombs[,     Month_name := Month]
+Korea_bombs1[,  Month_name := Month]
+Korea_bombs2[,  Month_name := Month]
+Vietnam_bombs[, Month_name := Month]
+
+WW1_bombs[,     (cols) := lapply(.SD, factor), .SDcols = cols]
+WW2_bombs[,     (cols) := lapply(.SD, factor), .SDcols = cols]
+Korea_bombs1[,  (cols) := lapply(.SD, factor), .SDcols = cols]
+Korea_bombs2[,  (cols) := lapply(.SD, factor), .SDcols = cols]
+Vietnam_bombs[, (cols) := lapply(.SD, factor), .SDcols = cols]
+
+  get_total_missions <- function() {
+    return (sum(map_dbl(war_missions_reactive, function(x) (x)())))
+  }
+  
+  get_total_flights <- function() {
+    return (sum(map_dbl(war_flights_reactive, function(x) (x)())))
+  }
+  
+  get_total_bombs <- function() {
+    return (sum(map_dbl(war_bombs_reactive, function(x) (x)())))
+  }
+  
+  get_total_weight <- function() {
+    return (sum(map_dbl(war_weight_reactive, function(x) (x)())))
+  }
+
+  WW1_bombs %>% keep(is.character) %>% map_int(~expect_lt(max(nchar(levels(as.factor(.)))), max_string_length))
+  WW2_bombs %>% keep(is.character) %>% map_int(~expect_lt(max(nchar(levels(as.factor(.)))), max_string_length))
+  Korea_bombs1 %>% keep(is.character) %>% map_int(~expect_lt(max(nchar(levels(as.factor(.)))), max_string_length))
+  Korea_bombs2 %>% keep(is.character) %>% map_int(~expect_lt(max(nchar(levels(as.factor(.)))), max_string_length))
+  Vietnam_bombs %>% keep(is.character) %>% map_int(~expect_lt(max(nchar(levels(as.factor(.)))), max_string_length))
+
+  WW1_bombs %>% keep(is.factor) %>% map_int(~expect_lt(max(nchar(levels(.))), max_string_length))
+  WW2_bombs %>% keep(is.factor) %>% map_int(~expect_lt(max(nchar(levels(.))), max_string_length))
+  Korea_bombs1 %>% keep(is.factor) %>% map_int(~expect_lt(max(nchar(levels(.))), max_string_length))
+  Korea_bombs2 %>% keep(is.factor) %>% map_int(~expect_lt(max(nchar(levels(.))), max_string_length))
+  Vietnam_bombs %>% keep(is.factor) %>% map_int(~expect_lt(max(nchar(levels(.))), max_string_length))
+
+  WW1_bombs %>% keep(is.character) %>% map_lgl(~expect_false(anyNA(.)))
+  WW2_bombs %>% keep(is.character) %>% map_lgl(~expect_false(anyNA(.)))
+  Korea_bombs1 %>% keep(is.character) %>% map_lgl(~expect_false(anyNA(.)))
+  Korea_bombs2 %>% keep(is.character) %>% map_lgl(~expect_false(anyNA(.)))
+  Vietnam_bombs %>% keep(is.character) %>% map_lgl(~expect_false(anyNA(.)))
+
+  WW1_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(anyNA(.)))
+  WW2_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(anyNA(.)))
+  Korea_bombs1 %>% keep(is.factor) %>% map_lgl(~expect_false(anyNA(.)))
+  Korea_bombs2 %>% keep(is.factor) %>% map_lgl(~expect_false(anyNA(.)))
+  Vietnam_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(anyNA(.)))
+
+  WW1_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(anyNA(levels(.))))
+  WW2_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(anyNA(levels(.))))
+  Korea_bombs1 %>% keep(is.factor) %>% map_lgl(~expect_false(anyNA(levels(.))))
+  Korea_bombs2 %>% keep(is.factor) %>% map_lgl(~expect_false(anyNA(levels(.))))
+  Vietnam_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(anyNA(levels(.))))
+
+  WW1_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(any(tabulate(.) == 0L)))
+  WW2_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(any(tabulate(.) == 0L)))
+  Korea_bombs1 %>% keep(is.factor) %>% map_lgl(~expect_false(any(tabulate(.) == 0L)))
+  Korea_bombs2 %>% keep(is.factor) %>% map_lgl(~expect_false(any(tabulate(.) == 0L)))
+  Vietnam_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(any(tabulate(.) == 0L)))
+
+  WW1_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = "\\s{2,}"))))
+  WW2_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = "\\s{2,}"))))
+  Korea_bombs1 %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = "\\s{2,}"))))
+  Korea_bombs2 %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = "\\s{2,}"))))
+  Vietnam_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = "\\s{2,}"))))
+
+  WW1_bombs %>% keep(is.character) %>% map_lgl(~expect_false(any(grepl(., pattern = '\\"', fixed = TRUE))))
+  WW2_bombs %>% keep(is.character) %>% map_lgl(~expect_false(any(grepl(., pattern = '\\"', fixed = TRUE))))
+  Korea_bombs1 %>% keep(is.character) %>% map_lgl(~expect_false(any(grepl(., pattern = '\\"', fixed = TRUE))))
+  Korea_bombs2 %>% keep(is.character) %>% map_lgl(~expect_false(any(grepl(., pattern = '\\"', fixed = TRUE))))
+  Vietnam_bombs %>% keep(is.character) %>% map_lgl(~expect_false(any(grepl(., pattern = '\\"', fixed = TRUE))))
+
+  WW1_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = '\\"', fixed = TRUE))))
+  WW2_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = '\\"', fixed = TRUE))))
+  Korea_bombs1 %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = '\\"', fixed = TRUE))))
+  Korea_bombs2 %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = '\\"', fixed = TRUE))))
+  Vietnam_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = '\\"', fixed = TRUE))))
+
+  WW1_bombs %>% keep(is.character) %>% map_lgl(~expect_false(any(grepl(., pattern = "\\\\", fixed = TRUE))))
+  WW2_bombs %>% keep(is.character) %>% map_lgl(~expect_false(any(grepl(., pattern = "\\\\", fixed = TRUE))))
+  Korea_bombs1 %>% keep(is.character) %>% map_lgl(~expect_false(any(grepl(., pattern = "\\\\", fixed = TRUE))))
+  Korea_bombs2 %>% keep(is.character) %>% map_lgl(~expect_false(any(grepl(., pattern = "\\\\", fixed = TRUE))))
+  Vietnam_bombs %>% keep(is.character) %>% map_lgl(~expect_false(any(grepl(., pattern = "\\\\", fixed = TRUE))))
+
+  WW1_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = "\\\\", fixed = TRUE))))
+  WW2_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = "\\\\", fixed = TRUE))))
+  Korea_bombs1 %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = "\\\\", fixed = TRUE))))
+  Korea_bombs2 %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = "\\\\", fixed = TRUE))))
+  Vietnam_bombs %>% keep(is.factor) %>% map_lgl(~expect_false(any(grepl(levels(.), pattern = "\\\\", fixed = TRUE))))
+
+  WW1_bombs %>% keep(is.factor) %>% walk(~expect_null(names(levels(.))))
+  WW2_bombs %>% keep(is.factor) %>% walk(~expect_null(names(levels(.))))
+  Korea_bombs1 %>% keep(is.factor) %>% walk(~expect_null(names(levels(.))))
+  Korea_bombs2 %>% keep(is.factor) %>% walk(~expect_null(names(levels(.))))
+  Vietnam_bombs %>% keep(is.factor) %>% walk(~expect_null(names(levels(.))))
+
+  WW1_bombs %>% walk(~expect_null(names(.)))
+  WW2_bombs %>% walk(~expect_null(names(.)))
+  Korea_bombs1 %>% walk(~expect_null(names(.)))
+  Korea_bombs2 %>% walk(~expect_null(names(.)))
+  Vietnam_bombs %>% walk(~expect_null(names(.)))
+
+debug_message("tooltips WW1")
+WW1_clean[, tooltip := paste(tooltip_datetime, 
+                             tooltip_aircraft, 
+                             tooltip_bombload, 
+                             tooltip_targetType, 
+                             tooltip_targetLocation, 
+                             sep = "<br>")]
+
+debug_message("tooltips WW2")
+WW2_clean[, tooltip := paste(tooltip_datetime, 
+                             tooltip_aircraft, 
+                             tooltip_bombload, 
+                             tooltip_targetType, 
+                             tooltip_targetLocation, 
+                             sep = "<br>")]
+
+debug_message("tooltips Korea2")
+Korea_clean2[, tooltip := paste(tooltip_datetime, 
+                                tooltip_aircraft, 
+                                tooltip_bombload, 
+                                tooltip_targetType, 
+                                tooltip_targetLocation, 
+                                sep = "<br>")]
+
+debug_message("tooltips Vietnam")
+Vietnam_clean[, tooltip := paste(tooltip_datetime, 
+                                 tooltip_aircraft, 
+                                 tooltip_bombload, 
+                                 tooltip_targetType, 
+                                 tooltip_targetLocation, 
+                                 sep = "<br>")]
+
+  WW1_clean %>% select(starts_with("tooltip")) %>% map_lgl(~expect_false(any(. == "")))
+  WW2_clean %>% select(starts_with("tooltip")) %>% map_lgl(~expect_false(any(. == "")))
+  Korea_clean1 %>% select(starts_with("tooltip")) %>% map_lgl(~expect_false(any(. == "")))
+  Korea_clean2 %>% select(starts_with("tooltip")) %>% map_lgl(~expect_false(any(. == "")))
+  Vietnam_clean %>% select(starts_with("tooltip")) %>% map_lgl(~expect_false(any(. == "")))
+
+  WW1_clean %>% select(starts_with("tooltip")) %>% map_lgl(~expect_false(anyNA(.)))
+  WW2_clean %>% select(starts_with("tooltip")) %>% map_lgl(~expect_false(anyNA(.)))
+  Korea_clean1 %>% select(starts_with("tooltip")) %>% map_lgl(~expect_false(anyNA(.)))
+  Korea_clean2 %>% select(starts_with("tooltip")) %>% map_lgl(~expect_false(anyNA(.)))
+  Vietnam_clean %>% select(starts_with("tooltip")) %>% map_lgl(~expect_false(anyNA(.)))
+
+  expect_true(all(grepl(pattern = "<br>", WW1_clean[["tooltip"]], fixed = TRUE)))
+  expect_true(all(grepl(pattern = "<br>", WW2_clean[["tooltip"]], fixed = TRUE)))
+  expect_true(all(grepl(pattern = "<br>", Korea_clean1[["tooltip"]], fixed = TRUE)))
+  expect_true(all(grepl(pattern = "<br>", Korea_clean2[["tooltip"]], fixed = TRUE)))
+  expect_true(all(grepl(pattern = "<br>", Vietnam_clean[["tooltip"]], fixed = TRUE)))
+
+  expect_false(any(grepl(pattern = "<br><br>", WW1_clean[["tooltip"]], fixed = TRUE)))
+  expect_false(any(grepl(pattern = "<br><br>", WW2_clean[["tooltip"]], fixed = TRUE)))
+  expect_false(any(grepl(pattern = "<br><br>", Korea_clean1[["tooltip"]], fixed = TRUE)))
+  expect_false(any(grepl(pattern = "<br><br>", Korea_clean2[["tooltip"]], fixed = TRUE)))
+  expect_false(any(grepl(pattern = "<br><br>", Vietnam_clean[["tooltip"]], fixed = TRUE)))
+
+    WW1_clean %>% keep(is.factor) %>% map_lgl(~expect_false("" %c% levels(.)))
+    WW2_clean %>% keep(is.factor) %>% map_lgl(~expect_false("" %c% levels(.)))
+    Korea_clean1 %>% keep(is.factor) %>% map_lgl(~expect_false("" %c% levels(.)))
+    Korea_clean2 %>% keep(is.factor) %>% map_lgl(~expect_false("" %c% levels(.)))
+    Vietnam_clean %>% keep(is.factor) %>% map_lgl(~expect_false("" %c% levels(.)))
+
+  WW1_clean %>% keep(is.factor) %>% map_lgl(~expect_false(any(tabulate(.) == 0L)))
+  WW2_clean %>% keep(is.factor) %>% map_lgl(~expect_false(any(tabulate(.) == 0L)))
+  Korea_clean1 %>% keep(is.factor) %>% map_lgl(~expect_false(any(tabulate(.) == 0L)))
+  Korea_clean2 %>% keep(is.factor) %>% map_lgl(~expect_false(any(tabulate(.) == 0L)))
+  Vietnam_clean %>% keep(is.factor) %>% map_lgl(~expect_false(any(tabulate(.) == 0L)))
+
+  WW1_clean %>% keep(is.factor) %>% walk(~expect_null(names(levels(.))))
+  WW2_clean %>% keep(is.factor) %>% walk(~expect_null(names(levels(.))))
+  Korea_clean1 %>% keep(is.factor) %>% walk(~expect_null(names(levels(.))))
+  Korea_clean2 %>% keep(is.factor) %>% walk(~expect_null(names(levels(.))))
+  Vietnam_clean %>% keep(is.factor) %>% walk(~expect_null(names(levels(.))))
+
+  WW1_clean %>% walk(~expect_null(names(.)))
+  WW2_clean %>% walk(~expect_null(names(.)))
+  Korea_clean1 %>% walk(~expect_null(names(.)))
+  Korea_clean2 %>% walk(~expect_null(names(.)))
+  Vietnam_clean %>% walk(~expect_null(names(.)))
+
+debug_message("writing WW1")
+fwrite(x = WW1_bombs,  file = WW1_bombs_filepath,  quote = TRUE, nThread = cores)
+fwrite(x = WW1_clean,  file = WW1_clean_filepath,  quote = TRUE, nThread = cores)
+fwrite(x = WW1_unique, file = WW1_unique_filepath, quote = TRUE, nThread = cores)
+
+debug_message("writing WW2")
+fwrite(x = WW2_bombs,  file = WW2_bombs_filepath,  quote = TRUE, nThread = cores)
+fwrite(x = WW2_clean,  file = WW2_clean_filepath,  quote = TRUE, nThread = cores)
+fwrite(x = WW2_unique, file = WW2_unique_filepath, quote = TRUE, nThread = cores)
+
+debug_message("writing Korea")
+fwrite(x = Korea_bombs2,  file = Korea_bombs2_filepath,  quote = TRUE, nThread = cores)
+fwrite(x = Korea_clean2,  file = Korea_clean2_filepath,  quote = TRUE, nThread = cores)
+fwrite(x = Korea_unique2, file = Korea_unique2_filepath, quote = TRUE, nThread = cores)
+
+debug_message("writing Vietnam")
+fwrite(x = Vietnam_bombs,  file = Vietnam_bombs_filepath,  quote = TRUE, nThread = cores)
+fwrite(x = Vietnam_clean,  file = Vietnam_clean_filepath,  quote = TRUE, nThread = cores)
+fwrite(x = Vietnam_unique, file = Vietnam_unique_filepath, quote = TRUE, nThread = cores)
+
+refactor_and_order <- function(column, empty_string) {
+  if (is.ordered(column)) {
+    return (drop_missing_levels(column))
+  } else {
+    return (ordered_empty_at_end(column = drop_missing_levels(column), empty_string = empty_string))
+  }
+}
 
 

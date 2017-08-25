@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.8.1
-# @date 2017-08-15 21:00
+# @version 0.9.8.3
+# @date 2017-08-24 22:30
 
 
 ### Package Functions -------------------------------------------------------
@@ -26,9 +26,16 @@ if (is_package_installed("pipeR")) {
 ### Debugging Functions -----------------------------------------------------
 
 debug_message <- function(string) {
-  if (debug_mode_on) {
-    message(string)
-  }
+  if (debug_mode_on) message(string)
+}
+
+debug_message0 <- function(...) {
+  if (debug_mode_on) message(paste(...))
+}
+
+with_debug_message <- function(func_call) {
+  debug_message(deparse(substitute(func_call)))
+  eval(func_call)
 }
 
 
@@ -160,6 +167,10 @@ if (is_package_installed("dplyr")) {
   }
 }
 
+is_int <- function(double) {
+  return (near(double, as.integer(double)))
+}
+
 round_to_int <- function(numbers, digits = 0L) {
   return (as.integer(round(numbers, digits)))
 }
@@ -202,10 +213,21 @@ is_na_or_empty <- function(strings) {
 }
 
 
+### Attribute Functions -----------------------------------------------------
+
+get_names <- function(vec) {
+  return (names(vec) %||% rep("", length(vec)))
+}
+
+
 ### Factor Functions --------------------------------------------------------
 
 tabulate_factor <- function(fact) {
   return (tabulate(fact, nbins = nlevels(fact)))
+}
+
+mode_factor <- function(fact) {
+  return (levels(fact)[which.max(tabulate_factor(fact))])
 }
 
 level_proportions <- function(column, na.rm = FALSE) {
@@ -219,151 +241,163 @@ level_proportions <- function(column, na.rm = FALSE) {
   return (tab_counts / tab_total)
 }
 
-if (is_package_installed("data.table")) {
-  # best versions of these functions set levels (and names) by reference using data.table::setattr
-  format_levels <- function(fact, func, ...) {
-    data.table::setattr(fact, "levels", func(levels(fact), ...))
-  }
-  
-  replace_level <- function(fact, from, to) {
-    assert_that(length(from) == 1L && length(to) == 1L, 
-                msg = "either (or both) 'from' or 'to' are of length >1L (you may have intended to use replace_levels, not replace_level")
-    new_levels <- levels(fact)
-    new_levels[new_levels == from] <- to
-    data.table::setattr(fact, "levels", new_levels)
-  }
-  
-  replace_levels <- function(fact, from, to) {
-    assert_that(length(from) == length(to) || length(to) == 1L, 
-                msg = "Lengths of 'from' and 'to' don't match")
-    new_levels <- levels(fact)
-    if (length(to) == 1L) {
-      for (i in seq_along(from)) {
-        new_levels[new_levels == from[[i]]] <- to
-      }
+missing_levels <- function(fact) {
+  return (levels(fact)[tabulate_factor(fact) == 0L])
+}
+
+if (is_package_loaded("data.table")) {
+  fill_matching_values <- function(data, fact_col, code_col, drop.codes = FALSE, backfill = FALSE, drop.values = FALSE, numeric_code = TRUE, extra.codes = 'reduce') {
+    fact_colname <- deparse(substitute(fact_col))
+    code_colname <- deparse(substitute(code_col))
+    lookup_table <- eval(parse(text = paste0("data[, as.character(first(unique(", fact_colname, ") %[!=]% '')), keyby = ", code_colname, "]")))
+    setnames(lookup_table, c(code_colname, "V1"), c("codes", "values"))
+    if (numeric_code) {
+      lookup_table <- lookup_table[!is.na(codes), ]
     } else {
-      for (i in seq_along(from)) {
-        new_levels[new_levels == from[[i]]] <- to[[i]]
+      lookup_table <- lookup_table[codes != "", ]
+      lookup_table[, codes := as.character(codes)]
+    }
+    codes <- drop_NA(unique(data[[code_colname]]))
+    verified_codes <- lookup_table[["codes"]]
+    for (code in codes) {
+      if (code %c% verified_codes) {
+        replacement <- lookup_table[codes == code, ][["values"]]
+        eval(parse(text = paste0("data[", code_colname, " == ", as.character(code), ", ", fact_colname, " := replacement]")))
+      } else if (drop.codes) {
+        if (numeric_code) {
+          eval(parse(text = paste0("data[", code_colname, " == ", as.character(code), ", ", code_colname, " := NA]")))
+        } else {
+          eval(parse(text = paste0("data[", code_colname, ' == "', as.character(code), '", ', code_colname, ' := ""]')))
+        }
       }
     }
-    data.table::setattr(fact, "levels", new_levels)
-  }
-  
-  recode_levels <- function(fact, changes) {
-    new_levels <- levels(fact)
-    data.table::setattr(new_levels, "names", new_levels)
-    changes_names <- names(changes) %||% rep("", length(changes))
-    for (i in seq_along(changes)) {
-      new_levels[[changes[[i]]]] <- changes_names[[i]]
-    }
-    data.table::setattr(fact, "levels", unname(new_levels))
-  }
-  
-  recode_similar_levels <- function(fact, changes, exact = FALSE) {
-    new_levels <- levels(fact)
-    changes_names <- names(changes) %||% rep("", length(changes))
-    for (i in seq_along(changes)) {
-      new_levels <- gsub(pattern = changes[[i]], replacement = changes_names[[i]], new_levels, fixed = exact)
-    }
-    data.table::setattr(fact, "levels", new_levels)
-  }
-  
-  drop_levels <- function(fact, drop, to = "") {
-    new_levels <- levels(fact)
-    data.table::setattr(new_levels, "names", new_levels)
-    for (i in seq_along(drop)) {
-      new_levels[[drop[[i]]]] <- to
-    }
-    data.table::setattr(fact, "levels", unname(new_levels))
-  }
-  
-  drop_similar_levels <- function(fact, drop, to = "", exact = FALSE) {
-    new_levels <- levels(fact)
-    for (i in seq_along(drop)) {
-      new_levels[grepl(pattern = drop[[i]], fixed = exact, new_levels)] <- to
-    }
-    data.table::setattr(fact, "levels", new_levels)
-  }
-  
-  keep_levels <- function(fact, keep, to = "") {
-    new_levels <- levels(fact)
-    new_levels[new_levels %!in% keep] <- to
-    data.table::setattr(fact, "levels", new_levels)
-  }
-} else {
-  # if data.table isn't installed, then this function is still supported with base::`names<-` and base::`levels<-`
-  format_levels <- function(fact, func, ...) {
-    levels(fact) <- func(levels(fact), ...)
-  }
-  
-  replace_level <- function(fact, from, to) {
-    stopifnot(length(from) == 1L && length(to) == 1L)
-    new_levels <- levels(fact)
-    new_levels[new_levels == from] <- to
-    levels(fact) <- new_levels
-  }
-  
-  replace_levels <- function(fact, from, to) {
-    stopifnot(length(from) == length(to) || length(to) == 1L, "Lengths of 'from' and 'to' don't match")
-    new_levels <- levels(fact)
-    if (length(to) == 1L) {
-      for (i in seq_along(from)) {
-        new_levels[new_levels == from[[i]]] <- to
-      }
-    } else {
-      for (i in seq_along(from)) {
-        new_levels[new_levels == from[[i]]] <- to[[i]]
+    drop_missing_levels(data[[fact_colname]])
+    if (backfill) {
+      values <- levels(data[[fact_colname]]) %[!=]% ""
+      verified_values <- lookup_table[["values"]]
+      for (value in values) {
+        if (value %c% verified_values) {
+          replacement <- lookup_table[values == value, ][["codes"]]
+          if (is_plural(replacement)) {
+            if (extra.codes == 'reduce') {
+              if (numeric_code) {
+                eval(parse(text = paste0("sub_data <- data[", fact_colname, ' == "', as.character(value), '", as.factor(', code_colname, ")]")))
+              } else {
+                eval(parse(text = paste0("sub_data <- data[", fact_colname, ' == "', as.character(value), '", ', code_colname, "][, drop = TRUE]")))
+              }
+              if (numeric_code) {
+                best_code <- as.integer(mode_factor(sub_data))
+              } else {
+                best_code <- mode_factor(sub_data)
+              }
+              other_codes <- replacement %d% best_code
+              for (other_code in other_codes) {
+                if (numeric_code) {
+                  eval(parse(text = paste0("data[", code_colname, " == ", as.character(other_code), ", ", code_colname, " := ", as.character(best_code), "]")))
+                } else {
+                  eval(parse(text = paste0("data[", code_colname, ' == "', as.character(other_code), '", ', code_colname, ' := "', as.character(best_code), '"]')))
+                }
+              }
+              replacement <- best_code
+            } else if (extra.codes == 'recycle') {
+              replacement <- rep_len(replacement, eval(parse(text = paste0("data[", fact_colname, ' == "', as.character(value), '", .N]'))))
+            }
+          }
+          eval(parse(text = paste0("data[", fact_colname, ' == "', as.character(value), '", ', code_colname, " := replacement]")))
+        } else if (drop.values) {
+          eval(parse(text = paste0("data[", fact_colname, ' == "', as.character(value), '", ', fact_colname, ' := ""]')))
+        }
       }
     }
-    levels(fact) <- new_levels
-  }
-  
-  recode_levels <- function(fact, changes) {
-    new_levels <- levels(fact)
-    names(new_levels) <- new_levels
-    changes_names <- names(changes) %||% rep("", length(changes))
-    for (i in seq_along(changes)) {
-      new_levels[[changes[[i]]]] <- changes_names[[i]]
-    }
-    levels(fact) <- unname(new_levels)
-  }
-  
-  recode_similar_levels <- function(fact, changes, exact = FALSE) {
-    new_levels <- levels(fact)
-    changes_names <- names(changes) %||% rep("", length(changes))
-    for (i in seq_along(changes)) {
-      new_levels <- gsub(pattern = changes[[i]], replacement = changes_names[[i]], new_levels, fixed = exact)
-    }
-    levels(fact) <- new_levels
-  }
-  
-  drop_levels <- function(fact, drop, to = "") {
-    new_levels <- levels(fact)
-    names(new_levels) <- new_levels
-    for (i in seq_along(drop)) {
-      new_levels[[drop[[i]]]] <- to
-    }
-    levels(fact) <- unname(new_levels)
-  }
-  
-  drop_similar_levels <- function(fact, drop, to = "", exact = FALSE) {
-    new_levels <- levels(fact)
-    for (i in seq_along(drop)) {
-      new_levels[grepl(pattern = drop[[i]], fixed = exact, new_levels)] <- to
-    }
-    levels(fact) <- new_levels
-  }
-  
-  keep_levels <- function(fact, keep, to = "") {
-    new_levels <- levels(fact)
-    new_levels[new_levels %!in% keep] <- to
-    levels(fact) <- new_levels
+    invisible(data)
   }
 }
 
+if (is_package_installed("data.table")) {
+  # best versions of the factor functions set levels (and names) by reference using data.table::setattr
+  re_name <- function(vec, new_names) {
+    data.table::setattr(vec, "names", new_names)
+  }
+  
+  re_level <- function(vec, new_levels) {
+    data.table::setattr(vec, "levels", new_levels)
+  }
+} else {
+  re_name <- function(vec, new_names) {
+    names(vec) <- new_names
+  }
+  
+  re_level <- function(vec, new_levels) {
+    levels(vec) <- new_levels
+  }
+}
+
+format_levels <- function(fact, func, ...) {
+  re_level(fact, func(levels(fact), ...))
+}
+
+replace_level <- function(fact, from, to) {
+  assert_that(length(from) == 1L && length(to) == 1L, 
+              msg = "either (or both) 'from' or 'to' are of length >1L (you may have intended to use replace_levels, not replace_level")
+  new_levels <- levels(fact)
+  new_levels[new_levels == from] <- to
+  re_level(fact, new_levels)
+}
+
+replace_levels <- function(fact, from, to) {
+  assert_that(length(from) == length(to) || length(to) == 1L, 
+              msg = "Lengths of 'from' and 'to' don't match")
+  new_levels <- levels(fact)
+  if (length(to) == 1L) {
+    for (i in seq_along(from)) {
+      new_levels[new_levels == from[[i]]] <- to
+    }
+  } else {
+    for (i in seq_along(from)) {
+      new_levels[new_levels == from[[i]]] <- to[[i]]
+    }
+  }
+  re_level(fact, new_levels)
+}
+
+recode_levels <- function(fact, changes) {
+  new_levels <- levels(fact)
+  re_name(new_levels, new_levels)
+  changes_names <- get_names(changes)
+  for (i in seq_along(changes)) {
+    new_levels[[changes[[i]]]] <- changes_names[[i]]
+  }
+  re_level(fact, unname(new_levels))
+}
+
+recode_similar_levels <- function(fact, changes, exact = FALSE) {
+  new_levels <- levels(fact)
+  changes_names <- get_names(changes)
+  for (i in seq_along(changes)) {
+    new_levels <- gsub(pattern = changes[[i]], replacement = changes_names[[i]], new_levels, fixed = exact)
+  }
+  re_level(fact, new_levels)
+}
+
+drop_levels <- function(fact, drop, to = "") {
+  new_levels <- levels(fact)
+  re_name(new_levels, new_levels)
+  for (i in seq_along(drop)) {
+    new_levels[[drop[[i]]]] <- to
+  }
+  re_level(fact, unname(new_levels))
+}
+
+drop_similar_levels <- function(fact, drop, to = "", exact = FALSE) {
+  new_levels <- levels(fact)
+  for (i in seq_along(drop)) {
+    new_levels[grepl(pattern = drop[[i]], fixed = exact, new_levels)] <- to
+  }
+  re_level(fact, new_levels)
+}
+
 drop_missing_levels <- function(fact, to = "") {
-  missing_levels <- levels(fact)[tabulate_factor(fact) == 0L]
-  drop_levels(fact, drop = missing_levels, to)
+  drop_levels(fact, drop = missing_levels(fact), to)
 }
 
 drop_missing_levels_by_col <- function(data, cols = colnames(data), to = "") {
@@ -378,6 +412,12 @@ drop_levels_formula <- function(fact, expr, to = "") {
   drop_levels(fact, drop = drop_levels, to)
 }
 
+keep_levels <- function(fact, keep, to = "") {
+  new_levels <- levels(fact)
+  new_levels[new_levels %!in% keep] <- to
+  re_level(fact, new_levels)
+}
+
 keep_similar_levels <- function(fact, keep, to = "", exact = FALSE) {
   levels_to_drop <- levels(fact)
   for (i in seq_along(keep)) {
@@ -385,6 +425,53 @@ keep_similar_levels <- function(fact, keep, to = "", exact = FALSE) {
   }
   levels_to_drop <- levels_to_drop[levels_to_drop != to]
   drop_levels(fact, drop = levels_to_drop, to = to)
+}
+
+reduce_levels <- function(fact, rules, other = "other", exact = FALSE) {
+  replacements <- get_names(rules)
+  patterns <- unname(rules)
+  old_levels <- levels(fact)
+  new_levels <- rep(other, length(old_levels))
+  for (i in seq_along(rules)) {
+    slicer <- grepl(pattern = patterns[[i]], fixed = exact, old_levels)
+    new_levels[slicer] <- replacements[[i]]
+    old_levels[slicer] <- ""
+  }
+  re_level(fact, new_levels)
+}
+
+otherize_levels_rank <- function(fact, rank, other = "other", exact = FALSE) {
+  contains_empty_level <- "" %c% levels(fact)
+  lookup_table <- data.table(levels = levels(fact), count = tabulate_factor(fact))
+  if (contains_empty_level) {
+    lookup_table <- lookup_table[levels != ""]
+  }
+  setkey(lookup_table, count)
+  dropped_levels <- lookup_table[1:(.N-rank), levels]
+  if (contains_empty_level) {
+    dropped_levels <- append(dropped_levels, "")
+  }
+  drop_levels(fact, drop = dropped_levels, to = other)
+}
+
+otherize_levels_prop <- function(fact, cutoff, other = "other", exact = FALSE) {
+  contains_empty_level <- "" %c% levels(fact)
+  lookup_table <- data.table(levels = levels(fact), prop = level_proportions(fact))
+  if (contains_empty_level) {
+    lookup_table <- lookup_table[levels != ""]
+  }
+  dropped_levels <- lookup_table[prop < cutoff, levels]
+  if (contains_empty_level) {
+    dropped_levels <- append(dropped_levels, "")
+  }
+  drop_levels(fact, drop = dropped_levels, to = other)
+}
+
+by_col <- function(data, col_func, cols = colnames(data), ...) {
+  for (col in cols) {
+    col_func(data[[col]], ...)
+  }
+  invisible(data)
 }
 
 format_levels_by_col <- function(data, func, cols = colnames(data), ...) {
@@ -446,6 +533,13 @@ keep_levels_by_col <- function(data, keep, cols = colnames(data), to = "") {
 keep_similar_levels_by_col <- function(data, keep, cols = colnames(data), to = "", exact = FALSE) {
   for (col in cols) {
     keep_similar_levels(data[[col]], keep, to, exact)
+  }
+  invisible(data)
+}
+
+reduce_levels_by_col <- function(data, rules, cols = colnames(data), other = "other", exact = FALSE) {
+  for (col in cols) {
+    reduce_levels(data[[col]], rules, other, exact)
   }
   invisible(data)
 }
@@ -538,6 +632,8 @@ if (!(is_package_loaded("data.table") && exists("like") && is.function(like))) {
 `%!between%` <- function(a, b) !between(a, b[1], b[2])
 `%!like%` <- function(a, b) !like(a, b)
 `%exactlylike%` <- function(a, b) grepl(pattern = b, fixed = TRUE, a)
+`%whichlike%` <- function(a, b) a[a %like% b]
+`%!whichlike%` <- function(a, b) a[a %!like% b]
 
 ### functional operators
 `%.%` <- compose

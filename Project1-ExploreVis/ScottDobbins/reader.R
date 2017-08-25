@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.8.1
-# @date 2017-08-15 21:00
+# @version 0.9.8.3
+# @date 2017-08-24 22:30
 
 
 ### WW1 Column Names --------------------------------------------------------
@@ -33,8 +33,8 @@ WW1_col_names <- c("ID",                                     # integer        # 
                    "Enemy_Action",                           # character
                    "Route_Details",                          # character
                    "Intel_Collected",                        # character
-                   "Casualties_Friendly",                    # integer
-                   "Casualties_Friendly_Verbose",            # character
+                   "Num_Aircraft_Lost",                      # integer
+                   "Aircraft_Lost_Verbose",                  # character
                    "Target_Weather",                         # character
                    "Bomb_Altitude_Feet")                     # integer
 
@@ -51,7 +51,7 @@ WW2_col_names <- c("ID",                                     # integer
                    "Target_Country",                         # character
                    "Target_City",                            # character
                    "Target_Type",                            # character
-                   "Target_Code",                            # integer
+                   "Target_City_Code",                       # integer
                    "Target_Industry_Code",                   # integer
                    "Target_Industry",                        # character
                    "Target_Latitude_Nonconverted",          # character   # drop while reading
@@ -63,7 +63,7 @@ WW2_col_names <- c("ID",                                     # integer
                    "Aircraft_Type",                          # character
                    "Mission_Type",                           # integer
                    "Target_Priority_Code",                   # integer     # read as character per data.table's insistence
-                   "Target_Priority_Explanation",            # character
+                   "Target_Priority",                        # character
                    "Aircraft_Attacking_Num",                 # integer
                    "Bomb_Altitude",                          # integer
                    "Bomb_Altitude_Feet",                     # integer
@@ -91,7 +91,7 @@ WW2_col_names <- c("ID",                                     # integer
                    "Aircraft_Dropping_Num",                  # integer
                    "Bomb_Time",                              # character
                    "Sighting_Method_Code",                   # integer     # needs to be read as character due to bad data (leakage from next column)
-                   "Sighting_Method_Explanation",            # character
+                   "Sighting_Method",                        # character
                    "Bomb_Damage_Assessment",                 # character
                    "Callsign",                               # character
                    "Ammo_Rounds",                           # integer     # drop while reading
@@ -150,7 +150,7 @@ Korea_col_names2 <- c("Row_Number",                          # integer     # rea
                       "Sortie_Duplicates",                   # integer
                       "Aircraft_Aborted_Num",                # integer
                       "Aircraft_Lost_Num",                   # integer     # needs to be read as character due to bad data
-                      "Target_Name",                         # character
+                      "Target_City",                         # character
                       "Target_Type",                         # character
                       "Target_JapanB",                      # character   # drop while reading
                       "Target_UTM",                         # character   # drop while reading
@@ -199,10 +199,10 @@ Vietnam_col_names <- c("ID",                                 # integer
                        "Callsign",                           # character
                        "Flight_Hours",                       # integer
                        "Mission_Function_Code",              # integer     # needs to be read as character due to bad data
-                       "Mission_Function_Description",       # character
+                       "Mission_Function",                   # character
                        "Mission_ID",                         # character
                        "Aircraft_Attacking_Num",             # integer
-                       "Operation",                          # character
+                       "Operation",                       # character
                        "Mission_Day_Period",                 # character
                        "Unit",                               # character
                        "Target_CloudCover",                  # character
@@ -469,24 +469,34 @@ Vietnam_col_classes <- list(numeric = c("THOR_DATA_VIET_ID",
 debug_message("reading WW1")
 WW1_bombs <- fread(file = WW1_missions_filepath, 
                    col.names  = WW1_col_names, 
-                   colClasses = WW1_col_classes)
+                   colClasses = WW1_col_classes, 
+                   blank.lines.skip = TRUE, 
+                   fill = TRUE)
 
 debug_message("reading WW2")
 WW2_bombs <- fread(file = WW2_missions_filepath, 
                    col.names  = WW2_col_names, 
-                   colClasses = WW2_col_classes)
+                   colClasses = WW2_col_classes, 
+                   blank.lines.skip = TRUE, 
+                   fill = TRUE)
 
 debug_message("reading Korea1")
 Korea_bombs1 <- fread(file = Korea_missions1_filepath, 
                       col.names  = Korea_col_names1, 
-                      colClasses = Korea_col_classes1)
+                      colClasses = Korea_col_classes1, 
+                      blank.lines.skip = TRUE, 
+                      fill = TRUE)
 
 debug_message("reading Korea2")
 Korea_bombs2 <- fread(file = Korea_missions2_filepath, 
                       col.names  = Korea_col_names2, 
-                      colClasses = Korea_col_classes2)
+                      colClasses = Korea_col_classes2, 
+                      blank.lines.skip = TRUE, 
+                      fill = TRUE)
 
 debug_message("reading Vietnam")
 Vietnam_bombs <- fread(file = Vietnam_missions_filepath, 
                        col.names  = Vietnam_col_names, 
-                       colClasses = Vietnam_col_classes)
+                       colClasses = Vietnam_col_classes, 
+                       blank.lines.skip = TRUE, 
+                       fill = TRUE)
