@@ -1,6 +1,6 @@
 # @author Scott Dobbins
-# @date 2017-05-24 15:30
-# @version 0.6.3
+# @date 2017-05-28 23:00
+# @version 0.9.1
 
 
 ### FUTURE IMPROVEMENTS ###
@@ -11,6 +11,7 @@
 ### import packages ###
 
 # (in ascending order of importance)
+library(VIM)
 library(lubridate)
 library(data.table)
 library(dplyr)
@@ -596,54 +597,6 @@ read_data <- function(directory = 'data/', dataset = 'all', type = 'raw', comple
   }
 }
 
-transform_data <- function(data) {
-  if("data.table" %in% class(data)) {
-    return(transform_data.table(data))
-  } else {
-    return(transform_data.frame(data))
-  }
-}
-
-transform_data.table <- function(data) {
-  data[, year := year(timestamp)]
-  data[, quarter := (paste0(year, "-Q", quarter(timestamp)))]
-  data[, month := (paste0(year, "-", month(timestamp)))]
-  data[, log_fullsq := (log(full_sq))]
-  data[, log_lifesq := (log(life_sq))]
-  data[, log_10p_floor := (log(10L + floor))]
-  data[, log_10p_maxfloor := (log(10L + max_floor))]
-  data[, log_1p_numroom := (log(1L + num_room))]
-  data[, log_kitchsq := (log(kitch_sq))]
-  if("price_doc" %in% colnames(data)) {
-    data[, log_price := (log(price_doc))]
-    data[, price_per_room := (price_doc / num_room)]
-    data[, price_per_fullsq := (price_doc / full_sq)]
-    data[, log_price_per_10p_log_room := (log(price_doc) / (10 + log(num_room)))]
-    data[, log_price_per_log_fullsq := (log(price_doc) / log(full_sq))]
-  }
-  return(data)
-}
-
-transform_data.frame <- function(data) {
-  data$year <- year(data$timestamp)
-  data$quarter <- paste0(data$year, "-Q", quarter(data$timestamp))
-  data$month <- paste0(data$year, "-", month(data$timestamp))
-  data$log_fullsq <- log(data$full_sq)
-  data$log_lifesq <- log(data$life_sq)
-  data$log_10p_floor <- log(10L + data$floor)
-  data$log_10p_maxfloor <- log(10L + data$max_floor)
-  data$log_1p_numroom <- log(1L + data$num_room)
-  data$log_kitchsq <- log(data$kitch_sq)
-  if("price_doc" %in% colnames(data)) {
-    data$log_price <- log(data$price_doc)
-    data$price_per_room <- data$price_doc / data$num_room
-    data$price_per_fullsq <- data$price_doc / data$full_sq
-    data$log_price_per_10p_log_room <- log(data$price_doc) / (10 + log(data$num_room))
-    data$log_price_per_log_fullsq <- log(data$price_doc) / log(data$full_sq)
-  }
-  return(data)
-}
-
 ### cleaner function definitions ###
 
 # master function that can handle either a data.frame object or a data.table object
@@ -656,17 +609,19 @@ transform_data.frame <- function(data) {
 #                   : keep_ratios only keeps columns that contain "_per_" (keep_ratios does *not* keep "_per_"-containing columns in dependents)
 #                   : edge_cases will process known specific edge cases as discovered in the training data set (not test data set yet)
 #                   : complete_cases drops all incomplete observations
-clean_data <- function(data, drop_dependents = FALSE, drop_transforms = FALSE, drop_NA_threshold = 1, keep_ratios = FALSE, special_cases = TRUE, complete_cases = FALSE) {
+clean_data <- function(data, drop_dependents = FALSE, drop_transforms = FALSE, drop_NA_threshold = 1, keep_ratios = FALSE, special_cases = TRUE, eliminate_bad_prices = FALSE, complete_cases = FALSE) {
   if("data.table" %in% class(data)) {
-    return(clean_data.table(data, drop_dependents, drop_transforms, drop_NA_threshold, keep_ratios, special_cases, complete_cases))
+    return(clean_data.table(data, drop_dependents, drop_transforms, drop_NA_threshold, keep_ratios, special_cases, eliminate_bad_prices, complete_cases))
   } else {
-    return(clean_data.frame(data, drop_dependents, drop_transforms, drop_NA_threshold, keep_ratios, special_cases, complete_cases))
+    return(clean_data.frame(data, drop_dependents, drop_transforms, drop_NA_threshold, keep_ratios, special_cases, eliminate_bad_prices, complete_cases))
   }
 }
 
 # data.table-optimized sub-function
-clean_data.table <- function(data, drop_dependents = FALSE, drop_transforms = FALSE, drop_NA_threshold = 1, keep_ratios = FALSE, special_cases = TRUE, complete_cases = FALSE) {
+clean_data.table <- function(data, drop_dependents = FALSE, drop_transforms = FALSE, drop_NA_threshold = 1, keep_ratios = FALSE, special_cases = TRUE, eliminate_bad_prices = FALSE, complete_cases = FALSE) {
   data_colnames <- colnames(data)
+  
+  # drop dependents
   if(drop_dependents) {
     # figure out indices for each dependent (raion) column that is present in data set, pass that collection of indices into the selector
     data_dependent_indices <- c()
@@ -678,6 +633,8 @@ clean_data.table <- function(data, drop_dependents = FALSE, drop_transforms = FA
     }
     data[, (data_dependent_indices) := NULL]
   }
+  
+  # drop transforms
   if(drop_transforms) {
     if(keep_ratios) {
       data[, (starts_with("log_") & !contains("_per_")) := NULL]
@@ -685,12 +642,26 @@ clean_data.table <- function(data, drop_dependents = FALSE, drop_transforms = FA
       data[, (starts_with("log_")) := NULL]
     }
   }
+  
+  # drop columns that contain above a certain proportion of NAs
   if(drop_NA_threshold < 1.0) {
     # get NA % for each column, then threshold, then pass those indices into selector
     portion_NA <- unlist(lapply(data, function(x) sum(is.na(x))/length(x)), use.names = FALSE)
     cols_to_drop <- which(portion_NA > drop_NA_theshold)
     data[, (cols_to_drop) := NULL]
   }
+  
+  # eliminate bad prices
+  if(eliminate_bad_prices & "price_doc" %in% data_colnames) {
+    if("log_price" %in% data_colnames) {
+      print("got here")
+      data[(price_doc <= 2.5e6L) | (price_doc == 3e6L), c("price_doc", "log_price") := list(NA, NA)]
+    } else {
+      data[(price_doc <= 2.5e6L) | (price_doc == 3e6L), c("price_doc") := list(NA)]
+    }
+  }
+  
+  # handle special cases
   if(special_cases) {
     if("log_10p_floor" %in% data_colnames) {
       data[(floor > 76L) & ((floor %% 11L) == 0L), c("floor", "log_10p_floor") := list(floor %/% 11L, log(10 + (floor %/% 11L)))]
@@ -711,7 +682,7 @@ clean_data.table <- function(data, drop_dependents = FALSE, drop_transforms = FA
       data[(max_floor > 76L) & (((max_floor %% 100L) %/% 10L) == (max_floor %% 10L)), max_floor := (max_floor %% 10L)]
     }
     data[build_year > 1e8L, build_year := (build_year %% 1e5L)]
-    data[build_year == 1901, c("build_year") := list(NA)]
+    data[(build_year == 0L) | (build_year == 1L), c("build_year") := list(NA)]
     data[build_year < 100L, build_year := (build_year + 1900L)]
     data[build_year < 217L, build_year := (build_year - (build_year %% 100L)) + 1800L + (build_year %% 100L)]
     data[build_year > 2017L, build_year := (build_year - as.integer(round((build_year - 2000L) / 1000L) * 1000L))]
@@ -721,7 +692,9 @@ clean_data.table <- function(data, drop_dependents = FALSE, drop_transforms = FA
       data[num_room == 0L, c("num_room") := list(1L)]
     }
     data[((state >= 10L) & (state < 100L)), state := (state %/% 10L)]
+    data[ecology == "no data", ecology := list(NA)]
   }
+  
   # simple cleaning based on single columns
   if("log_lifesq" %in% data_colnames) {
     data[life_sq <= 5, c("life_sq", "log_lifesq") := list(NA, NA)]
@@ -729,14 +702,18 @@ clean_data.table <- function(data, drop_dependents = FALSE, drop_transforms = FA
     data[life_sq <= 5, c("life_sq") := list(NA)]
   }
   if("log_fullsq" %in% data_colnames) {
+    data[(full_sq <= 5) & (!is.na(life_sq)), c("full_sq", "log_fullsq") := list(life_sq, log_lifesq)]
     data[full_sq <= 5, c("full_sq", "log_fullsq") := list(NA, NA)]
   } else {
+    data[(full_sq <= 5) & (!is.na(life_sq)), c("full_sq") := list(life_sq)]
     data[full_sq <= 5, c("full_sq") := list(NA)]
   }
   if("log_lifesq" %in% data_colnames) {
+    data[(life_sq > full_sq) & (3*full_sq > life_sq), c("full_sq", "life_sq", "log_fullsq", "log_lifesq") := list(life_sq, full_sq, log_lifesq, log_fullsq)]
     data[life_sq > full_sq, c("life_sq", "log_lifesq") := list(life_sq / 10, log_lifesq - log(10))]
     data[life_sq > full_sq, c("life_sq", "log_lifesq") := list(life_sq / 10, log_lifesq - log(10))]
   } else {
+    data[(life_sq > full_sq) & (3*full_sq > life_sq), c("full_sq", "life_sq") := list(life_sq, full_sq)]
     data[life_sq > full_sq, life_sq := life_sq / 10]
     data[life_sq > full_sq, life_sq := life_sq / 10]
   }
@@ -780,6 +757,7 @@ clean_data.table <- function(data, drop_dependents = FALSE, drop_transforms = FA
   }
   data[(state < 1) | (state > 4), c("state") := list(NA)]
   data[!(product_type %in% possible_product_types), c("product_type") := list(NA)]
+  
   # further cleaning based on multiple columns
   if("log_price" %in% data_colnames) {
     if(("log_fullsq" %in% data_colnames) & ("log_lifesq" %in% data_colnames) & ("price_per_fullsq" %in% data_colnames) & ("log_price_per_log_fullsq") %in% data_colnames) {
@@ -799,6 +777,7 @@ clean_data.table <- function(data, drop_dependents = FALSE, drop_transforms = FA
     data[((price_doc / full_sq) > 5e5) & (full_sq < 25), c("full_sq", "life_sq") := list(full_sq * 10, life_sq * 10)]
     data[(price_doc / full_sq) > 5e5, price_doc := (price_doc %/% 10L)]
   }
+  
   # fix feature data types
   data[, material := as.factor(material)]
   data[, state := as.factor(state)]
@@ -806,7 +785,7 @@ clean_data.table <- function(data, drop_dependents = FALSE, drop_transforms = FA
 }
 
 # data.frame (plain) sub-function
-clean_data.frame <- function(data, drop_dependents = FALSE, drop_transforms = FALSE, drop_NA_threshold = 1, keep_ratios = FALSE, special_cases = TRUE, complete_cases = FALSE) {
+clean_data.frame <- function(data, drop_dependents = FALSE, drop_transforms = FALSE, drop_NA_threshold = 1, keep_ratios = FALSE, special_cases = TRUE, eliminate_bad_prices = FALSE, complete_cases = FALSE) {
   data_colnames <- colnames(data)
   if(drop_dependents) {
     # figure out indices for each dependent (raion) column that is present in data set, pass that collection of indices into the selector
@@ -898,8 +877,259 @@ clean_data.frame <- function(data, drop_dependents = FALSE, drop_transforms = FA
   return(data)
 }
 
+transform_data <- function(data) {
+  if("data.table" %in% class(data)) {
+    return(transform_data.table(data))
+  } else {
+    return(transform_data.frame(data))
+  }
+}
+
+transform_data.table <- function(data) {
+  data[, year := year(timestamp)]
+  data[, quarter := (paste0(year, "-Q", quarter(timestamp)))]
+  data[, month := (paste0(year, "-", month(timestamp)))]
+  data[, log_fullsq := (log(full_sq))]
+  data[, log_lifesq := (log(life_sq))]
+  data[, prop_life := (life_sq / full_sq)]
+  data[, log_10p_floor := (log(10L + floor))]
+  data[, log_10p_maxfloor := (log(10L + max_floor))]
+  data[, relative_floor := (floor / max_floor)]
+  data[, building_age := (build_year - year)]
+  data[, build_year_factor := factor(ifelse(build_year < 1959, "pre-1959", ifelse(build_year < 2001, "pre-2001", ifelse(build_year < 2009, "pre-2009", "contemporary"))))]
+  data[, log_1p_numroom := (log(1L + num_room))]
+  data[, avg_room_sq := (full_sq / num_room)]
+  data[, log_kitchsq := (log(kitch_sq))]
+  data[, prop_kitch := (kitch_sq / full_sq)]
+  data[, material_factor := factor(ifelse(material == 1 | material == 5, "1/5", ifelse(material == 2, "2", ifelse(material == 4, "4", "6"))))]
+  data[, metro_close_walk := factor(metro_min_walk < 15)]
+  data[, nearest_ring_road_dist := (pmin(mkad_km, ttk_km, sadovoe_km, bulvar_ring_km))]
+  data[, nearest_ring_road := factor(ifelse(nearest_ring_road_dist == mkad_km, "far", ifelse(nearest_ring_road_dist == ttk_km, "middle", ifelse(nearest_ring_road_dist == sadovoe_km, "close", "very_close"))))]
+  data[, nearest_ring_road_dist_factor := factor(ifelse(nearest_ring_road_dist < 0.8, "close", ifelse(nearest_ring_road_dist > 5, "far", "normal")))]
+  data[, public_transport_close_walk := factor(public_transport_station_min_walk < 5)]
+  data[, right_by_water := factor(water_km < 0.1)]
+  data[, water_factor := (exp(-water_km))]
+  data[, right_by_railroad := factor(railroad_km < 0.1)]
+  data[, railroad_factor := (exp(-railroad_km))]
+  data[, industrial_factor := (exp(-industrial_km))]
+  data[, oil_chemistry_factor := (exp(-oil_chemistry_km))]
+  data[, nuclear_reactor_factor := (exp(-nuclear_reactor_km))]
+  data[, radiation_factor := (exp(-radiation_km))]
+  data[, power_transmission_line_factor := (exp(-power_transmission_line_km))]
+  data[, thermal_power_plant_factor := (exp(-thermal_power_plant_km))]
+  data[, ts_factor := (exp(-ts_km))]
+  data[, threats_factor := (pmax(industrial_factor, oil_chemistry_factor, nuclear_reactor_factor, radiation_factor, power_transmission_line_factor, thermal_power_plant_factor, ts_factor))]
+  data[, big_market_factor := (exp(-big_market_km))]
+  data[, market_shop_factor := (exp(-market_shop_km))]
+  data[, fitness_factor := (exp(-fitness_km))]
+  data[, swim_pool_factor := (exp(-swim_pool_km))]
+  data[, ice_rink_factor := (exp(-ice_rink_km))]
+  data[, stadium_factor := (exp(-stadium_km))]
+  data[, basketball_factor := (exp(-basketball_km))]
+  
+  if("price_doc" %in% colnames(data)) {
+    data[, log_price := (log(price_doc))]
+    data[, price_per_room := (price_doc / num_room)]
+    data[, price_per_fullsq := (price_doc / full_sq)]
+    data[, log_price_per_10p_log_room := (log(price_doc) / (10 + log(num_room)))]
+    data[, log_price_per_log_fullsq := (log(price_doc) / log(full_sq))]
+  }
+  return(data)
+}
+
+transform_data.frame <- function(data) {
+  data$year <- year(data$timestamp)
+  data$quarter <- paste0(data$year, "-Q", quarter(data$timestamp))
+  data$month <- paste0(data$year, "-", month(data$timestamp))
+  data$log_fullsq <- log(data$full_sq)
+  data$log_lifesq <- log(data$life_sq)
+  data$log_10p_floor <- log(10L + data$floor)
+  data$log_10p_maxfloor <- log(10L + data$max_floor)
+  data$log_1p_numroom <- log(1L + data$num_room)
+  data$log_kitchsq <- log(data$kitch_sq)
+  if("price_doc" %in% colnames(data)) {
+    data$log_price <- log(data$price_doc)
+    data$price_per_room <- data$price_doc / data$num_room
+    data$price_per_fullsq <- data$price_doc / data$full_sq
+    data$log_price_per_10p_log_room <- log(data$price_doc) / (10 + log(data$num_room))
+    data$log_price_per_log_fullsq <- log(data$price_doc) / log(data$full_sq)
+  }
+  return(data)
+}
+
+impute_data <- function(data, k = round(sqrt(nrow(data))), impute_bad_prices = TRUE) {
+  if("data.table" %in% class(data)) {
+    return(impute_data.table(data, k, impute_bad_prices))
+  } else {
+    return(impute_data.frame(data, k, impute_bad_prices))
+  }
+}
+
+impute_data.table <- function(data, k = round(sqrt(nrow(data))), impute_bad_prices = TRUE) {
+  data_colnames <- colnames(data)
+  
+  # impute product_type
+  print("imputing product type")
+  imputed <- kNN(data, variable = c("product_type"), k = k, dist_var = c("state", "sub_area", "material"))
+  data[imputed$product_type_imp, c("product_type") := list(imputed$product_type[imputed$product_type_imp])]
+  
+  # impute log_fullsq or full_sq
+  print("imputing full_sq")
+  if("log_fullsq" %in% data_colnames) {
+    if("log_price" %in% data_colnames) {
+      imputed <- kNN(data, variable = c("log_fullsq"), k = k, dist_var = c("log_price", "state", "sub_area", "product_type", "quarter"))
+      data[imputed$log_fullsq_imp, c("full_sq", "log_fullsq", "price_per_fullsq", "log_price_per_log_fullsq", "avg_room_sq", "prop_life", "prop_kitch") := list(exp(imputed$log_fullsq[imputed$log_fullsq_imp]), imputed$log_fullsq[imputed$log_fullsq_imp], price_doc / exp(imputed$log_fullsq[imputed$log_fullsq_imp]), log_price / imputed$log_fullsq[imputed$log_fullsq_imp], exp(imputed$log_fullsq[imputed$log_fullsq_imp]) / num_room, life_sq / exp(imputed$log_fullsq[imputed$log_fullsq_imp]), kitch_sq / exp(imputed$log_fullsq[imputed$log_fullsq_imp]))]
+    } else {
+      imputed <- kNN(data, variable = c("log_fullsq"), k = k, dist_var = c("state", "sub_area", "product_type", "quarter"))
+      data[imputed$log_fullsq_imp, c("full_sq", "log_fullsq", "avg_room_sq", "prop_life", "prop_kitch") := list(exp(imputed$log_fullsq[imputed$log_fullsq_imp]), imputed$log_fullsq[imputed$log_fullsq_imp], exp(imputed$log_fullsq[imputed$log_fullsq_imp]) / num_room, life_sq / exp(imputed$log_fullsq[imputed$log_fullsq_imp]), kitch_sq / exp(imputed$log_fullsq[imputed$log_fullsq_imp]))]
+    }
+  } else {
+    if("price_doc" %in% data_colnames) {
+      imputed <- kNN(data, variable = c("full_sq"), k = k, dist_var = c("price_doc", "state", "sub_area", "product_type", "quarter"))
+      data[imputed$full_sq_imp, c("full_sq", "price_per_fullsq", "avg_room_sq", "prop_life", "prop_kitch") := list(imputed$full_sq[imputed$full_sq_imp], price_doc / exp(imputed$full_sq[imputed$full_sq_imp]), exp(imputed$full_sq[imputed$full_sq_imp]) / num_room)]
+    } else {
+      imputed <- kNN(data, variable = c("full_sq"), k = k, dist_var = c("state", "sub_area", "product_type", "quarter"))
+      data[imputed$full_sq_imp, c("full_sq") := list(imputed$full_sq[imputed$full_sq_imp])]
+    }
+  }
+  
+  # impute num_room
+  print("imputing num_room")
+  if("log_price" %in% data_colnames) {
+    imputed <- kNN(data, variable = c("num_room"), k = k, dist_var = c("log_fullsq", "state", "sub_area", "product_type", "quarter"))
+    data[imputed$num_room_imp, c("num_room", "log_1p_numroom", "avg_room_sq", "price_per_room", "log_price_per_10p_log_room") := list(as.integer(round(imputed$num_room[imputed$num_room_imp])), log(1+imputed$num_room[imputed$num_room_imp]), full_sq / imputed$num_room[imputed$num_room_imp], price_doc / imputed$num_room[imputed$num_room_imp], log_price / (10+log(imputed$num_room[imputed$num_room_imp])))]
+  } else {
+    imputed <- kNN(data, variable = c("num_room"), k = k, dist_var = c("log_fullsq", "state", "sub_area", "product_type", "quarter"))
+    data[imputed$num_room_imp, c("num_room") := list(as.integer(round(imputed$num_room[imputed$num_room_imp])), price_doc / as.integer(round(imputed$num_room[imputed$num_room_imp])))]
+  }
+  
+  # impute bad prices
+  print("imputing price_doc")
+  if("price_doc" %in% data_colnames & impute_bad_prices) {
+    if("log_price" %in% data_colnames) {
+      imputed <- kNN(data, variable = c("log_price"), k = k, dist_var = c("log_fullsq", "num_room", "state", "sub_area", "product_type", "quarter"))
+      data[imputed$log_price_imp, c("price_doc", "log_price", "price_per_fullsq", "log_price_per_log_fullsq", "price_per_room", "log_price_per_10p_log_room") := list(exp(imputed$log_price[imputed$log_price_imp]), imputed$log_price[imputed$log_price_imp], exp(imputed$log_price[imputed$log_price_imp]) / full_sq, imputed$log_price[imputed$log_price_imp] / log_fullsq, exp(imputed$log_price[imputed$log_price_imp]) / (10+log(num_room)), imputed$log_price[imputed$log_price_imp] / (10+log(num_room)))]
+    } else {
+      imputed <- kNN(data, variable = c("price_doc"), k = k, dist_var = c("full_sq", "num_room", "state", "sub_area", "product_type", "quarter"))
+      data[imputed$price_doc_imp, c("price_doc", "price_per_fullsq", "price_per_room") := list(as.integer(round(imputed$price_doc[imputed$price_doc_imp])), imputed$price_doc[imputed$price_doc_imp] / full_sq, imputed$price_doc[imputed$price_doc_imp] / (10+log(num_room)))]
+    }
+  }
+  
+  # impute state
+  print("imputing state")
+  if("log_price" %in% data_colnames) {
+    imputed <- kNN(data, variable = c("state"), k = k, dist_var = c("log_price", "log_fullsq", "num_room", "sub_area", "product_type", "quarter"))
+    data[imputed$state_imp, c("state") := list(imputed$state[imputed$state_imp])]
+  } else if("price_doc" %in% data_colnames) {
+    imputed <- kNN(data, variable = c("state"), k = k, dist_var = c("price_doc", "full_sq", "num_room", "sub_area", "product_type", "quarter"))
+    data[imputed$state_imp, c("state") := list(imputed$state[imputed$state_imp])]
+  } else {
+    imputed <- kNN(imputed, variable = c("state"), k = k, dist_var = c("log_fullsq", "num_room", "sub_area", "product_type", "quarter"))
+    data[imputed$state_imp, c("state") := list(imputed$state[imputed$state_imp])]
+  }
+  
+  # impute log_kitchsq or kitch_sq
+  print("imputing kitch_sq")
+  if("log_price" %in% data_colnames) {
+    imputed <- kNN(data, variable = c("log_kitchsq"), k = k, dist_var = c("log_price", "log_fullsq", "num_room", "sub_area", "product_type", "quarter", "state"))
+    data[imputed$log_kitchsq_imp, c("kitch_sq", "log_kitchsq", "prop_kitch") := list(exp(imputed$log_kitchsq[imputed$log_kitchsq_imp]), imputed$log_kitchsq[imputed$log_kitchsq_imp], exp(imputed$log_kitchsq[imputed$log_kitchsq_imp]) / full_sq)]
+  } else if("price_doc" %in% data_colnames) {
+    imputed <- kNN(data, variable = c("kitch_sq"), k = k, dist_var = c("price_doc", "full_sq", "num_room", "sub_area", "product_type", "quarter", "state"))
+    data[imputed$kitch_sq_imp, c("kitch_sq", "prop_kitch") := list(imputed$kitch_sq[imputed$kitch_sq_imp], imputed$kitch_sq[imputed$kitch_sq_imp] / full_sq)]
+  } else {
+    imputed <- kNN(data, variable = c("log_kitchsq"), k = k, dist_var = c("log_fullsq", "num_room", "sub_area", "product_type", "quarter", "state"))
+    data[imputed$log_kitchsq_imp, c("kitch_sq", "log_kitchsq", "prop_kitch") := list(exp(imputed$log_kitchsq[imputed$log_kitchsq_imp]), imputed$log_kitchsq[imputed$log_kitchsq_imp], exp(imputed$log_kitchsq[imputed$log_kitchsq_imp]) / full_sq)]
+  }
+  
+  # impute max_floor
+  print("imputing max_floor")
+  if("log_price" %in% data_colnames) {
+    imputed <- kNN(data, variable = c("max_floor"), k = k, dist_var = c("log_price", "log_fullsq", "num_room", "sub_area", "product_type", "quarter", "state", "log_kitchsq"))
+    data[imputed$max_floor_imp, c("max_floor", "log_10p_maxfloor", "relative_floor") := list(imputed$max_floor[imputed$max_floor_imp], log(10+imputed$max_floor[imputed$max_floor_imp]), floor / imputed$max_floor[imputed$max_floor_imp])]
+  } else if("price_doc" %in% data_colnames) {
+    imputed <- kNN(data, variable = c("max_floor"), k = k, dist_var = c("price_doc", "full_sq", "num_room", "sub_area", "product_type", "quarter", "state", "kitch_sq"))
+    data[imputed$max_floor_imp, c("max_floor") := list(imputed$max_floor[imputed$max_floor_imp])]
+  } else {
+    imputed <- kNN(data, variable = c("max_floor"), k = k, dist_var = c("log_fullsq", "num_room", "sub_area", "product_type", "quarter", "state", "log_kitchsq"))
+    data[imputed$max_floor_imp, c("max_floor", "log_10p_maxfloor", "relative_floor") := list(imputed$max_floor[imputed$max_floor_imp], log(10+imputed$max_floor[imputed$max_floor_imp]), floor / imputed$max_floor[imputed$max_floor_imp])]
+  }
+  
+  # impute floor
+  print("imputing floor")
+  if("log_price" %in% data_colnames) {
+    imputed <- kNN(data, variable = c("floor"), k = k, dist_var = c("log_price", "log_fullsq", "num_room", "sub_area", "product_type", "quarter", "state", "log_kitchsq", "max_floor"))
+    data[imputed$floor_imp, c("floor", "log_10p_floor", "relative_floor") := list(imputed$floor[imputed$floor_imp], log(10+imputed$floor[imputed$floor_imp]), imputed$floor[imputed$floor_imp] / max_floor)]
+  } else if("price_doc" %in% data_colnames) {
+    imputed <- kNN(data, variable = c("floor"), k = k, dist_var = c("price_doc", "full_sq", "num_room", "sub_area", "product_type", "quarter", "state", "kitch_sq", "max_floor"))
+    data[imputed$floor_imp, c("floor") := list(imputed$floor[imputed$floor_imp])]
+  } else {
+    imputed <- kNN(data, variable = c("floor"), k = k, dist_var = c("log_fullsq", "sub_area", "product_type", "quarter", "state", "log_kitchsq", "max_floor"))
+    data[imputed$floor_imp, c("floor", "log_10p_floor", "relative_floor") := list(imputed$floor[imputed$floor_imp], log(10+imputed$floor[imputed$floor_imp]), imputed$floor[imputed$floor_imp] / max_floor)]
+  }
+  
+  # impute build year
+  print("imputing build_year")
+  if("log_price" %in% data_colnames) {
+    imputed <- kNN(data, variable = c("build_year"), k = k, dist_var = c("log_price", "log_fullsq", "num_room", "sub_area", "product_type", "quarter", "state", "log_kitchsq", "max_floor", "floor"))
+    data[imputed$build_year_imp, c("build_year", "building_age", "build_year_factor") := list(imputed$build_year[imputed$build_year_imp], imputed$build_year[imputed$build_year_imp] - year, as.factor(ifelse(imputed$build_year[imputed$build_year_imp] < 1959, "pre-1959", ifelse(imputed$build_year[imputed$build_year_imp] < 2001, "pre-2001", ifelse(imputed$build_year[imputed$build_year_imp] < 2009, "pre-2009", "contemporary")))))]
+  } else if("price_doc" %in% data_colnames) {
+    imputed <- kNN(data, variable = c("build_year"), k = k, dist_var = c("price_doc", "full_sq", "num_room", "sub_area", "product_type", "quarter", "state", "kitch_sq", "max_floor", "floor"))
+    data[imputed$build_year_imp, c("build_year") := list(imputed$build_year[imputed$build_year_imp])]
+  } else {
+    imputed <- kNN(data, variable = c("build_year"), k = k, dist_var = c("log_fullsq", "num_room", "sub_area", "product_type", "quarter", "state", "log_kitchsq", "max_floor", "floor"))
+    data[imputed$build_year_imp, c("build_year", "building_age", "build_year_factor") := list(imputed$build_year[imputed$build_year_imp], imputed$build_year[imputed$build_year_imp] - year, as.factor(ifelse(imputed$build_year[imputed$build_year_imp] < 1959, "pre-1959", ifelse(imputed$build_year[imputed$build_year_imp] < 2001, "pre-2001", ifelse(imputed$build_year[imputed$build_year_imp] < 2009, "pre-2009", "contemporary")))))]
+  }
+  
+  # impute material
+  print("imputing material")
+  if("log_price" %in% data_colnames) {
+    imputed <- kNN(data, variable = c("material"), k = k, dist_var = c("log_price", "log_fullsq", "num_room", "sub_area", "product_type", "quarter", "state", "log_kitchsq", "max_floor", "floor", "build_year"))
+    data[imputed$material_imp, c("material", "material_factor") := list(as.factor(imputed$material[imputed$material_imp]), as.factor(ifelse(imputed$material[imputed$material_imp] == 1 | imputed$material[imputed$material_imp] == 5, "1/5", ifelse(imputed$material[imputed$material_imp] == 2, "2", ifelse(imputed$material[imputed$material_imp] == 4, "4", "6")))))]
+  } else if("price_doc" %in% data_colnames) {
+    imputed <- kNN(data, variable = c("material"), k = k, dist_var = c("price_doc", "full_sq", "num_room", "sub_area", "product_type", "quarter", "state", "kitch_sq", "max_floor", "floor", "build_year"))
+    data[imputed$material_imp, c("material") := list(as.factor(imputed$material[imputed$material_imp]))]
+  } else {
+    imputed <- kNN(data, variable = c("material"), k = k, dist_var = c("log_fullsq", "num_room", "sub_area", "product_type", "quarter", "state", "log_kitchsq", "max_floor", "floor", "build_year"))
+    data[imputed$material_imp, c("material", "material_factor") := list(as.factor(imputed$material[imputed$material_imp]), as.factor(ifelse(imputed$material[imputed$material_imp] == 1 | imputed$material[imputed$material_imp] == 5, "1/5", ifelse(imputed$material[imputed$material_imp] == 2, "2", ifelse(imputed$material[imputed$material_imp] == 4, "4", "6")))))]
+  }
+  
+  # impute log_lifesq or life_sq
+  print("imputing life_sq")
+  if("log_lifesq" %in% data_colnames) {
+    if("log_price" %in% data_colnames) {
+      imputed <- kNN(data, variable = c("log_lifesq"), k = k, dist_var = c("log_price", "log_fullsq", "num_room", "sub_area", "product_type", "quarter", "state", "log_kitchsq", "max_floor", "floor", "build_year"))
+      data[imputed$log_lifesq_imp, c("life_sq", "log_lifesq", "prop_life") := list(exp(imputed$log_lifesq[imputed$log_lifesq_imp]), imputed$log_lifesq[imputed$log_lifesq_imp], exp(imputed$log_lifesq[imputed$log_lifesq_imp]) / full_sq)]
+    } else {
+      imputed <- kNN(data, variable = c("log_lifesq"), k = k, dist_var = c("log_fullsq", "num_room", "sub_area", "product_type", "quarter", "state", "log_kitchsq", "max_floor", "floor", "build_year"))
+      data[imputed$log_lifesq_imp, c("life_sq", "log_lifesq", "prop_life") := list(exp(imputed$log_lifesq[imputed$log_lifesq_imp]), imputed$log_lifesq[imputed$log_lifesq_imp], exp(imputed$log_lifesq[imputed$log_lifesq_imp]) / full_sq)]
+    }
+  } else {
+    if("price_doc" %in% data_colnames) {
+      imputed <- kNN(data, variable = c("life_sq"), k = k, dist_var = c("price_doc", "full_sq", "num_room", "sub_area", "product_type", "quarter", "state", "kitch_sq", "max_floor", "floor", "build_year"))
+      data[imputed$life_sq_imp, c("life_sq", "prop_life") := list(imputed$life_sq[imputed$life_sq_imp], imputed$life_sq[imputed$life_sq_imp] / full_sq)]
+    } else {
+      imputed <- kNN(data, variable = c("life_sq"), k = k, dist_var = c("full_sq", "num_room", "sub_area", "product_type", "quarter", "state", "kitch_sq", "max_floor", "floor", "build_year"))
+      data[imputed$life_sq_imp, c("life_sq", "prop_life") := list(imputed$life_sq[imputed$life_sq_imp], imputed$life_sq[imputed$life_sq_imp] / full_sq)]
+    }
+  }
+  
+  # impute big pca feature set
+  print("imputing big_pca")
+  cols_to_impute <- c("metro_min_walk", "metro_km_walk", "railroad_station_walk_km", "railroad_station_walk_min", "ID_railroad_station_walk", "ecology", "cafe_sum_500_min_price_avg", "cafe_sum_500_max_price_avg", "cafe_avg_price_500", "cafe_sum_1000_min_price_avg", "cafe_sum_1000_max_price_avg", "cafe_avg_price_1000", "cafe_sum_1500_min_price_avg", "cafe_sum_1500_max_price_avg", "cafe_avg_price_1500", "cafe_sum_2000_min_price_avg", "cafe_sum_2000_max_price_avg", "cafe_avg_price_2000", "cafe_sum_3000_min_price_avg", "cafe_sum_3000_max_price_avg", "cafe_avg_price_3000", "prom_part_5000", "cafe_sum_5000_min_price_avg", "cafe_sum_5000_max_price_avg", "cafe_avg_price_5000")
+  cols_to_use <- c("metro_km_avto", "school_km", "park_km", "industrial_km", "cemetery_km", "railroad_station_avto_km", "public_transport_station_km", "water_km", "mkad_km", "kremlin_km", "railroad_km", "oil_chemistry_km", "ts_km", "big_market_km", "market_shop_km", "fitness_km", "stadium_km", "basketball_km", "hospice_morgue_km", "office_km", "additional_education_km", "big_church_km", "church_synagogue_km", "mosque_km", "theater_km", "museum_km", "exhibition_km", "catering_km", "green_part_500", "prom_part_500", "office_count_500", "trc_count_500", "cafe_count_500", "big_church_count_500", "mosque_count_500", "leisure_count_500", "market_count_500", "green_part_1000", "prom_part_1000", "office_count_1000", "trc_count_1000", "cafe_count_1000", "big_church_count_1000", "mosque_count_1000", "leisure_count_1000", "market_count_1000", "green_part_1500", "prom_part_1500", "office_count_1500", "trc_count_1500", "cafe_count_1500", "big_church_count_1500", "mosque_count_1500", "leisure_count_1500", "market_count_1500", "green_part_2000", "prom_part_2000", "office_count_2000", "trc_count_2000", "cafe_count_2000", "big_church_count_2000", "mosque_count_2000", "leisure_count_2000", "market_count_2000", "green_part_3000", "prom_part_3000", "office_count_3000", "trc_count_3000", "cafe_count_3000", "big_church_count_3000", "mosque_count_3000", "leisure_count_3000", "market_count_3000", "green_part_5000", "prom_part_5000", "office_count_5000", "trc_count_5000", "cafe_count_5000", "big_church_count_5000", "mosque_count_5000", "leisure_count_5000", "market_count_5000")
+  #if("log_lifesq" %in% data_colnames) {
+    imputed <- kNN(data, variable = cols_to_impute, k = k , dist_var = cols_to_use)
+    for(col in cols_to_impute) {
+      col_imp <- paste0(col, "_imp")
+      data[imputed[,col_imp], (col) := list(imputed[imputed[,col_imp],col])]
+    }
+  #}
+  
+  return(data)
+}
+
 # read raw data and write fresh cleaned data
-refresh_data <- function(read_directory = 'data/', write_directory = 'data/') {
+refresh_data <- function(read_directory = 'data/', write_directory = 'data/', clean = TRUE, transform = TRUE, impute = FALSE) {
   
   # read data
   data_list <- read_data(read_directory)
@@ -941,12 +1171,22 @@ refresh_data <- function(read_directory = 'data/', write_directory = 'data/') {
   fwrite(raion, file = paste0(write_directory, raion_filename), append = FALSE)
   
   # clean data
-  train <- clean_data(train, drop_dependents = TRUE)
-  test <- clean_data(test, drop_dependents = TRUE)
+  if(clean) {
+    train <- clean_data(train, drop_dependents = TRUE, eliminate_bad_prices = TRUE)
+    test <- clean_data(test, drop_dependents = TRUE)
+  }
   
   # transform data
-  train <- transform_data(train)
-  test <- transform_data(test)
+  if(transform) {
+    train <- transform_data(train)
+    test <- transform_data(test)
+  }
+  
+  # impute data
+  if(impute) {
+    train <- impute_data(train, k = 50)
+    test <- impute_data(test, k = 50)
+  }
   
   # all features (native and composite/transform)
   fwrite(train, paste0(write_directory, train_total_filename), append = FALSE)
@@ -956,37 +1196,36 @@ refresh_data <- function(read_directory = 'data/', write_directory = 'data/') {
   fwrite(train_complete, paste0(write_directory, train_total_complete_filename), append = FALSE)
   fwrite(test_complete, paste0(write_directory, test_total_complete_filename), append = FALSE)
   
-  # barebones features only
-  train_barebones_almost <- select(train, -log_fullsq, -log_lifesq, -log_kitchsq, -log_10p_floor, -log_10p_maxfloor, -log_1p_numroom, -price_per_room, -price_per_fullsq, -log_price_per_10p_log_room, -log_price_per_log_fullsq)
-  fwrite(select(train_barebones_almost, -log_price), paste0(write_directory, train_barebones_price_filename), append = FALSE)
-  fwrite(select(train_barebones_almost, -price_doc), paste0(write_directory, train_barebones_logprice_filename), append = FALSE)
-  
-  test_barebones <- select(test, -log_fullsq, -log_lifesq, -log_kitchsq, -log_10p_floor, -log_10p_maxfloor, -log_1p_numroom)
-  fwrite(test_barebones, paste0(write_directory, test_barebones_filename), append = FALSE)
-  
-  train_barebones_almost_complete <- train_barebones_almost[complete.cases(train_barebones_almost),]
-  fwrite(select(train_barebones_almost_complete, -log_price), paste0(write_directory, train_barebones_price_complete_filename), append = FALSE)
-  fwrite(select(train_barebones_almost_complete, -price_doc), paste0(write_directory, train_barebones_logprice_complete_filename), append = FALSE)
-  
-  test_barebones_complete <- test_barebones[complete.cases(test_barebones),]
-  fwrite(test_barebones_complete, paste0(write_directory, test_barebones_complete_filename), append = FALSE)
-
-  # composite/transform replacing native
-  train_transforms_almost <- select(train, -full_sq, -life_sq, -kitch_sq, -floor, -max_floor, -num_room, -price_per_room, -price_per_fullsq, -log_price_per_10p_log_room, -log_price_per_log_fullsq)
-  fwrite(select(train_transforms_almost, -log_price), paste0(write_directory, train_transforms_price_filename), append = FALSE)
-  fwrite(select(train_transforms_almost, -price_doc), paste0(write_directory, train_transforms_logprice_filename), append = FALSE)
-  
-  test_transforms <- select(test, -full_sq, -life_sq, -kitch_sq, -floor, -max_floor, -num_room)
-  fwrite(test_transforms, paste0(write_directory, test_transforms_filename), append = FALSE)
-  
-  train_transforms_almost_complete <- train_transforms_almost[complete.cases(train_transforms_almost),]
-  fwrite(select(train_transforms_almost_complete, -log_price), paste0(write_directory, train_transforms_price_complete_filename), append = FALSE)
-  fwrite(select(train_transforms_almost_complete, -price_doc), paste0(write_directory, train_transforms_logprice_complete_filename), append = FALSE)
-  
-  test_transforms_complete <- test_transforms[complete.cases(test_transforms),]
-  fwrite(test_transforms_complete, paste0(write_directory, test_transforms_complete_filename), append = FALSE)
+  # # barebones features only
+  # train_barebones_almost <- select(train, -log_fullsq, -log_lifesq, -log_kitchsq, -log_10p_floor, -log_10p_maxfloor, -log_1p_numroom, -price_per_room, -price_per_fullsq, -log_price_per_10p_log_room, -log_price_per_log_fullsq)
+  # fwrite(select(train_barebones_almost, -log_price), paste0(write_directory, train_barebones_price_filename), append = FALSE)
+  # fwrite(select(train_barebones_almost, -price_doc), paste0(write_directory, train_barebones_logprice_filename), append = FALSE)
+  # 
+  # test_barebones <- select(test, -log_fullsq, -log_lifesq, -log_kitchsq, -log_10p_floor, -log_10p_maxfloor, -log_1p_numroom)
+  # fwrite(test_barebones, paste0(write_directory, test_barebones_filename), append = FALSE)
+  # 
+  # train_barebones_almost_complete <- train_barebones_almost[complete.cases(train_barebones_almost),]
+  # fwrite(select(train_barebones_almost_complete, -log_price), paste0(write_directory, train_barebones_price_complete_filename), append = FALSE)
+  # fwrite(select(train_barebones_almost_complete, -price_doc), paste0(write_directory, train_barebones_logprice_complete_filename), append = FALSE)
+  # 
+  # test_barebones_complete <- test_barebones[complete.cases(test_barebones),]
+  # fwrite(test_barebones_complete, paste0(write_directory, test_barebones_complete_filename), append = FALSE)
+  # 
+  # # composite/transform replacing native
+  # train_transforms_almost <- select(train, -full_sq, -life_sq, -kitch_sq, -floor, -max_floor, -num_room, -price_per_room, -price_per_fullsq, -log_price_per_10p_log_room, -log_price_per_log_fullsq)
+  # fwrite(select(train_transforms_almost, -log_price), paste0(write_directory, train_transforms_price_filename), append = FALSE)
+  # fwrite(select(train_transforms_almost, -price_doc), paste0(write_directory, train_transforms_logprice_filename), append = FALSE)
+  # 
+  # test_transforms <- select(test, -full_sq, -life_sq, -kitch_sq, -floor, -max_floor, -num_room)
+  # fwrite(test_transforms, paste0(write_directory, test_transforms_filename), append = FALSE)
+  # 
+  # train_transforms_almost_complete <- train_transforms_almost[complete.cases(train_transforms_almost),]
+  # fwrite(select(train_transforms_almost_complete, -log_price), paste0(write_directory, train_transforms_price_complete_filename), append = FALSE)
+  # fwrite(select(train_transforms_almost_complete, -price_doc), paste0(write_directory, train_transforms_logprice_complete_filename), append = FALSE)
+  # 
+  # test_transforms_complete <- test_transforms[complete.cases(test_transforms),]
+  # fwrite(test_transforms_complete, paste0(write_directory, test_transforms_complete_filename), append = FALSE)
   
   # return datasets as list
   return(list('train' = train, 'test' = test, 'raion' = raion, 'yearly' = yearly, 'quarterly' = quarterly, 'monthly' = monthly, 'daily' = daily))
 }
-

@@ -1,21 +1,6 @@
 # @author Scott Dobbins
-# @version 0.9.3
-# @date 2017-05-01 01:30
-
-### import useful packages ###
-library(shiny)          # app formation
-library(leaflet)        # map source
-library(leaflet.extras) # map extras
-library(ggplot2)        # plots and graphs
-library(data.table)     # data processing
-library(dplyr)          # data processing
-#library(plotly)         # pretty interactive graphs
-#library(maps)           # also helps with maps
-#library(htmltools)      # helps with tooltips
-library(DT)             # web tables
-
-# get helper functions if not already present
-require(helper.R)
+# @version 0.9.8.3
+# @date 2017-08-24 22:30
 
 
 # ### initialize plotly ###
@@ -24,198 +9,158 @@ require(helper.R)
 # Sys.setenv("plotly_api_key"="ElZwoGYrCyhDGcauIpUQ")
 
 
-### server component ###
+### Constants ---------------------------------------------------------------
+
+change_token <- "change_token"
+
+
+### Server Component --------------------------------------------------------
 
 shinyServer(function(input, output, session) {
   
-  ### server session variables ###
+### Session variables -------------------------------------------------------
+
+  previous_wars_selection <- c()
+  previous_dropdown_selection <- list(country = "All", aircraft = "All", weapon = "All")
   
-  # toggles for graphs
-  WW1_selected <- FALSE
-  WW2_selected <- FALSE
-  Korea_selected <- FALSE
-  Vietnam_selected <- FALSE
+  overview_proxy <- leafletProxy("overview_map")
+  civilian_proxy <- leafletProxy("civilian_map")
   
-  # graphing behavior
-  opacity_now <- 0.2
+
+### War Selections ----------------------------------------------------------
+
+  selected <- function(war_label) {
+    reactive(war_label %c% input$which_war)
+  }
+  war_selected <- lapply(war_labels, selected)
   
+  selection <- function(war_tag) {
+    reactive({
+      if (all(length(input$dateRange) == 2L, 
+              length(input$country)   >= 1L, 
+              length(input$aircraft)  >= 1L, 
+              length(input$weapon)    >= 1L)) {
+        filter_selection(war_data[[war_tag]], 
+                         input$dateRange[1], 
+                         input$dateRange[2], 
+                         input$country, 
+                         input$aircraft, 
+                         input$weapon)
+      } else {
+        war_data[[war_tag]]
+      }
+    })
+  }
+  war_selection <- lapply(war_tags, selection)
   
-  # # show data using DataTable
-  # output$table <- DT::renderDataTable({
-  #   datatable(state_stat, rownames=FALSE) %>%
-  #     formatStyle(input$which_war, background="skyblue", fontWeight='bold')
-  # })
+  sample_war <- function(war_tag) {
+    reactive({
+      if ((war_missions_reactive[[war_tag]])() < input$sample_num) {
+        (war_selection[[war_tag]])()
+      } else {
+        war_dt <- (war_selection[[war_tag]])()
+        war_dt[sample(seq_len(nrow(war_dt)), size = input$sample_num, replace = FALSE)]
+      }
+    })
+  }
+  war_sample <- lapply(war_tags, sample_war)
   
-  ### show overview statistics
+  walk(list(war_selected, 
+            war_selection, 
+            war_sample), 
+       ~setattr(., "names", war_tags))
   
-  WW1_selection <- reactive({
-    WW1_clean %>% 
-      filter(Mission.Date >= input$dateRange[1] & Mission.Date <= input$dateRange[2])# %>% 
-    #filter(Unit.Country %in% input$country) %>%
-    #filter(Aircraft.Type %in% input$aircraft)
-  })
+
+### InfoBox Reactives -------------------------------------------------------
   
-  WW2_selection <- reactive({
-    WW2_clean %>% 
-      filter(Mission.Date >= input$dateRange[1] & Mission.Date <= input$dateRange[2])# %>% 
-  })
+  missions_reactive <- function(war_tag) {
+    reactive({
+      if ((war_selected[[war_tag]])()) {
+        (war_selection[[war_tag]])()[, .N]
+      } else 0
+    })
+  }
+  war_missions_reactive <- lapply(war_tags, missions_reactive)
   
-  Korea_selection <- reactive({
-    Korea_clean2 %>% 
-      filter(Mission.Date >= input$dateRange[1] & Mission.Date <= input$dateRange[2])# %>% 
-  })
+  flights_reactive <- function(war_tag) {
+    reactive({
+      if((war_selected[[war_tag]])()) {
+        (war_selection[[war_tag]])()[, sum(Aircraft_Attacking_Num,  na.rm = TRUE)]
+      } else 0
+    })
+  }
+  war_flights_reactive <- lapply(war_tags, flights_reactive)
+
+  bombs_reactive <- function(war_tag) {
+    reactive({
+      if((war_selected[[war_tag]])()) {
+        (war_selection[[war_tag]])()[, sum(Weapon_Expended_Num,  na.rm = TRUE)]
+      } else 0
+    })
+  }
+  war_bombs_reactive <- lapply(war_tags, bombs_reactive)
   
-  Vietnam_selection <- reactive({
-    Vietnam_clean %>%
-      filter(Mission.Date >= input$dateRange[1] & Mission.Date <= input$dateRange[2])# %>% 
-  })
+  weight_reactive <- function(war_tag) {
+    reactive({
+      if((war_selected[[war_tag]])()) {
+        (war_selection[[war_tag]])()[, sum(as.numeric(Weapon_Weight_Pounds),  na.rm = TRUE)]
+      } else 0
+    })
+  }
+  war_weight_reactive <- lapply(war_tags, weight_reactive)
   
-  WW1_sample <- reactive({
-    if(WW1_missions_reactive() < input$sample_num) {
-      WW1_selection()
-    } else {
-      sample_n(WW1_selection(), input$sample_num, replace = FALSE)
-    }
-  })
+  walk(list(war_missions_reactive, 
+            war_flights_reactive, 
+            war_bombs_reactive, 
+            war_weight_reactive), 
+       ~setattr(., "names", war_tags))
   
-  WW2_sample <- reactive({
-    if(WW2_missions_reactive() < input$sample_num) {
-      WW2_selection()
-    } else {
-      sample_n(WW2_selection(), input$sample_num, replace = FALSE)
-    }
-  })
+  war_reactive <- list(missions = war_missions_reactive, 
+                       flights  = war_flights_reactive, 
+                       bombs    = war_bombs_reactive, 
+                       weight   = war_weight_reactive)
   
-  Korea_sample <- reactive({
-    if(Korea_missions_reactive() < input$sample_num) {
-      Korea_selection()
-    } else {
-      sample_n(Korea_selection(), input$sample_num, replace = FALSE)
-    }
-  })
+
+### Infobox Outputs ---------------------------------------------------------
   
-  Vietnam_sample <- reactive({
-    if(Vietnam_missions_reactive() < input$sample_num) {
-      Vietnam_selection()
-    } else {
-      sample_n(Vietnam_selection(), input$sample_num, replace = FALSE)
-    }
-  })
-  
-  WW1_missions_reactive <- reactive({
-    if(WW1_string %in% input$which_war) {
-      (WW1_selection() %>% summarize(n = n()))$n
-    } else {
-      0
-    }
-  })
-  
-  WW2_missions_reactive <- reactive({
-    if(WW2_string %in% input$which_war) {
-      (WW2_selection() %>% summarize(n = n()))$n
-    } else {
-      0
-    }
-  })
-  
-  Korea_missions_reactive <- reactive({
-    if(Korea_string %in% input$which_war) {
-      (Korea_selection() %>% summarize(n = n()))$n
-    } else {
-      0
-    }
-  })
-  
-  Vietnam_missions_reactive <- reactive({
-    if(Vietnam_string %in% input$which_war) {
-      (Vietnam_selection() %>% summarize(n = n()))$n
-    } else {
-      0
-    }
-  })
-  
-  WW1_bombs_reactive <- reactive({
-    if(WW1_string %in% input$which_war) {
-      (WW1_selection() %>% summarize(sum = sum(Weapons.Expended, na.rm = TRUE)))$sum
-    } else {
-      0
-    }
-  })
-  
-  WW2_bombs_reactive <- reactive({
-    if(WW2_string %in% input$which_war) {
-      (WW2_selection() %>% summarize(sum = sum(Bomb.HE.Num, na.rm = TRUE)))$sum
-    } else {
-      0
-    }
-  })
-  
-  Korea_bombs_reactive <- reactive({
-    if(Korea_string %in% input$which_war) {
-      (Korea_selection() %>% summarize(sum = sum(Weapons.Num, na.rm = TRUE)))$sum
-    } else {
-      0
-    }
-  })
-  
-  Vietnam_bombs_reactive <- reactive({
-    if(Vietnam_string %in% input$which_war) {
-      (Vietnam_selection() %>% summarize(sum = sum(Weapons.Delivered.Num, na.rm = TRUE)))$sum
-    } else {
-      0
-    }
-  })
-  
-  WW1_weight_reactive <- reactive({
-    if(WW1_string %in% input$which_war) {
-      (WW1_selection() %>% summarize(sum = sum(Aircraft.Bombload, na.rm = TRUE)))$sum
-    } else {
-      0
-    }
-  })
-  
-  WW2_weight_reactive <- reactive({
-    if(WW2_string %in% input$which_war) {
-      (WW2_selection() %>% summarize(sum = sum(Bomb.Total.Pounds, na.rm = TRUE)))$sum
-    } else {
-      0
-    }
-  })
-  
-  Korea_weight_reactive <- reactive({
-    if(Korea_string %in% input$which_war) {
-      (Korea_selection() %>% summarize(sum = sum(Aircraft.Bombload.Calculated.Pounds, na.rm = TRUE)))$sum
-    } else {
-      0
-    }
-  })
-  
-  Vietnam_weight_reactive <- reactive({
-    if(Vietnam_string %in% input$which_war) {
-      (Vietnam_selection() %>% summarize(sum = sum(Weapon.Type.Weight, na.rm = TRUE)))$sum
-    } else {
-      0
-    }
-  })
+  get_total <- function(type) {
+    function() return(sum(map_dbl(war_reactive[[type]], function(f) (f)())))
+  }
+  get_total_missions <- get_total('missions')
+  get_total_flights  <- get_total('flights')
+  get_total_bombs    <- get_total('bombs')
+  get_total_weight   <- get_total('weight')
   
   # number of missions
   output$num_missions <- renderInfoBox({
-    total_missions <- WW1_missions_reactive() + WW2_missions_reactive() + Korea_missions_reactive() + Vietnam_missions_reactive()
-    infoBox(title = "Number of Missions", value = add_commas(total_missions), icon = icon('chevron-up', lib = 'font-awesome'))
+    infoBox(title = "Missions", 
+            value = add_commas(get_total_missions()), 
+            icon = icon('chevron-up', lib = 'font-awesome'))
+  })
+  
+  # number of aircraft
+  output$num_aircraft <- renderInfoBox({
+    infoBox(title = "Aircraft Flights", 
+            value = add_commas(get_total_flights()), 
+            icon = icon('fighter-jet', lib = 'font-awesome'))
   })
   
   # number of bombs
   output$num_bombs <- renderInfoBox({
-    total_bombs <- WW1_bombs_reactive() + WW2_bombs_reactive() + Korea_bombs_reactive() + Vietnam_bombs_reactive()
-    infoBox(title = "Number of Bombs", value = add_commas(total_bombs), icon = icon('bomb', lib = 'font-awesome'))
+    infoBox(title = "Bombs", 
+            value = add_commas(get_total_bombs()), 
+            icon = icon('bomb', lib = 'font-awesome'))
   })
   
   # weight of bombs
   output$total_weight <- renderInfoBox({
-    total_weight <- WW1_weight_reactive() + WW2_weight_reactive() + Korea_weight_reactive() + Vietnam_weight_reactive()
-    infoBox(title = "Weight of Bombs", value = add_commas(total_weight), icon = icon('fire', lib = 'font-awesome'))
+    infoBox(title = "TNT Equivalent (lbs)", 
+            value = add_commas(get_total_weight()), 
+            icon = icon('fire', lib = 'font-awesome'))
   })
   
+  
+### Overview Map ------------------------------------------------------------
   
   # initialize overview leaflet map
   output$overview_map <- renderLeaflet({
@@ -223,12 +168,33 @@ shinyServer(function(input, output, session) {
     overview
   })
   
-  output$overview_text <- renderText({"<i>Hints on use:</i><br>
-    <b>Color</b> map is best for aesthetic appearance<br>
-    <b>Plain</b> map is best for finding individual points<br>
-    <b>Terrain</b> map is best for investigating bomb locations with respect to terrain<br>
-    <b>Street</b> map is best for investigating bomb locations with respect to civil infrastructure<br>
-    <b>Satellite</b> map is best for investigating bomb locations with respect to current-day city features"
+  output$overview_text <- renderText({"<i>Hints for use:</i><br>
+    <b>Color</b> map: best aesthetics<br>
+    <b>Plain</b> map: visualize individual points<br>
+    <b>Terrain</b> map: visualize terrain<br>
+    <b>Street</b> map: visualize civil infrastructure<br>
+    <b>Satellite</b> map: visualize current-day city features"
+  })
+  
+
+### Pilot Map ---------------------------------------------------------------
+  
+  output$pilot_title <- renderText({
+    "Where is the most dangerous to fly?"
+  })
+  
+
+### Commander Map -----------------------------------------------------------
+  
+  output$commander_title <- renderText({
+    "Where are the major battles?"
+  })
+  
+
+### Civilian Map ------------------------------------------------------------
+  
+  output$civilian_title <- renderText({
+    "Where is the bombing the worst?"
   })
   
   # initialize civilian leaflet map
@@ -236,711 +202,602 @@ shinyServer(function(input, output, session) {
     civilian <- leaflet() %>% addProviderTiles("CartoDB.Positron", layerId = "civilian_base")
     civilian
   })
+
+    
+### DataTable ---------------------------------------------------------------
   
+  datatable_output <- function(war_tag) {
+    reactive({
+      datatable(data = (war_selection[[war_tag]])()[, war_datatable_columns[[war_tag]], with = FALSE], 
+                rownames = FALSE, 
+                colnames = war_datatable_colnames[[war_tag]]) %>%
+        formatStyle(columns = war_datatable_columns[[war_tag]], 
+                    background = war_background[[war_tag]], 
+                    fontWeight = font_weight)
+    })
+  }
+  war_datatable_output <- lapply(war_tags, datatable_output)
+  setattr(war_datatable_output, "names", war_tags)
   
-  ### WW1 tab ###
-  
-  # WW1 histogram
-  output$WW1_hist <- renderPlot({
-    WW1_hist_plot <- ggplot(WW1_selection(), aes(x = Mission.Date)) + 
-      geom_histogram(bins = input$WW1_hist_slider) + 
-      ggtitle("Missions over time during World War One") + 
-      xlab("Date") + 
-      ylab("Number of Missions")
-    WW1_hist_plot
-  })
-  
-  # WW1 sandbox
-  output$WW1_sandbox <- renderPlot({
-    if(input$WW1_sandbox_ind == "Year") {
-      plot_continuous <- WW1_continuous[[input$WW1_sandbox_dep]]
-      if(input$WW1_sandbox_group == "None") {
-        WW1_sandbox_plot <- ggplot(mapping = aes(x = year((WW1_selection())[, "Mission.Date"]), 
-                                                 y = (WW1_selection())[, plot_continuous]))
-      } else {
-        group_category <- WW1_categorical[[input$WW1_sandbox_group]]
-        WW1_sandbox_plot <- ggplot(mapping = aes(x = year((WW1_selection())[, "Mission.Date"]), 
-                                                 y = (WW1_selection())[, plot_continuous], 
-                                                 group = (WW1_selection())[, group_category], 
-                                                 fill = (WW1_selection())[, group_category]))
-      }
-      WW1_sandbox_plot <- WW1_sandbox_plot + geom_col(position = 'dodge')
-    } else if(input$WW1_sandbox_ind %in% WW1_categorical_choices) {
-      plot_category <- WW1_categorical[[input$WW1_sandbox_ind]]
-      plot_continuous <- WW1_continuous[[input$WW1_sandbox_dep]]
-      if(input$WW1_sandbox_group == "None") {
-        WW1_sandbox_plot <- ggplot(data = WW1_selection(), 
-                                   mapping = aes_string(x = plot_category, 
-                                                        y = plot_continuous))
-      } else {
-        group_category <- WW1_categorical[[input$WW1_sandbox_group]]
-        WW1_sandbox_plot <- ggplot(data = WW1_selection(), 
-                                   mapping = aes_string(x = plot_category, 
-                                                        y = plot_continuous, 
-                                                        group = group_category, 
-                                                        fill = group_category))
-      }
-      WW1_sandbox_plot <- WW1_sandbox_plot + geom_col(position = 'dodge')
+  output$table <- DT::renderDataTable({
+    if ((war_selected[[WW1]])()) {
+      (war_datatable_output[[WW1]])()
+    } else if ((war_selected[[WW2]])()) {
+      (war_datatable_output[[WW2]])()
+    } else if ((war_selected[[Korea]])()) {
+      (war_datatable_output[[Korea]])()
+    } else if ((war_selected[[Vietnam]])()) {
+      (war_datatable_output[[Vietnam]])()
     } else {
-      plot_independent <- WW1_continuous[[input$WW1_sandbox_ind]]
-      plot_dependent <- WW1_continuous[[input$WW1_sandbox_dep]]
-      if(input$WW1_sandbox_group == "None") {
-        WW1_sandbox_plot <- ggplot(data = WW1_selection(), 
-                                   mapping = aes_string(x = plot_independent, 
-                                                        y = plot_dependent))
-      } else {
-        group_category <- WW1_categorical[[input$WW1_sandbox_group]]
-        WW1_sandbox_plot <- ggplot(data = WW1_selection(), 
-                                   mapping = aes_string(x = plot_independent, 
-                                                        y = plot_dependent, 
-                                                        color = group_category))
-      }
-      WW1_sandbox_plot <- WW1_sandbox_plot + geom_point() + geom_smooth(method = 'lm')
+      datatable(data = data.table(Example = list("Pick a war"), Data = list("to see its data")), 
+                rownames = FALSE) %>%
+        formatStyle(columns = 1:2, 
+                    background = example_background, 
+                    fontWeight = font_weight)
     }
-    WW1_sandbox_plot + 
-      ggtitle("World War 1 sandbox") + 
-      xlab(input$WW1_sandbox_ind) + 
-      ylab(input$WW1_sandbox_dep)
   })
   
   
-  ### WW2 tab ###
+### Data Graph Inputs -------------------------------------------------------
   
-  # WW2 histogram
-  output$WW2_hist <- renderPlot({
-    WW2_hist_plot <- ggplot(WW2_selection(), aes(x = Mission.Date)) + 
-      geom_histogram(bins = input$WW2_hist_slider) + 
-      ggtitle("Missions over time during World War Two") + 
-      xlab("Date") + 
-      ylab("Number of Missions")
-    WW2_hist_plot
-  })
+  war_sandbox_group_input <- function(war_tag) {
+    switch(war_tag, 
+           WW1     = input$WW1_sandbox_group, 
+           WW2     = input$WW2_sandbox_group, 
+           Korea   = input$Korea_sandbox_group, 
+           Vietnam = input$Vietnam_sandbox_group)
+  }
   
-  # WW2 sandbox
-  output$WW2_sandbox <- renderPlot({
-    if(input$WW2_sandbox_ind == "Year") {
-      plot_continuous <- WW2_continuous[[input$WW2_sandbox_dep]]
-      if(input$WW2_sandbox_group == "None") {
-        WW2_sandbox_plot <- ggplot(mapping = aes(x = year((WW2_selection())[, "Mission.Date"]), 
-                                                 y = (WW2_selection())[, plot_continuous]))
+  war_sandbox_ind_input <- function(war_tag) {
+    switch(war_tag, 
+           WW1     = input$WW1_sandbox_ind, 
+           WW2     = input$WW2_sandbox_ind, 
+           Korea   = input$Korea_sandbox_ind, 
+           Vietnam = input$Vietnam_sandbox_ind)
+  }
+  
+  war_sandbox_dep_input <- function(war_tag) {
+    switch(war_tag, 
+           WW1     = input$WW1_sandbox_dep, 
+           WW2     = input$WW2_sandbox_dep, 
+           Korea   = input$Korea_sandbox_dep, 
+           Vietnam = input$Vietnam_sandbox_dep)
+  }
+  
+  war_hist_slider_input <- function(war_tag) {
+    switch(war_tag, 
+           WW1     = input$WW1_hist_slider, 
+           WW2     = input$WW2_hist_slider, 
+           Korea   = input$Korea_hist_slider, 
+           Vietnam = input$Vietnam_hist_slider)
+  }
+  
+  war_hor_trans_input <- function(war_tag) {
+    switch(war_tag, 
+           WW1     = input$WW1_transformation_hor, 
+           WW2     = input$WW2_transformation_hor, 
+           Korea   = input$Korea_transformation_hor, 
+           Vietnam = input$Vietnam_transformation_hor)
+  }
+  
+  war_ver_trans_input <- function(war_tag) {
+    switch(war_tag, 
+           WW1     = input$WW1_transformation_ver, 
+           WW2     = input$WW2_transformation_ver, 
+           Korea   = input$Korea_transformation_ver, 
+           Vietnam = input$Vietnam_transformation_ver)
+  }
+  
+
+### Dropdown Inputs ---------------------------------------------------------
+
+  dropdown_input <- function(type) {
+    switch(type, 
+           country = input$country, 
+           aircraft = input$aircraft, 
+           weapon = input$weapon)
+  }
+  
+  
+### Data Histograms ---------------------------------------------------------
+  
+  histogram_output <- function(war_tag) {
+    renderPlot({
+      war_dt <- (war_selection[[war_tag]])()
+      group_input <- war_sandbox_group_input(war_tag)
+      ver_trans_input <- war_ver_trans_input(war_tag)
+      if (group_input == "None") {
+        hist_plot <- ggplot(mapping = aes(x = war_dt[["Mission_Date"]])) + 
+          geom_histogram(bins = war_hist_slider_input(war_tag))
       } else {
-        group_category <- WW2_categorical[[input$WW2_sandbox_group]]
-        WW2_sandbox_plot <- ggplot(mapping = aes(x = year((WW2_selection())[, "Mission.Date"]), 
-                                                 y = (WW2_selection())[, plot_continuous], 
-                                                 group = (WW2_selection())[, group_category], 
-                                                 fill = (WW2_selection())[, group_category]))
+        group_category <- war_categorical[[war_tag]][[group_input]]
+        hist_plot <- ggplot(mapping = aes(x     = war_dt[["Mission_Date"]], 
+                                          color = war_dt[[group_category]])) + 
+          geom_freqpoly(bins = war_hist_slider_input(war_tag)) + 
+          guides(color = guide_legend(title = group_input))
       }
-      WW2_sandbox_plot <- WW2_sandbox_plot + geom_col(position = 'dodge')
-    } else if(input$WW2_sandbox_ind %in% WW2_categorical_choices) {
-      plot_category <- WW2_categorical[[input$WW2_sandbox_ind]]
-      plot_continuous <- WW2_continuous[[input$WW2_sandbox_dep]]
-      if(input$WW2_sandbox_group == "None") {
-        WW2_sandbox_plot <- ggplot(data = WW2_selection(), 
-                                   mapping = aes_string(x = plot_category, 
-                                                        y = plot_continuous))
+      hist_plot <- hist_plot + 
+        ggtitle(war_histogram_title[[war_tag]]) + 
+        xlab("Date") + 
+        ylab("Number of Missions") + 
+        theme_bw()
+      if (ver_trans_input == "None") {
+        hist_plot
       } else {
-        group_category <- WW2_categorical[[input$WW2_sandbox_group]]
-        WW2_sandbox_plot <- ggplot(data = WW2_selection(), 
-                                   mapping = aes_string(x = plot_category, 
-                                                        y = plot_continuous, 
-                                                        group = group_category, 
-                                                        fill = group_category))
+        hist_plot + 
+          scale_y_log10()
       }
-      WW2_sandbox_plot <- WW2_sandbox_plot + geom_col(position = 'dodge')
-    } else {
-      plot_independent <- WW2_continuous[[input$WW2_sandbox_ind]]
-      plot_dependent <- WW2_continuous[[input$WW2_sandbox_dep]]
-      if(input$WW2_sandbox_group == "None") {
-        WW2_sandbox_plot <- ggplot(data = WW2_selection(), 
-                                   mapping = aes_string(x = plot_independent, 
-                                                        y = plot_dependent))
-      } else {
-        group_category <- WW2_categorical[[input$WW2_sandbox_group]]
-        WW2_sandbox_plot <- ggplot(data = WW2_selection(), 
-                                   mapping = aes_string(x = plot_independent, 
-                                                        y = plot_dependent, 
-                                                        color = group_category))
-      }
-      WW2_sandbox_plot <- WW2_sandbox_plot + geom_point() + geom_smooth(method = 'lm')
-    }
-    WW2_sandbox_plot + 
-      ggtitle("World War 2 sandbox") + 
-      xlab(input$WW2_sandbox_ind) + 
-      ylab(input$WW2_sandbox_dep)
-  })
+    })
+  }
+  output$WW1_hist     <- histogram_output(WW1)
+  output$WW2_hist     <- histogram_output(WW2)
+  output$Korea_hist   <- histogram_output(Korea)
+  output$Vietnam_hist <- histogram_output(Vietnam)
   
   
-  ### Korea tab ###
+### Data Sandboxes ----------------------------------------------------------
   
-  # Korea histogram
-  output$Korea_hist <- renderPlot({
-    Korea_hist_plot <- ggplot(Korea_selection(), aes(x = Mission.Date)) + 
-      geom_histogram(bins = input$Korea_hist_slider) + 
-      ggtitle("Missions over time during the Korean War") + 
-      xlab("Date") + 
-      ylab("Number of Missions")
-    Korea_hist_plot
-  })
+  sandbox_output <- function(war_tag) {
+    renderPlot({
+      ind_input <- war_sandbox_ind_input(war_tag)
+      dep_input <- war_sandbox_dep_input(war_tag)
+      group_input <- war_sandbox_group_input(war_tag)
+      war_dt <- (war_selection[[war_tag]])()
+      plot_dep <- war_continuous[[war_tag]][[dep_input]]
+      plot_group <- war_categorical[[war_tag]][[group_input]]
+      if (ind_input %c% war_continuous_choices[[war_tag]]) {
+        plot_ind <- war_continuous[[war_tag]][[ind_input]]
+        sandbox_plot <- ggplot(data = war_dt, 
+                               mapping = aes_string(x     = plot_ind, 
+                                                    y     = plot_dep, 
+                                                    color = plot_group)) + 
+          guides(color = guide_legend(title = group_input)) + 
+          geom_point() + 
+          geom_smooth(method = 'lm')
+        if (war_hor_trans_input(war_tag) == "Logarithm") {
+          sandbox_plot <- sandbox_plot + scale_x_log10()
+        }
+      } else {
+        plot_ind <- war_categorical[[war_tag]][[ind_input]]
+        if (ind_input == "None (All Data)") {
+          if (group_input == "None") {
+            sandbox_plot <- ggplot(mapping = aes(x = "", 
+                                                 y = war_dt[[plot_dep]]))
+          } else {
+            sandbox_plot <- ggplot(mapping = aes(x    = "", 
+                                                 y    = war_dt[[plot_dep]], 
+                                                 fill = war_dt[[plot_group]])) + 
+              guides(fill = guide_legend(title = group_input))
+          }
+        } else {
+          sandbox_plot <- ggplot(data = war_dt, 
+                                 mapping = aes_string(x    = plot_ind, 
+                                                      y    = plot_dep, 
+                                                      fill = plot_group)) + 
+            guides(fill = guide_legend(title = group_input))
+        }
+        sandbox_plot <- sandbox_plot + 
+          geom_violin(draw_quantiles = c(0.25, 0.50, 0.75))
+      }
+      if (war_ver_trans_input(war_tag) == "Logarithm") {
+        sandbox_plot <- sandbox_plot + scale_y_log10()
+      }
+      sandbox_plot + 
+        ggtitle(war_sandbox_title[[war_tag]]) + 
+        xlab(ind_input) + 
+        ylab(dep_input) + 
+        theme_bw()
+    })
+  }
+  output$WW1_sandbox     <- sandbox_output(WW1)
+  output$WW2_sandbox     <- sandbox_output(WW2)
+  output$Korea_sandbox   <- sandbox_output(Korea)
+  output$Vietnam_sandbox <- sandbox_output(Vietnam)
   
-  # Korea sandbox
-  output$Korea_sandbox <- renderPlot({
-    if(input$Korea_sandbox_ind == "Year") {
-      plot_continuous <- Korea_continuous[[input$Korea_sandbox_dep]]
-      if(input$Korea_sandbox_group == "None") {
-        Korea_sandbox_plot <- ggplot(mapping = aes(x = year((Korea_selection())[, "Mission.Date"]), 
-                                                   y = (Korea_selection())[, plot_continuous]))
-      } else {
-        group_category <- Korea_categorical[[input$Korea_sandbox_group]]
-        Korea_sandbox_plot <- ggplot(mapping = aes(x = year((Korea_selection())[, "Mission.Date"]), 
-                                                   y = (Korea_selection())[, plot_continuous], 
-                                                   group = (Korea_selection())[, group_category], 
-                                                   fill = (Korea_selection())[, group_category]))
-      }
-      Korea_sandbox_plot <- Korea_sandbox_plot + geom_col(position = 'dodge')
-    } else if(input$Korea_sandbox_ind %in% Korea_categorical_choices) {
-      plot_category <- Korea_categorical[[input$Korea_sandbox_ind]]
-      plot_continuous <- Korea_continuous[[input$Korea_sandbox_dep]]
-      if(input$Korea_sandbox_group == "None") {
-        Korea_sandbox_plot <- ggplot(data = Korea_selection(), 
-                                     mapping = aes_string(x = plot_category, 
-                                                          y = plot_continuous))
-      } else {
-        group_category <- Korea_categorical[[input$Korea_sandbox_group]]
-        Korea_sandbox_plot <- ggplot(data = Korea_selection(), 
-                                     mapping = aes_string(x = plot_category, 
-                                                          y = plot_continuous, 
-                                                          group = group_category, 
-                                                          fill = group_category))
-      }
-      Korea_sandbox_plot <- Korea_sandbox_plot + geom_col(position = 'dodge')
-    } else {
-      plot_independent <- Korea_continuous[[input$Korea_sandbox_ind]]
-      plot_dependent <- Korea_continuous[[input$Korea_sandbox_dep]]
-      if(input$Korea_sandbox_group == "None") {
-        Korea_sandbox_plot <- ggplot(data = Korea_selection(), 
-                                     mapping = aes_string(x = plot_independent, 
-                                                          y = plot_dependent))
-      } else {
-        group_category <- Korea_categorical[[input$Korea_sandbox_group]]
-        Korea_sandbox_plot <- ggplot(data = Korea_selection(), 
-                                     mapping = aes_string(x = plot_independent, 
-                                                          y = plot_dependent, 
-                                                          color = group_category))
-      }
-      Korea_sandbox_plot <- Korea_sandbox_plot + geom_point() + geom_smooth(method = 'lm')
-    }
-    Korea_sandbox_plot + 
-      ggtitle("Korean War sandbox") + 
-      xlab(input$Korea_sandbox_ind) + 
-      ylab(input$Korea_sandbox_dep)
-  })
-  
-  
-  ### Vietnam tab ###
-  
-  # Vietnam histogram
-  output$Vietnam_hist <- renderPlot({
-    Vietnam_hist_plot <- ggplot(Vietnam_selection(), aes(x = Mission.Date)) + 
-      geom_histogram(bins = input$Vietnam_hist_slider) + 
-      ggtitle("Missions over time during the Vietnam War") + 
-      xlab("Date") + 
-      ylab("Number of Missions")
-    Vietnam_hist_plot
-  })
-  
-  # Vietnam sandbox
-  output$Vietnam_sandbox <- renderPlot({
-    if(input$Vietnam_sandbox_ind == "Year") {
-      plot_continuous <- Vietnam_continuous[[input$Vietnam_sandbox_dep]]
-      if(input$Vietnam_sandbox_group == "None") {
-        Vietnam_sandbox_plot <- ggplot(mapping = aes(x = year((Vietnam_selection())[, "Mission.Date"]), 
-                                                     y = (Vietnam_selection())[, plot_continuous]))
-      } else {
-        group_category <- Vietnam_categorical[[input$Vietnam_sandbox_group]]
-        Vietnam_sandbox_plot <- ggplot(mapping = aes(x = year((Vietnam_selection())[, "Mission.Date"]), 
-                                                     y = (Vietnam_selection())[, plot_continuous], 
-                                                     group = (Vietnam_selection())[, group_category], 
-                                                     fill = (Vietnam_selection())[, group_category]))
-      }
-      Vietnam_sandbox_plot <- Vietnam_sandbox_plot + geom_col(position = 'dodge')
-    } else if(input$Vietnam_sandbox_ind %in% Vietnam_categorical_choices) {
-      plot_category <- Vietnam_categorical[[input$Vietnam_sandbox_ind]]
-      plot_continuous <- Vietnam_continuous[[input$Vietnam_sandbox_dep]]
-      if(input$Vietnam_sandbox_group == "None") {
-        Vietnam_sandbox_plot <- ggplot(data = Vietnam_selection(), 
-                                       mapping = aes_string(x = plot_category, 
-                                                            y = plot_continuous))
-      } else {
-        group_category <- Vietnam_categorical[[input$Vietnam_sandbox_group]]
-        Vietnam_sandbox_plot <- ggplot(data = Vietnam_selection(), 
-                                       mapping = aes_string(x = plot_category, 
-                                                            y = plot_continuous, 
-                                                            group = group_category, 
-                                                            fill = group_category))
-      }
-      Vietnam_sandbox_plot <- Vietnam_sandbox_plot + geom_col(position = 'dodge')
-    } else {
-      plot_independent <- Vietnam_continuous[[input$Vietnam_sandbox_ind]]
-      plot_dependent <- Vietnam_continuous[[input$Vietnam_sandbox_dep]]
-      if(input$Vietnam_sandbox_group == "None") {
-        Vietnam_sandbox_plot <- ggplot(data = Vietnam_selection(), 
-                                       mapping = aes_string(x = plot_independent, 
-                                                            y = plot_dependent))
-      } else {
-        group_category <- Vietnam_categorical[[input$Vietnam_sandbox_group]]
-        Vietnam_sandbox_plot <- ggplot(data = Vietnam_selection(), 
-                                       mapping = aes_string(x = plot_independent, 
-                                                            y = plot_dependent, 
-                                                            color = group_category))
-      }
-      Vietnam_sandbox_plot <- Vietnam_sandbox_plot + geom_point() + geom_smooth(method = 'lm')
-    }
-    Vietnam_sandbox_plot + 
-      ggtitle("Vietnam War sandbox") + 
-      xlab(input$Vietnam_sandbox_ind) + 
-      ylab(input$Vietnam_sandbox_dep)
-  })
+
+### Observers ---------------------------------------------------------------
+
+
+### Map observers -----------------------------------------------------------
   
   # hanlder for changes in map type
-  observeEvent(eventExpr = input$pick_map, ignoreNULL = FALSE, handlerExpr = {
-    
-    if(debug_mode_on) print("map altered")
-    
-    overview_proxy <- leafletProxy("overview_map")
-    
+  observeEvent(eventExpr = input$pick_map, handlerExpr = {
+    debug_message("map altered")
     # remove other tiles and add designated map
-    if(input$pick_map == "Color Map") {
-      
-      overview_proxy %>%
-        clearTiles() %>%
-        addProviderTiles("Stamen.Watercolor", layerId = "map_base")#,
-      #options = providerTileOptions(attribution = 'Map tiles by <a href="http://stamen.com">Stamen Design</a>,
-      #<a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy;
-      #<a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'))
-      
-    } else if(input$pick_map == "Plain Map") {
-      
-      overview_proxy %>%
-        clearTiles() %>%
-        addProviderTiles("CartoDB.PositronNoLabels",
-                         layerId = "map_base")#,
-      #options = providerTileOptions(attribution = '&copy;
-      #<a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy;
-      #<a href="http://cartodb.com/attributions">CartoDB</a>'))
-      
-    } else if(input$pick_map == "Terrain Map") {
-      
-      overview_proxy %>%
-        clearTiles() %>%
-        addProviderTiles("Stamen.TerrainBackground",
-                         layerId = "map_base")#,
-      #options = providerTileOptions(attribution = 'Map tiles by <a href="http://stamen.com">Stamen Design</a>,
-      #<a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy;
-      #<a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'))
-      
-    } else if(input$pick_map == "Street Map") {
-      
-      overview_proxy %>%
-        clearTiles() %>%
-        addProviderTiles("HERE.basicMap",
-                         layerId = "map_base",
-                         options = providerTileOptions(app_id = '5LPi1Hu7Aomn8Nv4If6c',
-                                                       app_code = 'mrmfvq4OREjya6Vbjmw6Gw'))#,
-      #attribution = 'Map &copy; 2016
-      #<a href="http://developer.here.com">HERE</a>'))
-      
-    } else if(input$pick_map == "Satellite Map") {
-      
-      overview_proxy %>%
-        clearTiles() %>%
-        addProviderTiles("Esri.WorldImagery",
-                         layerId = "map_base")#,
-      #options = providerTileOptions(attribution = 'Tiles &copy; Esri &mdash;
-      #Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'))
-      
-    }
-    
+    fix_map_base(map_type = input$pick_map)
     # gotta redraw the map labels if the underlying map has changed
-    if("Borders" %in% input$pick_labels) {
-      if("Text" %in% input$pick_labels) {
-        
-        overview_proxy %>%
-          removeTiles(layerId = "map_labels") %>%
-          addProviderTiles("Stamen.TonerHybrid", layerId = "map_labels")
-        
-      } else {
-        
-        overview_proxy %>%
-          removeTiles(layerId = "map_labels") %>%
-          addProviderTiles("Stamen.TonerLines", layerId = "map_labels")
-        
-      }
-    } else {
-      if("Text" %in% input$pick_labels) {
-        
-        overview_proxy %>%
-          removeTiles(layerId = "map_labels") %>%
-          addProviderTiles("Stamen.TonerLabels", layerId = "map_labels")
-        
-      } else {
-        
-        overview_proxy %>%
-          removeTiles(layerId = "map_labels")
-        
-      }
-    }
+    fix_map_labels(borders = "Borders" %c% input$pick_labels, 
+                   text = "Text" %c% input$pick_labels)
   })
   
   # handler for changes in map labels
   observeEvent(eventExpr = input$pick_labels, ignoreNULL = FALSE, handlerExpr = {
-    
-    if(debug_mode_on) print("labels altered")
-    
-    overview_proxy <- leafletProxy("overview_map")
-    
-    # remove current label tiles and re-add designated label tiles
-    if("Borders" %in% input$pick_labels) {
-      if("Text" %in% input$pick_labels) {
-        if(debug_mode_on) print("Both borders and text")
-        
-        overview_proxy %>%
-          removeTiles(layerId = "map_labels") %>%
-          addProviderTiles("Stamen.TonerHybrid", layerId = "map_labels")
-        
-      } else {
-        if(debug_mode_on) print("Just borders; no text")
-        
-        overview_proxy %>%
-          removeTiles(layerId = "map_labels") %>%
-          addProviderTiles("Stamen.TonerLines", layerId = "map_labels")
-        
-      }
-      
-    } else {
-      
-      if("Text" %in% input$pick_labels) {
-        if(debug_mode_on) print("Just text; no borders")
-        
-        overview_proxy %>%
-          removeTiles(layerId = "map_labels") %>%
-          addProviderTiles("Stamen.TonerLabels", layerId = "map_labels")
-        
-      } else {
-        if(debug_mode_on) print("Neither text nor borders")
-        
-        overview_proxy %>%
-          removeTiles(layerId = "map_labels")
-        
-      }
-    }
+    debug_message("labels altered")
+    fix_map_labels(borders = "Borders" %c% input$pick_labels, 
+                   text = "Text" %c% input$pick_labels)
   })
   
+  # handler for changes in map zoom
+  observeEvent(eventExpr = input$overview_map_zoom, handlerExpr = {
+    debug_message("map zoomed")
+    redraw_overview()
+  })
+  
+
+### War observer ------------------------------------------------------------
+
   # handler for war selection
   observeEvent(eventExpr = input$which_war, ignoreNULL = FALSE, ignoreInit = TRUE, handlerExpr = {
-    
-    if(debug_mode_on) print("wars selected")
-    
-    overview_proxy <- leafletProxy("overview_map")
-    civilian_proxy <- leafletProxy("civilian_map")
-    
-    if(xor(WW1_selected, WW1_string %in% input$which_war)) {
-      if(WW1_selected) {
-        if(debug_mode_on) print("WW1 deselected")
-        overview_proxy %>% clearGroup(group = "WW1_unique_targets")
-        civilian_proxy %>% clearGroup(group = "WW1_heatmap")
-        WW1_selected <<- FALSE
+    debug_message("wars selected")
+    diff_war <- war_tags[which(war_labels == previous_wars_selection %dd% input$which_war)]
+    deselected <- length(previous_wars_selection) > length(input$which_war)
+    if (is_scalar(diff_war)) {
+      if (deselected) {
+        debug_message0(diff_war, "deselected")
+        (war_clear[[diff_war]])()
       } else {
-        if(debug_mode_on) print("WW1 selected")
-        overview_proxy %>% addCircles(data = WW1_sample(),
-                                      lat = ~Target.Latitude,
-                                      lng = ~Target.Longitude,
-                                      color = "darkblue",
-                                      weight = 5,
-                                      opacity = opacity_now,
-                                      fill = TRUE,
-                                      fillColor = "darkblue",
-                                      fillOpacity = opacity_now,
-                                      popup = ~tooltip,
-                                      group = "WW1_unique_targets")
-        civilian_proxy %>% addHeatmap(lng = WW1_selection()$Target.Longitude, 
-                                      lat = WW1_selection()$Target.Latitude, 
-                                      blur = 20, 
-                                      max = 0.05, 
-                                      radius = 15, 
-                                      group = "WW1_heatmap")
-        WW1_selected <<- TRUE
-      }
-    } else if(xor(WW2_selected, WW2_string %in% input$which_war)) {
-      if(WW2_selected) {
-        if(debug_mode_on) print("WW2 deselected")
-        overview_proxy %>% clearGroup(group = "WW2_unique_targets")
-        civilian_proxy %>% clearGroup(group = "WW2_heatmap")
-        WW2_selected <<- FALSE
-      } else {
-        if(debug_mode_on) print("WW2 selected")
-        overview_proxy %>% addCircles(data = WW2_sample(),
-                                      lat = ~Target.Latitude,
-                                      lng = ~Target.Longitude,
-                                      color = "darkred",
-                                      weight = 5,
-                                      opacity = opacity_now,
-                                      fill = TRUE,
-                                      fillColor = "darkred",
-                                      fillOpacity = opacity_now, 
-                                      popup = ~tooltip,
-                                      group = "WW2_unique_targets")
-        civilian_proxy %>% addHeatmap(lng = WW2_selection()$Target.Longitude, 
-                                      lat = WW2_selection()$Target.Latitude, 
-                                      blur = 20, 
-                                      max = 0.05, 
-                                      radius = 15, 
-                                      group = "WW2_heatmap")
-        WW2_selected <<- TRUE
-      }
-    } else if(xor(Korea_selected, Korea_string %in% input$which_war)) {
-      if(Korea_selected) {
-        if(debug_mode_on) print("Korea deselected")
-        overview_proxy %>% clearGroup(group = "Korea_unique_targets")
-        civilian_proxy %>% clearGroup(group = "Korea_heatmap")
-        Korea_selected <<- FALSE
-      } else {
-        if(debug_mode_on) print("Korea selected")
-        overview_proxy %>% addCircles(data = Korea_sample(),
-                                      lat = ~Target.Latitude,
-                                      lng = ~Target.Longitude,
-                                      color = "yellow",
-                                      weight = 5,
-                                      opacity = opacity_now,
-                                      fill = TRUE,
-                                      fillColor = "yellow", 
-                                      fillOpacity = opacity_now, 
-                                      popup = ~tooltip,
-                                      group = "Korea_unique_targets")
-        civilian_proxy %>% addHeatmap(lng = Korea_selection()$Target.Longitude, 
-                                      lat = Korea_selection()$Target.Latitude, 
-                                      blur = 20, 
-                                      max = 0.05, 
-                                      radius = 15, 
-                                      group = "Korea_heatmap")
-        Korea_selected <<- TRUE
-      }
-    } else if(xor(Vietnam_selected, Vietnam_string %in% input$which_war)) {
-      if(Vietnam_selected) {
-        if(debug_mode_on) print("Vietnam deselected")
-        overview_proxy %>% clearGroup(group = "Vietnam_unique_targets")
-        civilian_proxy %>% clearGroup(group = "Vietnam_heatmap")
-        Vietnam_selected <<- FALSE
-      } else {
-        if(debug_mode_on) print("Vietnam selected")
-        overview_proxy %>% addCircles(data = Vietnam_sample(),
-                                      lat = ~Target.Latitude,
-                                      lng = ~Target.Longitude,
-                                      color = "darkgreen",
-                                      weight = 5,
-                                      opacity = opacity_now,
-                                      fill = TRUE,
-                                      fillColor = "darkgreen", 
-                                      fillOpacity = opacity_now, 
-                                      popup = ~tooltip,
-                                      group = "Vietnam_unique_targets")
-        civilian_proxy %>% addHeatmap(lng = Vietnam_selection()$Target.Longitude, 
-                                      lat = Vietnam_selection()$Target.Latitude, 
-                                      blur = 20, 
-                                      max = 0.05, 
-                                      radius = 15, 
-                                      group = "Vietnam_heatmap")
-        Vietnam_selected <<- TRUE
+        debug_message0(diff_war, "selected")
+        (war_draw[[diff_war]])()
       }
     } else {
-      if(debug_mode_on) print("all wars deselected")
-      print(stupid_var)
-      if(WW1_selected) {
-        overview_proxy %>% clearGroup(group = "WW1_unique_targets")
-        civilian_proxy %>% clearGroup(group = "WW1_heatmap")
-        WW1_selected <<- FALSE
-      } else if(WW2_selected) {
-        overview_proxy %>% clearGroup(group = "WW2_unique_targets")
-        civilian_proxy %>% clearGroup(group = "WW2_heatmap")
-        WW2_selected <<- FALSE
-      } else if(Korea_selected) {
-        overview_proxy %>% clearGroup(group = "Korea_unique_targets")
-        civilian_proxy %>% clearGroup(group = "Korea_heatmap")
-        Korea_selected <<- FALSE
-      } else if(Vietnam_selected) {
-        overview_proxy %>% clearGroup(group = "Vietnam_unique_targets")
-        civilian_proxy %>% clearGroup(group = "Vietnam_heatmap")
-        Vietnam_selected <<- FALSE
+      if (deselected) {
+        debug_message("all wars deselected")
+        for (tag in diff_war) {
+          (war_clear[[diff_war]])()
+        }
       } else {
-        if(debug_mode_on) print("something else happened")
+        debug_message("impossible?")
       }
     }
+    update_selectize_inputs()
+    previous_wars_selection <<- input$which_war
   })
   
-  # # handler for country selection
-  # observeEvent(eventExpr = input$country, ignoreNULL = FALSE, ignoreInit = TRUE, handlerExpr = {
-  #   if(debug_mode_on) print("country selected")
-  #   
-  #   proxy <- leafletProxy("overview_map")
-  # })
-  # 
-  # # handler for aircraft selection
-  # observeEvent(eventExpr = input$aircraft, ignoreNULL = FALSE, ignoreInit = TRUE, handlerExpr = {
-  #   if(debug_mode_on) print("aircraft selected")
-  #   
-  #   proxy <- leafletProxy("overview_map")
-  # })
-  # 
-  # # handler for weapon selection
-  # observeEvent(eventExpr = input$weapon, ignoreNULL = FALSE, ignoreInit = TRUE, handlerExpr = {
-  #   if(debug_mode_on) print("weapon selected")
-  #   
-  #   proxy <- leafletProxy("overview_map")
-  # })
+
+### Country observer --------------------------------------------------------
   
+  # general observer maker
+  dropdown_observer <- function(type) {
+    observeEvent(eventExpr = dropdown_input(type), ignoreNULL = FALSE, ignoreInit = TRUE, handlerExpr = {
+      debug_message0(type, "selected")
+      if (change_token %c% previous_dropdown_selection[[type]]) {
+        previous_dropdown_selection[[type]] <<- previous_dropdown_selection[[type]] %d% change_token
+        redraw()
+        update_other_selectize_inputs(type)
+      } else {
+        input <- dropdown_input(type)
+        if (is_empty(input)) {
+          previous_dropdown_selection[[type]] <<- c("All", change_token)
+          updateSelectizeInput(session, inputId = type, selected = "All")
+        } else {
+          difference <- previous_dropdown_selection[[type]] %dd% input
+          selected <- length(input) > length(previous_dropdown_selection[[type]])
+          if ("All" %c% previous_dropdown_selection[[type]]) {
+            previous_dropdown_selection[[type]] <<- c(difference, change_token)
+            updateSelectizeInput(session, inputId = type, selected = difference)
+          } else {
+            if ("All" %e% difference) {
+              previous_dropdown_selection[[type]] <<- c("All", change_token)
+              updateSelectizeInput(session, inputId = type, selected = "All")
+            } else {
+              previous_dropdown_selection[[type]] <<- input
+              redraw()
+              update_other_selectize_inputs(type)
+            }
+          }
+        }
+      }
+    })
+  }
+  dropdown_observers <- lapply(names(dropdowns), dropdown_observer)
+  setattr(dropdown_observers, "names", names(dropdowns))
+  
+
+### Other observers ---------------------------------------------------------
+
   # handler for sample size refresh
   observeEvent(eventExpr = input$sample_num, ignoreNULL = TRUE, ignoreInit = TRUE, handlerExpr = {
-    
-    overview_proxy <- leafletProxy("overview_map")
-    
-    if(input$sample_num > 1024) opacity_now <<- 0.1
-    else if(input$sample_num > 512) opacity_now <<- 0.2
-    else if(input$sample_num > 256) opacity_now <<- 0.3
-    else if(input$sample_num > 128) opacity_now <<- 0.4
-    else if(input$sample_num > 64) opacity_now <<- 0.5
-    else if(input$sample_num > 32) opacity_now <<- 0.6
-    else if(input$sample_num > 16) opacity_now <<- 0.7
-    else if(input$sample_num > 8) opacity_now <<- 0.8
-    else if(input$sample_num > 4) opacity_now <<- 0.9
-    else opacity_now <<- 1.0
-    
-    if(WW1_selected) {
-      overview_proxy %>% 
-        clearGroup(group = "WW1_unique_targets") %>% 
-        addCircles(data = WW1_sample(),
-                   lat = ~Target.Latitude,
-                   lng = ~Target.Longitude,
-                   color = "darkblue",
-                   weight = 5,
-                   opacity = opacity_now,
-                   fill = TRUE,
-                   fillColor = "darkblue",
-                   fillOpacity = opacity_now,
-                   popup = ~tooltip,
-                   group = "WW1_unique_targets")
-    }
-    if(WW2_selected) {
-      overview_proxy %>% 
-        clearGroup(group = "WW2_unique_targets") %>% 
-        addCircles(data = WW2_sample(),
-                   lat = ~Target.Latitude,
-                   lng = ~Target.Longitude,
-                   color = "darkred",
-                   weight = 5,
-                   opacity = opacity_now,
-                   fill = TRUE,
-                   fillColor = "darkred",
-                   fillOpacity = opacity_now, 
-                   popup = ~tooltip,
-                   group = "WW2_unique_targets")
-    }
-    if(Korea_selected) {
-      overview_proxy %>% 
-        clearGroup(group = "Korea_unique_targets") %>% 
-        addCircles(data = Korea_sample(),
-                   lat = ~Target.Latitude,
-                   lng = ~Target.Longitude,
-                   color = "yellow",
-                   weight = 5,
-                   opacity = opacity_now,
-                   fill = TRUE,
-                   fillColor = "yellow", 
-                   fillOpacity = opacity_now, 
-                   popup = ~tooltip,
-                   group = "Korea_unique_targets")
-    }
-    if(Vietnam_selected) {
-      overview_proxy %>% 
-        clearGroup(group = "Vietnam_unique_targets") %>% 
-        addCircles(data = Vietnam_sample(),
-                   lat = ~Target.Latitude,
-                   lng = ~Target.Longitude,
-                   color = "darkgreen",
-                   weight = 5,
-                   opacity = opacity_now,
-                   fill = TRUE, 
-                   fillColor = "darkgreen", 
-                   fillOpacity = opacity_now, 
-                   popup = ~tooltip,
-                   group = "Vietnam_unique_targets")
-    }
+    debug_message("sample size changed")
+    redraw_overview()
   })
   
   # handler for date range refresh
   observeEvent(eventExpr = input$dateRange, ignoreNULL = TRUE, ignoreInit = TRUE, handlerExpr = {
-    
-    overview_proxy <- leafletProxy("overview_map")
-    
-    if(WW1_selected) {
-      overview_proxy %>% 
-        clearGroup(group = "WW1_unique_targets") %>% 
-        addCircles(data = WW1_sample(),
-                   lat = ~Target.Latitude,
-                   lng = ~Target.Longitude,
-                   color = "darkblue",
-                   weight = 5,
-                   opacity = opacity_now,
-                   fill = TRUE,
-                   fillColor = "darkblue",
-                   fillOpacity = opacity_now,
-                   popup = ~tooltip,
-                   group = "WW1_unique_targets")
-    }
-    if(WW2_selected) {
-      overview_proxy %>% 
-        clearGroup(group = "WW2_unique_targets") %>% 
-        addCircles(data = WW2_sample(),
-                   lat = ~Target.Latitude,
-                   lng = ~Target.Longitude,
-                   color = "darkred",
-                   weight = 5,
-                   opacity = opacity_now,
-                   fill = TRUE,
-                   fillColor = "darkred",
-                   fillOpacity = opacity_now, 
-                   popup = ~tooltip,
-                   group = "WW2_unique_targets")
-    }
-    if(Korea_selected) {
-      overview_proxy %>% 
-        clearGroup(group = "Korea_unique_targets") %>% 
-        addCircles(data = Korea_sample(),
-                   lat = ~Target.Latitude,
-                   lng = ~Target.Longitude,
-                   color = "yellow",
-                   weight = 5,
-                   opacity = opacity_now,
-                   fill = TRUE,
-                   fillColor = "yellow", 
-                   fillOpacity = opacity_now, 
-                   popup = ~tooltip,
-                   group = "Korea_unique_targets")
-    }
-    if(Vietnam_selected) {
-      overview_proxy %>% 
-        clearGroup(group = "Vietnam_unique_targets") %>% 
-        addCircles(data = Vietnam_sample(),
-                   lat = ~Target.Latitude,
-                   lng = ~Target.Longitude,
-                   color = "darkgreen",
-                   weight = 5,
-                   opacity = opacity_now,
-                   fill = TRUE, 
-                   fillColor = "darkgreen", 
-                   fillOpacity = opacity_now, 
-                   popup = ~tooltip,
-                   group = "Vietnam_unique_targets")
-    }
-    
+    debug_message("date range changed")
+    redraw()
   })
+  
+  
+### War Map Drawers ---------------------------------------------------------
+
+  draw_overview_war <- function(war_tag) {
+    function() {
+      opacity <- calculate_opacity(min((war_missions_reactive[[war_tag]])(), input$sample_num), input$overview_map_zoom)
+      overview_proxy %>% addCircles(data = (war_sample[[war_tag]])(),
+                                    lat = ~Target_Latitude,
+                                    lng = ~Target_Longitude,
+                                    color = war_color[[war_tag]],
+                                    weight = point_weight + input$overview_map_zoom,
+                                    opacity = opacity,
+                                    fill = point_fill,
+                                    fillColor = war_color[[war_tag]],
+                                    fillOpacity = opacity,
+                                    popup = ~tooltip,
+                                    group = war_overview[[war_tag]])
+    }
+  }
+  war_draw_overview <- lapply(war_tags, draw_overview_war)
+  
+  clear_overview_war <- function(war_tag) {
+    function() {
+      overview_proxy %>% clearGroup(group = war_overview[[war_tag]])
+    }
+  }
+  war_clear_overview <- lapply(war_tags, clear_overview_war)
+  
+  draw_civilian_war <- function(war_tag) {
+    function() {
+      war_dt <- (war_selection[[war_tag]])()
+      civilian_proxy %>% addHeatmap(lng = war_dt[["Target_Longitude"]], 
+                                    lat = war_dt[["Target_Latitude"]], 
+                                    blur = civilian_blur, 
+                                    max = civilian_max, 
+                                    radius = civilian_radius, 
+                                    group = war_civilian[[war_tag]])
+    }
+  }
+  war_draw_civilian <- lapply(war_tags, draw_civilian_war)
+  
+  clear_civilian_war <- function(war_tag) {
+    function() {
+      civilian_proxy %>% clearGroup(group = war_civilian[[war_tag]])
+    }
+  }
+  war_clear_civilian <- lapply(war_tags, clear_civilian_war)
+  
+  walk(list(war_draw_overview, 
+            war_clear_overview, 
+            war_draw_civilian, 
+            war_clear_civilian), 
+       ~setattr(., "names", war_tags))
+  
+
+### War Map Composite Drawers -----------------------------------------------
+  
+  redraw_overview_war <- function(war_tag) {
+    function() {
+      (war_clear_overview[[war_tag]])()
+      (war_draw_overview[[war_tag]])()
+    }
+  }
+  war_redraw_overview <- lapply(war_tags, redraw_overview_war)
+  
+  redraw_civilian_war <- function(war_tag) {
+    function() {
+      (war_clear_civilian[[war_tag]])()
+      (war_draw_civilian[[war_tag]])()
+    }
+  }
+  war_redraw_civilian <- lapply(war_tags, redraw_civilian_war)
+  
+  draw_war <- function(war_tag) {
+    function() {
+      (war_draw_overview[[war_tag]])()
+      (war_draw_civilian[[war_tag]])()
+    }
+  }
+  war_draw <- lapply(war_tags, draw_war)
+  
+  clear_war <- function(war_tag) {
+    function() {
+      (war_clear_overview[[war_tag]])()
+      (war_clear_civilian[[war_tag]])()
+    }
+  }
+  war_clear <- lapply(war_tags, clear_war)
+  
+  redraw_war <- function(war_tag) {
+    function() {
+      (war_redraw_overview[[war_tag]])()
+      (war_redraw_civilian[[war_tag]])()
+    }
+  }
+  war_redraw <- lapply(war_tags, redraw_war)
+  
+  walk(list(war_redraw_overview, 
+            war_redraw_civilian, 
+            war_draw, 
+            war_clear, 
+            war_redraw), 
+       ~setattr(., "names", war_tags))
+  
+
+### Total War Map Drawers ---------------------------------------------------
+
+  redraw_overview <- function() {
+    for (tag in war_tags) {
+      if ((war_selected[[tag]])()) (war_redraw_overview[[tag]])()
+    }
+  }
+  
+  redraw_civilian <- function() {
+    for (tag in war_tags) {
+      if ((war_selected[[tag]])()) (war_redraw_civilian[[tag]])()
+    }
+  }
+  
+  redraw <- function() {
+    for (tag in war_tags) {
+      if ((war_selected[[tag]])()) (war_redraw[[tag]])()
+    }
+  }
+  
+
+### Map Drawers -------------------------------------------------------------
+
+  swap_map_base <- function(type, options = NULL) {
+    overview_proxy %>% clearTiles() %>% addProviderTiles(provider = type, layerId = "overview_base", options = options)
+  }
+  
+  fix_map_base <- function(map_type) {
+    switch(map_type, 
+           "Color Map"     = swap_map_base(type = "Stamen.Watercolor"), 
+           "Plain Map"     = swap_map_base(type = "CartoDB.PositronNoLabels"), 
+           "Terrain Map"   = swap_map_base(type = "Stamen.TerrainBackground"), 
+           "Street Map"    = swap_map_base(type = "HERE.basicMap", options = providerTileOptions(app_id = HERE_id, app_code = HERE_code)), 
+           "Satellite Map" = swap_map_base(type = "Esri.WorldImagery"))
+  }
+  
+  swap_map_labels <- function(type) {
+    overview_proxy %>% removeTiles(layerId = "overview_labels")
+    if (type != "none") {
+      overview_proxy %>% addProviderTiles(type, layerId = "overview_labels")
+    }
+  }
+  
+  fix_map_labels <- function(borders, text) {
+    if (borders) {
+      if (text) {
+        debug_message("Both borders and text")
+        swap_map_labels(type = "Stamen.TonerHybrid")
+      } else {
+        debug_message("Just borders; no text")
+        swap_map_labels(type = "Stamen.TonerLines")
+      }
+    } else {
+      if (text) {
+        debug_message("Just text; no borders")
+        swap_map_labels(type = "Stamen.TonerLabels")
+      } else {
+        debug_message("Neither text nor borders")
+        swap_map_labels(type = "none")
+      }
+    }
+  }
+  
+
+### Dropdown Updaters -------------------------------------------------------
+  
+  update_dropdown <- function(type) {
+    function() {
+      debug_message0(type, "choices updated")
+      choices <- c("All", possible_selectize_choices(dropdowns[[type]]))
+      input <- dropdown_input(type)
+      matches <- input %in% choices
+      if (any(matches)) {
+        selected <- input[matches]
+      } else {
+        selected <- "All"
+      }
+      updateSelectizeInput(session, 
+                           inputId = type, 
+                           choices = choices, 
+                           selected = selected)
+    }
+  }
+  update_countries <- update_dropdown('country')
+  update_aircraft  <- update_dropdown('aircraft')
+  update_weapons   <- update_dropdown('weapon')
+  
+  update_selectize_inputs <- function() {
+    update_countries()
+    update_aircraft()
+    update_weapons()
+  }
+  
+  update_other_selectize_inputs <- function(changed) {
+    switch(changed, 
+           country  = {update_aircraft()
+                       update_weapons()}, 
+           aircraft = {update_countries()
+                       update_weapons()}, 
+           weapon   = {update_countries()
+                       update_aircraft()})
+  }
+  
+
+### Filtering Functions -----------------------------------------------------
+
+  possible_selectize_choices <- function(column) {
+    start_date <- input$dateRange[1]
+    end_date   <- input$dateRange[2]
+    countries  <- input$country
+    aircrafts  <- input$aircraft
+    weapons    <- input$weapon
+    switch(column, 
+           "Unit_Country"  = {countries <- "All"}, 
+           "Aircraft_Type" = {aircrafts <- "All"}, 
+           "Weapon_Type"   = {weapons   <- "All"})
+    result <- c()
+    if (all(c(countries, aircrafts, weapons) == "All")) {
+      for (tag in war_tags) {
+        if ((war_selected[[tag]])()) {
+          result <- append(result, levels(war_data[[tag]][[column]]))
+        }
+      }
+    } else {
+      for (tag in war_tags) {
+        if ((war_selected[[tag]])()) {
+          result <- append(result, unique_from_filter(tag, 
+                                                      column, 
+                                                      start_date, 
+                                                      end_date, 
+                                                      countries, 
+                                                      aircrafts, 
+                                                      weapons))
+        }
+      }
+    }
+    if (!is_empty(result)) {
+      result <- sort(unique(result))
+      if (empty_text %c% result) {
+        result <- c(result %[!=]% empty_text, empty_text)
+      }
+    }
+    result
+  }
+  
+  unique_from_filter_slow <- function(war_tag, column, start_date, end_date, countries, aircrafts, weapons) {
+    return (levels(unique(filter_selection(war_data[[war_tag]], 
+                                           start_date, 
+                                           end_date, 
+                                           countries, 
+                                           aircrafts, 
+                                           weapons)[[column]])[, drop = TRUE]))
+  }
+  
+  unique_from_filter <- memoise(unique_from_filter_slow)
+  
+  filter_selection <- function(war_dt, start_date, end_date, countries, aircrafts, weapons) {
+    if ("All" %c% countries) {
+      if ("All" %c% aircrafts) {
+        if ("All" %c% weapons) {
+          war_dt[Mission_Date >= start_date & Mission_Date <= end_date]
+        } else {
+          war_dt[.(weapons), on = .(Weapon_Type)][Mission_Date >= start_date & Mission_Date <= end_date]
+        }
+      } else {
+        if ("All" %c% weapons) {
+          war_dt[.(aircrafts), on = .(Aircraft_Type)][Mission_Date >= start_date & Mission_Date <= end_date]
+        } else {
+          war_dt[.(aircrafts, weapons), on = .(Aircraft_Type, Weapon_Type)][Mission_Date >= start_date & Mission_Date <= end_date]
+        }
+      }
+    } else {
+      if ("All" %c% aircrafts) {
+        if ("All" %c% weapons) {
+          war_dt[.(countries), on = .(Unit_Country)][Mission_Date >= start_date & Mission_Date <= end_date]
+        } else {
+          war_dt[.(countries, weapons), on = .(Unit_Country, Weapon_Type)][Mission_Date >= start_date & Mission_Date <= end_date]
+        }
+      } else {
+        if ("All" %c% weapons) {
+          war_dt[.(countries, aircrafts), on = .(Unit_Country, Aircraft_Type)][Mission_Date >= start_date & Mission_Date <= end_date]
+        } else {
+          war_dt[.(countries, aircrafts, weapons), on = .(Unit_Country, Aircraft_Type, Weapon_Type)][Mission_Date >= start_date & Mission_Date <= end_date]
+        }
+      }
+    }
+  }
   
 })

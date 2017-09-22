@@ -1,249 +1,184 @@
 # @author Scott Dobbins
-# @version 0.9.3
-# @date 2017-05-01 01:30
-
-### import useful packages ###
-library(shiny)      # app formation
-library(rgdal)      # map reading
-# library(data.table) # data input
-# library(dplyr)      # data cleaning
-# library(tidyr)      # data tidying
+# @version 0.9.8.3
+# @date 2017-08-24 22:30
 
 
-### toggles for app behavior ###
+### Import Packages ---------------------------------------------------------
 
-# data refresh
-if(exists("WW1_clean") & exists("WW2_clean") & exists("Korea_clean2") & exists("Vietnam_clean")) {
-  has_data <- TRUE
-} else {
-  has_data <- FALSE
+library(shiny)          # app formation
+library(shinydashboard) # web display
+library(leaflet)        # map source
+library(leaflet.extras) # map extras
+library(ggplot2)        # plots and graphs
+library(assertthat)     # assertions for errors
+library(memoise)        # caching
+library(dplyr)          # data processing
+library(purrr)          # data processing
+library(lubridate)      # time processing
+library(data.table)     # data processing
+# library(plotly)         # pretty interactive graphs
+# library(maps)           # also helps with maps
+# library(htmltools)      # helps with tooltips
+library(DT)             # web tables
+# library(rgdal)          # map reading
+
+
+### Global Values -----------------------------------------------------------
+
+# app behavior parameters
+source('parameters.R')
+if (debug_mode_on) {
+  library(testthat)     # unit testing
+  library(beepr)        # sound alert
 }
-refresh_data <- FALSE
-full_write <- FALSE
 
-# debug control
-debug_mode_on <- TRUE
+# file locations
+source('filepaths.R')
 
-# default plotting complexity
-sample_num <- 1024
+# labels for drop-down menus
+source('labels.R')
 
 
-### global static variables ###
+### Global Functions --------------------------------------------------------
 
-# war labels
-WW1_string = "World War I (1914-1918)"
-WW2_string = "World War II (1939-1945)"
-Korea_string = "Korean War (1950-1953)"
-Vietnam_string = "Vietnam War (1955-1975)"
+# standard personal functions
+source('utils.R')
 
-### WW1 labels ###
+# specific helper functions
+source('helper.R')
 
-WW1_categorical_choices = c("Operation Supported", 
-                            "Military Regiment", 
-                            "Country of Origin", 
-                            "Target Country", 
-                            "Target City", 
-                            "Target Type", 
-                            "Aircraft Model", 
-                            "Bomb Type", 
-                            "Takeoff Time of Day", 
-                            "Takeoff Base", 
-                            "Weather")
-
-WW1_continuous_choices = c("Number of Attacking Aircraft", 
-                           "Altitude at Bomb Drop", 
-                           "Number of Bombs Dropped", 
-                           "Weight of Bombs Dropped", 
-                           "Bombload (weight of bombs per plane)", 
-                           "Number of Aircraft Lost")
-
-WW1_all_choices <- c(WW1_categorical_choices, WW1_continuous_choices)
-
-WW1_categorical = list("Operation Supported" = "Operation", 
-                       "Military Regiment" = "Unit.Service", 
-                       "Country of Origin" = "Unit.Country", 
-                       "Target Country" = "Target.Country", 
-                       "Target City" = "Target.City", 
-                       "Target Type" = "Target.Type", 
-                       "Aircraft Model" = "Aircraft.Type", 
-                       "Bomb Type" = "Weapons.Type", 
-                       "Takeoff Time of Day" = "Takeoff.Day.Period", 
-                       "Takeoff Base" = "Takeoff.Base", 
-                       "Weather" = "Target.Weather")
-
-WW1_continuous = list("Number of Attacking Aircraft" = "Aircraft.Attacking.Num", 
-                      "Altitude at Bomb Drop" = "Bomb.Altitude", 
-                      "Number of Bombs Dropped" = "Weapons.Expended", 
-                      "Weight of Bombs Dropped" = "Weapons.Weight", 
-                      "Bombload (weight of bombs per plane)" = "Aircraft.Bombload", 
-                      "Number of Aircraft Lost" = "Casualties.Friendly")
-
-
-### WW2 labels ###
-
-WW2_categorical_choices = c("Theater of Operations", 
-                         "Military Regiment", 
-                         "Country of Origin", 
-                         "Target Country", 
-                         "Target City", 
-                         "Target Type", 
-                         "Target Industry", 
-                         "Aircraft Model", 
-                         "Target Priority", 
-                         "High Explosive Bomb Type", 
-                         "Incendiary Bomb Type", 
-                         "Fragmentation Bomb Type", 
-                         "Takeoff Country", 
-                         "Takeoff City", 
-                         "Sighting Method")
-
-WW2_continuous_choices = c("Number of Attacking Aircraft", 
-                           "Altitude at Bomb Drop", 
-                           "Number of High Explosive Bombs", 
-                           "Pounds of High Explosive Weaponry", 
-                           "Number of Incendiary Bombs", 
-                           "Pounds of Incendiary Weaponry", 
-                           "Number of Fragmentation Bombs", 
-                           "Pounds of Fragmentation Weaponry", 
-                           "Total Weight of Weaponry", 
-                           "Number of Aircraft Lost/Destroyed", 
-                           "Number of Aircraft Damaged", 
-                           "Number of Aircraft Aborted due to Weather", 
-                           "Number of Aircraft Aborted due to Mechanical Issues", 
-                           "Number of Aircraft Aborted for Other Reasons")
-
-WW2_all_choices <- c(WW2_categorical_choices, WW2_continuous_choices)
-
-WW2_categorical = list("Theater of Operations" = "Mission.Theater", 
-                       "Military Regiment" = "Unit.Service", 
-                       "Country of Origin" = "Unit.Country", 
-                       "Target Country" = "Target.Country", 
-                       "Target City" = "Target.City", 
-                       "Target Type" = "Target.Type", 
-                       "Target Industry" = "Target.Industry", 
-                       "Aircraft Model" = "Aircraft.Name", 
-                       "Target Priority" = "Target.Priority.Explanation", 
-                       "High Explosive Bomb Type" = "Bomb.HE.Type", 
-                       "Incendiary Bomb Type" = "Bomb.IC.Type", 
-                       "Fragmentation Bomb Type" = "Bomb.Frag.Type", 
-                       "Takeoff Country" = "Takeoff.Country", 
-                       "Takeoff City" = "Takeoff.City", 
-                       "Sighting Method" = "Sighting.Method.Explanation")
-
-WW2_continuous = list("Number of Attacking Aircraft" = "Aircraft.Attacking.Num", 
-                      "Altitude at Bomb Drop" = "Bomb.Altitude.Feet", 
-                      "Number of High Explosive Bombs" = "Bomb.HE.Num", 
-                      "Pounds of High Explosive Weaponry" = "Bomb.HE.Pounds", 
-                      "Number of Incendiary Bombs" = "Bomb.IC.Num", 
-                      "Pounds of Incendiary Weaponry" = "Bomb.IC.Pounds", 
-                      "Number of Fragmentation Bombs" = "Bomb.Frag.Num", 
-                      "Pounds of Fragmentation Weaponry" = "Bomb.Frag.Pounds", 
-                      "Total Weight of Weaponry" = "Bomb.Total.Pounds", 
-                      "Number of Aircraft Lost/Destroyed" = "Aircraft.Lost.Num", 
-                      "Number of Aircraft Damaged" = "Aircraft.Damaged.Num", 
-                      "Number of Aircraft Aborted due to Weather" = "Aircraft.Fail.WX.Num", 
-                      "Number of Aircraft Aborted due to Mechanical Issues" = "Aircraft.Fail.Mech.Num", 
-                      "Number of Aircraft Aborted for Other Reasons" = "Aircraft.Fail.Misc.Num")
-
-
-### Korea labels ###
-
-Korea_categorical_choices = c("Military Division", 
-                               "Mission Type", 
-                               "Target City", 
-                               "Target Type", 
-                               "Aircraft Model", 
-                               "Bomb Type", 
-                               "Sighting Method", 
-                               "Nose Fuze", 
-                               "Tail Fuze")
-
-Korea_continuous_choices = c("Number of Attacking Aircraft", 
-                              "Altitude at Bomb Drop", 
-                              "Number of Bombs Dropped", 
-                              "Bombload (weight of bombs per plane)", 
-                              "Number of Aircraft Lost", 
-                              "Number of Aircraft Aborted")
-
-Korea_all_choices <- c(Korea_categorical_choices, Korea_continuous_choices)
-
-Korea_categorical = list("Military Division" = "Unit.Order", 
-                          "Mission Type" = "Mission.Type", 
-                          "Target City" = "Target.Name", 
-                          "Target Type" = "Target.Type", 
-                          "Aircraft Model" = "Aircraft.Type", 
-                          "Bomb Type" = "Weapons.Type", 
-                          "Sighting Method" = "Bomb.Sighting.Method", 
-                          "Nose Fuze" = "Nose.Fuze", 
-                          "Tail Fuze" = "Tail.Fuze")
-
-Korea_continuous = list("Number of Attacking Aircraft" = "Aircraft.Attacking.Num", 
-                         "Altitude at Bomb Drop" = "Bomb.Altitude.Feet.Low", 
-                         "Number of Bombs Dropped" = "Weapons.Num", 
-                         "Bombload (weight of bombs per plane)" = "Aircraft.Bombload.Calculated.Pounds", 
-                         "Number of Aircraft Lost" = "Aircraft.Lost.Num", 
-                         "Number of Aircraft Aborted" = "Aircraft.Aborted.Num")
-
-
-### Vietnam labels ###
-
-Vietnam_categorical_choices = c("Operation Supported", 
-                                "Military Regiment", 
-                                "Country of Origin", 
-                                "Target Country", 
-                                "Target Type", 
-                                "Aircraft Model", 
-                                "Bomb Type", 
-                                "Bomb Class", 
-                                "Takeoff City", 
-                                "Takeoff Time of Day", 
-                                "Target Control", 
-                                "Target Weather", 
-                                "Target Cloudcover", 
-                                "Geozone")
-
-Vietnam_continuous_choices = c("Number of Attacking Aircraft", 
-                               "Altitude at Bomb Drop", 
-                               "Speed at Bomb Drop", 
-                               "Number of Bombs Dropped", 
-                               "Number of Bombs Jettisoned", 
-                               "Number of Bombs Returned", 
-                               "Flight Hours")
-
-Vietnam_all_choices <- c(Vietnam_categorical_choices, Vietnam_continuous_choices)
-
-Vietnam_categorical = list("Operation Supported" = "Operation.Supported", 
-                           "Military Regiment" = "Unit.Service", 
-                           "Country of Origin" = "Unit.Country", 
-                           "Target Country" = "Target.Country", 
-                           "Target Type" = "Target.Type", 
-                           "Aircraft Model" = "Aircraft.Root.Valid", 
-                           "Bomb Type" = "Weapon.Type", 
-                           "Bomb Class" = "Weapon.Type.Class", 
-                           "Takeoff City" = "Takeoff.Location", 
-                           "Takeoff Time of Day" = "Mission.Day.Period", 
-                           "Target Control" = "Target.Control", 
-                           "Target Weather" = "Target.Weather", 
-                           "Target Cloudcover" = "Target.CloudCover", 
-                           "Geozone" = "Target.Geozone")
-
-Vietnam_continuous = list("Number of Attacking Aircraft" = "Aircraft.Num", 
-                          "Altitude at Bomb Drop" = "Bomb.Altitude", 
-                          "Speed at Bomb Drop" = "Bomb.Speed", 
-                          "Number of Bombs Dropped" = "Weapons.Delivered.Num", 
-                          "Number of Bombs Jettisoned" = "Weapons.Jettisoned.Num", 
-                          "Number of Bombs Returned" = "Weapons.Returned.Num", 
-                          "Flight Hours" = "Flight.Hours")
-
-
-### get data ###
-
-if(!has_data) {
-  if(refresh_data) {
-    # refresh the data from scratch
-    source(file = 'cleaner.R')
+# for plotting points on overview map
+calculate_opacity <- function(sample_number, map_zoom) {
+  if (sample_number > 1024) {
+    return (bounded(0.1 * (map_zoom - 1), 1, 10))
+  } else if (sample_number < 2) {
+    return (bounded(0.1 * (map_zoom + 8), 1, 10))
   } else {
-    # just read the pre-saved data
-    load('saves/Shiny_2017-04-30.RData')
+    return (bounded(0.1 * (map_zoom + 9 - log2(sample_number)), 1, 10))
   }
 }
+
+# for stat summaries on graphs
+quartile_points <- function(x) {
+  quantile(x, probs = c(0.25, 0.50, 0.75))
+}
+
+# for necessity of loading or generating app data
+has_bombs_data <- function() {
+  return (exists("WW1_bombs") &&
+            exists("WW2_bombs") &&
+            exists("Korea_bombs2") &&
+            exists("Vietnam_bombs"))
+}
+has_clean_data <- function() {
+  return (exists("WW1_clean") &&
+            exists("WW2_clean") &&
+            exists("Korea_clean2") &&
+            exists("Vietnam_clean"))
+}
+
+
+### Parallel ----------------------------------------------------------------
+
+if (use_parallel) {
+  library(parallel)
+  all_cores <- detectCores(logical = TRUE)
+  real_cores_only <- detectCores(logical = FALSE)
+  cores <- real_cores_only
+} else {
+  cores <- 1L
+}
+setDTthreads(cores)
+
+
+### Get Data ----------------------------------------------------------------
+
+if (!has_clean_data()) {
+  if (use_compiler) {
+    library(compiler)
+    enableJIT(3)
+  }
+  
+  if (refresh_data) {
+    started.at <- proc.time()
+    source('reader.R')
+    debug_message(paste0("Read in ", timetaken(started.at)))
+    started.at <- proc.time()
+    source('cleaner.R')
+    debug_message(paste0("Cleaned in ", timetaken(started.at)))
+    if (debug_mode_on) {
+      started.at <- proc.time()
+      source('cleaner_test.R')
+      debug_message(paste0("Tested cleaned data in ", timetaken(started.at)))
+    }
+    started.at <- proc.time()
+    source('processor.R')
+    debug_message(paste0("Processed in ", timetaken(started.at)))
+    if (debug_mode_on) {
+      started.at <- proc.time()
+      source('processor_test.R')
+      debug_message(paste0("Tested processed data in ", timetaken(started.at)))
+    }
+    
+    if (full_write) {
+      started.at <- proc.time()
+      source('saver.R')
+      debug_message(paste0("Saved data in ", timetaken(started.at)))
+    }
+  } else {
+    started.at <- proc.time()
+    load(most_recent_save_filepath)
+    debug_message(paste0("Loaded in ", timetaken(started.at)))
+  }
+  
+  if (use_compiler) {
+    enableJIT(0)
+  }
+  if (debug_mode_on) beep()
+}
+
+
+### Set Keys ----------------------------------------------------------------
+
+keys <- c("Mission_Date", "Unit_Country", "Aircraft_Type", "Weapon_Type")
+walk(list(WW1_clean, WW2_clean, Korea_clean1, Korea_clean2, Vietnam_clean), 
+     ~setkeyv(., cols = keys))
+
+
+### Create Samples ----------------------------------------------------------
+
+if (debug_mode_on) {
+  WW1_sample <-     sample_n(WW1_clean,     debug_sample_size)
+  WW2_sample <-     sample_n(WW2_clean,     debug_sample_size)
+  Korea_sample1 <-  sample_n(Korea_clean1,  debug_sample_size)
+  Korea_sample2 <-  sample_n(Korea_clean2,  debug_sample_size)
+  Vietnam_sample <- sample_n(Vietnam_clean, debug_sample_size)
+}
+
+
+### More Globals ------------------------------------------------------------
+
+# for iteration
+war_data <- list(WW1_clean, WW2_clean, Korea_clean2, Vietnam_clean)
+
+# DataTable
+war_color <- list(WW1_color, WW2_color, Korea_color, Vietnam_color)
+war_background <- list(WW1_background, WW2_background, Korea_background, Vietnam_background)
+war_datatable_columns <- list(WW1_datatable_columns, WW2_datatable_columns, Korea_datatable_columns, Vietnam_datatable_columns)
+war_datatable_colnames <- list(WW1_datatable_colnames, WW2_datatable_colnames, Korea_datatable_colnames, Vietnam_datatable_colnames)
+
+# war data
+war_init_bins <- list(WW1_init_bins, WW2_init_bins, Korea_init_bins, Vietnam_init_bins)
+war_min_bins <- list(WW1_min_bins, WW2_min_bins, Korea_min_bins, Vietnam_min_bins)
+war_max_bins <- list(WW1_max_bins, WW2_max_bins, Korea_max_bins, Vietnam_max_bins)
+
+# set names
+walk(list(war_data, 
+          war_color, 
+          war_background, 
+          war_datatable_columns, 
+          war_datatable_colnames, 
+          war_init_bins, 
+          war_min_bins, 
+          war_max_bins), 
+     ~setattr(., "names", war_tags))

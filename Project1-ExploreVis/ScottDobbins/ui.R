@@ -1,236 +1,431 @@
 # @author Scott Dobbins
-# @version 0.9.3
-# @date 2017-05-01 01:30
-
-### import useful packages ###
-library(shiny)            # app formation
-library(shinydashboard)   # web display
-library(leaflet)          # map source
+# @version 0.9.8.3
+# @date 2017-08-24 22:30
 
 
-### constants ###
+### Constructors ------------------------------------------------------------
 
-# appearance
-sidebar_width = 240
-title_width = 360
+### Menu Items
+
+menu_overview <- function() {
+  menuItem("Overview", 
+           tabName = "overview", 
+           icon = icon('map'))
+}
+
+menu_data <- function() {
+  menuItem("Data", 
+           tabName = "data", 
+           icon = icon('database'))
+}
+
+menu_WW1 <- function() {
+  menuItem("World War I", 
+           tabName = "WW1", 
+           icon = icon('bar-chart', lib = 'font-awesome'))
+}
+
+menu_WW2 <- function() {
+  menuItem("World War II", 
+           tabName = "WW2", 
+           icon = icon('bar-chart', lib = 'font-awesome'))
+}
+
+menu_Korea <- function() {
+  menuItem("Korea", 
+           tabName = "Korea", 
+           icon = icon('bar-chart', lib = 'font-awesome'))
+}
+
+menu_Vietnam <- function() {
+  menuItem("Vietnam", 
+           tabName = "Vietnam", 
+           icon = icon('bar-chart', lib = 'font-awesome'))
+}
+
+menu_pilot <- function() {
+  menuItem("Be a pilot", 
+           tabName = "pilot", 
+           icon = icon('fighter-jet', lib = 'font-awesome'))
+}
+
+menu_commander <- function() {
+  menuItem("Be a commander", 
+           tabName = "commander", 
+           icon = icon('map-o', lib = 'font-awesome'))
+}
+
+menu_civilian <- function() {
+  menuItem("Be a civilian", 
+           tabName = "civilian", 
+           icon = icon('life-ring',   lib = 'font-awesome'))
+}
+
+### Tab Picker Constructors
+
+war_picker <- function() {
+  selectizeInput(inputId = "which_war", 
+                 label = "Which wars?", 
+                 choices = c(WW1_label, WW2_label, Korea_label, Vietnam_label), 
+                 selected = c(), 
+                 multiple = TRUE, 
+                 width = sidebar_width)
+}
+
+date_picker <- function() {
+  dateRangeInput(inputId = "dateRange", 
+                 label = "Select which dates to show", 
+                 start = earliest_date, 
+                 end = latest_date, 
+                 min = earliest_date, 
+                 max = latest_date, 
+                 startview = "year", 
+                 width = sidebar_width)
+}
+
+country_picker <- function() {
+  selectizeInput(inputId = "country", 
+                 label = "Which country's air force?", 
+                 choices = c("All"), 
+                 selected = "All", 
+                 multiple = TRUE, 
+                 width = sidebar_width)
+}
+
+aircraft_picker <- function() {
+  selectizeInput(inputId = "aircraft", 
+                 label = "Which types of aircraft?", 
+                 choices = c("All"), 
+                 selected = "All", 
+                 multiple = TRUE, 
+                 width = sidebar_width)
+}
+
+weapon_picker <- function() {
+  selectizeInput(inputId = "weapon", 
+                 label = "Which types of bombs?", 
+                 choices = c("All"), 
+                 selected = "All", 
+                 multiple = TRUE, 
+                 width = sidebar_width)
+}
+
+### Item Constructors
+
+overview_map_type_mod <- function() {
+  box(width = 6, 
+      selectizeInput(inputId = "pick_map", 
+                     label = "Pick Map", 
+                     choices = c("Color Map", 
+                                 "Plain Map", 
+                                 "Terrain Map", 
+                                 "Street Map", 
+                                 "Satellite Map"), 
+                     selected = "Color Map", 
+                     multiple = FALSE))
+}
+
+overview_map_label_mod <- function() {
+  box(width = 6, 
+      selectizeInput(inputId = "pick_labels", 
+                     label = "Pick Labels", 
+                     choices = c("Borders", "Text"), 
+                     selected = c("Borders", "Text"), 
+                     multiple = TRUE))
+}
+
+overview_map_text_spacer <- function() {
+  box(width = 6, 
+      htmlOutput(outputId = "overview_text", 
+                 inline = FALSE))
+}
+
+overview_map_sample_mod <- function() {
+  box(width = 6, 
+      numericInput(inputId = "sample_num", 
+                   label = "Maximum number of points to display on map", 
+                   value = init_sample_size, 
+                   min = min_sample_size, 
+                   max = max_sample_size))
+}
+
+war_hist_slider <- function(war_tag) {
+  box(width = 12,
+      #height = 200,
+      sliderInput(inputId = paste0(war_tag, "_hist_slider"), 
+                  label = "# of bins", 
+                  value = war_init_bins[[war_tag]], 
+                  min = war_min_bins[[war_tag]], 
+                  max = war_max_bins[[war_tag]], 
+                  step = 1))
+}
+
+war_transformation_ver <- function(war_tag) {
+  box(width = 12,
+      #height = 100,
+      selectizeInput(inputId = paste0(war_tag, "_transformation_ver"), 
+                     label = "Apply vertical transformation?", 
+                     choices = c("None", "Logarithm"), 
+                     selected = "None", 
+                     multiple = FALSE))
+}
+
+war_transformation_hor <- function(war_tag) {
+  box(width = 12,
+      #height = 100,
+      selectizeInput(inputId = paste0(war_tag, "_transformation_hor"), 
+                     label = "Apply horizontal transformation?", 
+                     choices = c("None", "Logarithm"), 
+                     selected = "None", 
+                     multiple = FALSE))
+}
+
+war_sandbox_ind <- function(war_tag) {
+  box(width = 12,
+      #height = 100,
+      selectizeInput(inputId = paste0(war_tag, "_sandbox_ind"), 
+                     label = "Which independent variable?", 
+                     choices = c("None (All Data)", war_all_choices[[war_tag]]), 
+                     selected = c("Year"), 
+                     multiple = FALSE))
+}
+
+war_sandbox_dep <- function(war_tag) {
+  box(width = 12,
+      #height = 100,
+      selectizeInput(inputId = paste0(war_tag, "_sandbox_dep"), 
+                     label = "Which dependent variable?", 
+                     choices = war_continuous_choices[[war_tag]], 
+                     selected = c("Number of Attacking Aircraft"), 
+                     multiple = FALSE))
+}
+
+war_sandbox_group <- function(war_tag) {
+  box(width = 12,
+      #height = 100,
+      selectizeInput(inputId = paste0(war_tag, "_sandbox_group"), 
+                     label = "Group by what?", 
+                     choices = c("None", war_categorical_choices[[war_tag]]), 
+                     selected = c("None"), 
+                     multiple = FALSE)
+  )
+}
+
+### Row Constructors
+
+stat_infoboxes <- function() {
+  fluidRow(
+    infoBoxOutput(outputId = "num_missions", width = 3),
+    infoBoxOutput(outputId = "num_aircraft", width = 3), 
+    infoBoxOutput(outputId = "num_bombs",    width = 3),
+    infoBoxOutput(outputId = "total_weight", width = 3))
+}
+
+overview_map_output <- function() {
+  fluidRow(
+    box(width  = map_width, 
+        height = map_height, 
+        leafletOutput("overview_map", 
+                      width  = "100%", 
+                      height = map_height)))
+}
+
+overview_map_mods <- function() {
+  fluidRow(
+    overview_map_type_mod(),
+    overview_map_label_mod()
+  )
+}
+
+overview_map_sampler <- function() {
+  fluidRow(
+    overview_map_text_spacer(), 
+    overview_map_sample_mod()
+  )
+}
+
+datatable_output <- function() {
+  fluidRow(box(DT::dataTableOutput("table"), width = 12))
+}
+
+war_plot_outputs <- function(war_tag) {
+  fluidRow(box(plotOutput(paste0(war_tag, "_hist"))),
+           box(plotOutput(paste0(war_tag, "_sandbox"))))
+}
+
+war_plot_mods <- function(war_tag) {
+  fluidRow(
+    column(width = 6, 
+           war_hist_slider(war_tag), 
+           war_transformation_ver(war_tag), 
+           war_transformation_hor(war_tag)), 
+    column(width = 6, 
+           war_sandbox_ind(war_tag), 
+           war_sandbox_dep(war_tag), 
+           war_sandbox_group(war_tag))
+  )
+}
+
+pilot_title <- function() {
+  fluidRow(
+    box(width = 12, 
+        htmlOutput(outputId = "pilot_title", 
+                   inline = FALSE))
+  )
+}
+
+commander_title <- function() {
+  fluidRow(
+    box(width = 12, 
+        htmlOutput(outputId = "commander_title", 
+                   inline = FALSE))
+  )
+}
+
+civilian_title <- function() {
+  fluidRow(
+    box(width = 12, 
+        htmlOutput(outputId = "civilian_title", 
+                   inline = FALSE))
+  )
+}
+
+civilian_map_output <- function() {
+  fluidRow(
+    box(width  = map_width, 
+        height = map_height, 
+        leafletOutput("civilian_map", 
+                      width  = "100%", 
+                      height = map_height))
+  )
+}
+
+civilian_map_mods <- function() {
+  fluidRow(
+    box(width = 12, 
+        selectizeInput(inputId = "civilian_priority",
+                       label = "I am most concerned about:",
+                       choices = c("The number of planes flying", 
+                                   "The number of bombs dropped", 
+                                   "The intensity of the bombing"),
+                       selected = c("The intensity of the bombing"), 
+                       multiple = FALSE))
+  )
+}
 
 
-### UI component ###
+### UI Component ------------------------------------------------------------
+
 shinyUI(dashboardPage(
   
-  # Title Panel
+
+### Header and Sidebar ------------------------------------------------------
+
   dashboardHeader(title = "Aerial Bombing Operations", titleWidth = title_width), 
   
   dashboardSidebar(width = sidebar_width, 
                    
-                   # Sidebar Panel
                    sidebarUserPanel("Scott Dobbins", 
-                                    image = "https://yt3.ggpht.com/-04uuTMHfDz4/AAAAAAAAAAI/AAAAAAAAAAA/Kjeupp-eNNg/s100-c-k-no-rj-c0xffffff/photo.jpg"), 
+                                    image = sidebar_image), 
                    
                    sidebarMenu(id = "tabs", 
-                               menuItem("Overview", tabName = "overview", icon = icon("map")), 
-                               # menuItem("Data", tabName = "data", icon = icon("database")), 
-                               menuItem("WW I", tabName = "WW1", icon = icon('bar-chart', lib = 'font-awesome')), 
-                               menuItem("WW II", tabName = "WW2", icon = icon('bar-chart', lib = 'font-awesome')), 
-                               menuItem("Korea", tabName = "Korea", icon = icon('bar-chart', lib = 'font-awesome')), 
-                               menuItem("Vietnam", tabName = "Vietnam", icon = icon('bar-chart', lib = 'font-awesome')), 
-                               # menuItem("Be a pilot", tabName = "pilot", icon = icon('fighter-jet', lib = 'font-awesome')), 
-                               # menuItem("Be a commander", tabName = "commander", icon = icon('map-o', lib = 'font-awesome')), 
-                               menuItem("Be a civilian", tabName = "civilian", icon = icon('life-ring', lib = 'font-awesome'))
+                               menu_overview(), 
+                               menu_data(), 
+                               menu_WW1(), 
+                               menu_WW2(), 
+                               menu_Korea(), 
+                               menu_Vietnam(), 
+                               menu_pilot(), 
+                               menu_commander(), 
+                               menu_civilian()
                    ), 
                    
-                   # war picker
-                   selectizeInput(inputId = "which_war", 
-                                  label = "Which wars?", 
-                                  choices = c(WW1_string, WW2_string, Korea_string, Vietnam_string), 
-                                  selected = c(), 
-                                  multiple = TRUE, 
-                                  width = sidebar_width), 
-                   
-                   # date picker
-                   dateRangeInput(inputId = "dateRange", 
-                                  label = "Select which dates to show", 
-                                  start = "1914-07-28", 
-                                  end = "1975-04-30", 
-                                  min = "1914-07-28", 
-                                  max = "1975-04-30", 
-                                  startview = "year", 
-                                  width = sidebar_width), 
-                   
-                   # selectizeInput(inputId = "country", 
-                   #                label = "Which country's air force?", 
-                   #                choices = c("one"), 
-                   #                selected = c(), 
-                   #                width = sidebar_width), 
-                   # 
-                   # selectizeInput(inputId = "aircraft", 
-                   #                label = "Which types of aircraft?", 
-                   #                choices = c("one"), 
-                   #                selected = c(), 
-                   #                width = sidebar_width), 
-                   # 
-                   # selectizeInput(inputId = "weapon", 
-                   #                label = "Which types of bombs?", 
-                   #                choices = c("one"), 
-                   #                selected = c(), 
-                   #                width = sidebar_width), 
-                   
-                   numericInput(inputId = "sample_num", 
-                                label = "Sample size = ?", 
-                                value = 1024, 
-                                min = 1, 
-                                max = 4096)
-                   
+                   war_picker(), 
+                   date_picker(), 
+                   country_picker(), 
+                   aircraft_picker(), 
+                   weapon_picker()
   ),
   
+
+### Body --------------------------------------------------------------------
+  
   dashboardBody(
-    tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")), #***really wish this would also apply my desired formatting to the sidebar, but it seems not
+    #***really wish this would also apply my desired formatting to the sidebar, but it seems not
+    tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")), 
     
     tabItems(
       
-      # main panel with map and simple stats
+
+### Overview (Main) ---------------------------------------------------------
+
       tabItem(tabName = "overview", 
-              
-              # some stats
-              fluidRow(
-                infoBoxOutput(outputId = "num_missions"),
-                infoBoxOutput(outputId = "num_bombs"),
-                infoBoxOutput(outputId = "total_weight")
-              ), 
-              
-              # map
-              fluidRow(
-                box(leafletOutput("overview_map", width = "100%", height = 640), width = 1024, height = 640)
-              ), 
-              
-              # selection widgets
-              fluidRow(
-                
-                # map picker
-                box(selectizeInput(inputId = "pick_map", 
-                                   label = "Pick Map", 
-                                   choices = c("Color Map", "Plain Map", "Terrain Map", "Street Map", "Satellite Map"), 
-                                   selected = "Color Map", 
-                                   multiple = FALSE), 
-                    width = 6),
-                
-                # label picker
-                box(selectizeInput(inputId = "pick_labels", 
-                                   label = "Pick Labels", 
-                                   choices = c("Borders", "Text"), 
-                                   selected = c("Borders","Text"), 
-                                   multiple = TRUE), 
-                    width = 6) 
-                
-              ), 
-              
-              # text box whose sole purpose is actually just to add spacing to the bottom of the window
-              fluidRow(
-                box(htmlOutput(outputId = "overview_text", 
-                               inline = FALSE), 
-                    width = 12)
-              )
+              stat_infoboxes(), 
+              overview_map_output(), 
+              overview_map_mods(), 
+              overview_map_sampler()
       ), 
       
-      # # a closer look at the data
-      # tabItem(tabName = "data", 
-      #   fluidRow(box(DT::dataTableOutput("table"), width = 12))
-      # ), 
-      
-      # WW1-specific stats
-      tabItem(tabName = "WW1",
-              
-              fluidRow(
-                box(plotOutput("WW1_hist")), 
-                box(plotOutput("WW1_sandbox"))
-              ), 
-              
-              fluidRow(
-                box(sliderInput(inputId = "WW1_hist_slider", label = "# of bins", min = 4, value = 30, max = 48, step = 1), width = 6), 
-                box(selectizeInput(inputId = "WW1_sandbox_ind", label = "Which independent variable?", choices = c("Year", WW1_all_choices), selected = c("Year"), multiple = FALSE), width = 6)
-              ), 
-              
-              fluidRow(
-                box(selectizeInput(inputId = "WW1_sandbox_group", label = "Group by what?", choices = c("None", WW1_categorical_choices), selected = c("None"), multiple = FALSE), width = 6), 
-                box(selectizeInput(inputId = "WW1_sandbox_dep", label = "Which dependent variable?", choices = WW1_continuous_choices, selected = c("Number of Attacking Aircraft"), multiple = FALSE), width = 6)
-              )
+
+### DataTable ---------------------------------------------------------------
+
+      tabItem(tabName = "data",
+              datatable_output()
+      ),
+
+
+### WW1 ---------------------------------------------------------------------
+
+      tabItem(tabName = WW1,
+              war_plot_outputs(WW1), 
+              war_plot_mods(WW1)
+      ),
+
+
+### WW2 ---------------------------------------------------------------------
+
+      tabItem(tabName = WW2,
+              war_plot_outputs(WW2), 
+              war_plot_mods(WW2)
+      ),
+
+
+### Korea -------------------------------------------------------------------
+
+      tabItem(tabName = Korea,
+              war_plot_outputs(Korea), 
+              war_plot_mods(Korea)
+      ),
+
+
+### Vietnam -----------------------------------------------------------------
+
+      tabItem(tabName = Vietnam,
+              war_plot_outputs(Vietnam), 
+              war_plot_mods(Vietnam)
       ),
       
-      # WW2-specific stats
-      tabItem(tabName = "WW2",
-              
-              fluidRow(
-                box(plotOutput("WW2_hist")), 
-                box(plotOutput("WW2_sandbox"))
-              ), 
-              
-              fluidRow(
-                box(sliderInput(inputId = "WW2_hist_slider", label = "# of bins", min = 7, value = 30, max = 84, step = 1), width = 6), 
-                box(selectizeInput(inputId = "WW2_sandbox_ind", label = "Which independent variable?", choices = c("Year", WW2_all_choices), selected = c("Year"), multiple = FALSE), width = 6)
-              ), 
-              
-              fluidRow(
-                box(selectizeInput(inputId = "WW2_sandbox_group", label = "Group by what?", choices = c("None", WW2_categorical_choices), selected = c("None"), multiple = FALSE), width = 6), 
-                box(selectizeInput(inputId = "WW2_sandbox_dep", label = "Which dependent variable?", choices = WW2_continuous_choices, selected = c("Number of Attacking Aircraft"), multiple = FALSE), width = 6)
-              )
+
+### Pilot -------------------------------------------------------------------
+
+      tabItem(tabName = "pilot",
+              pilot_title()
       ),
       
-      # Korea-specific stats
-      tabItem(tabName = "Korea",
-              
-              fluidRow(
-                box(plotOutput("Korea_hist")), 
-                box(plotOutput("Korea_sandbox"))
-              ), 
-              
-              fluidRow(
-                box(sliderInput(inputId = "Korea_hist_slider", label = "# of bins", min = 4, value = 30, max = 48, step = 1), width = 6), 
-                box(selectizeInput(inputId = "Korea_sandbox_ind", label = "Which independent variable?", choices = c("Year", Korea_all_choices), selected = c("Year"), multiple = FALSE), width = 6)
-              ), 
-              
-              fluidRow(
-                box(selectizeInput(inputId = "Korea_sandbox_group", label = "Group by what?", choices = c("None", Korea_categorical_choices), selected = c("None"), multiple = FALSE), width = 6), 
-                box(selectizeInput(inputId = "Korea_sandbox_dep", label = "Which dependent variable?", choices = Korea_continuous_choices, selected = c("Number of Attacking Aircraft"), multiple = FALSE), width = 6)
-              )
+
+### Commander ---------------------------------------------------------------
+
+      tabItem(tabName = "commander",
+              commander_title()
       ),
       
-      # Vietnam-specific stats
-      tabItem(tabName = "Vietnam",
-              
-              fluidRow(
-                box(plotOutput("Vietnam_hist")), 
-                box(plotOutput("Vietnam_sandbox"))
-              ), 
-              
-              fluidRow(
-                box(sliderInput(inputId = "Vietnam_hist_slider", label = "# of bins", min = 4, value = 30, max = 240, step = 1), width = 6), 
-                box(selectizeInput(inputId = "Vietnam_sandbox_ind", label = "Which independent variable?", choices = c("Year", Vietnam_all_choices), selected = c("Year"), multiple = FALSE), width = 6)
-              ), 
-              
-              fluidRow(
-                box(selectizeInput(inputId = "Vietnam_sandbox_group", label = "Group by what?", choices = c("None", Vietnam_categorical_choices), selected = c("None"), multiple = FALSE), width = 6), 
-                box(selectizeInput(inputId = "Vietnam_sandbox_dep", label = "Which dependent variable?", choices = Vietnam_continuous_choices, selected = c("Number of Attacking Aircraft"), multiple = FALSE), width = 6)
-              )
-      ),
-      
-      # # pilot stats
-      # tabItem(tabName = "pilot", 
-      #         fluidRow()
-      # ), 
-      # 
-      # # commander stats
-      # tabItem(tabName = "commander", 
-      #         fluidRow()
-      # ), 
-      
-      # civilian stats
+
+### Civilian ----------------------------------------------------------------
+
       tabItem(tabName = "civilian",
-              
-              # map
-              fluidRow(
-                box(leafletOutput("civilian_map", width = "100%", height = 640), width = 1024, height = 640)
-              )
-              # box(plotOutput("civilian_density", width = "100%"), width = 12)#, height = 768)
+              civilian_title(),
+              civilian_map_output(), 
+              civilian_map_mods()
       )
     )
   )

@@ -1,0 +1,211 @@
+---
+title: "Kaggle Macro Data EDA, Cleaning"
+author: "Wes Aull"
+date: "May 16, 2017"
+output:
+  html_document: default
+  pdf_document:
+    toc: yes
+---
+
+```{r setup, echo=FALSE, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(lubridate)
+library(xts)
+library(ggplot2)
+library(ggthemes)
+library(readr)
+library(corrplot)
+library(caret)
+library(car)
+library(fastICA)
+library(tree)
+library(randomForest)
+library(neuralnet)
+library(e1071)
+library(readxl)
+data <- read_excel("C:/Users/Wes Aull/GoogleDrive/Value Investing Collaboration/Economic Cycle Research/Y Predictive Data for R Import.xlsx", col_types = c("date", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric"))
+
+data_corr = cor(data[,2:9])
+corrplot(data_corr)
+
+a = randomForest(Y12MD ~ . - DATE - NYSEM4MD,data)
+a
+varImpPlot(a)
+rf_predict = predict(a,data[,2:8])
+data$residuals = rf_predict - data[,9]
+ggplot(data,aes(x=DATE,y=Y12MD,colour=residuals)) + geom_point() + scale_colour_gradientn(colours=rainbow(4))
+```
+
+Joining the critical price data to the macro data:
+
+```{r}
+process_parameters = preProcess(data,method=c('center','scale'))
+data_t = data
+data_t$
+data_t = predict(process_parameters,data)
+a = lm(Y12MD ~ CAPE + FOURWKMAU6MD + TSPREAD + DCLASA9MD,data_t)
+summary(a)
+ggplot(data_t,aes(x=Y12MD)) + geom_histogram()
+```
+
+
+```{r, echo = TRUE}
+
+```
+
+
+
+```{r, echo = FALSE}
+
+
+```
+
+```{r, echo=TRUE}
+
+```
+
+
+
+```{r, echo = TRUE}
+
+```
+
+
+
+```{r}
+saturated_linear_regression = lm(price_doc ~ ., complete_stand_data[,2:ncol(complete_stand_data)])
+summary(saturated_linear_regression)
+plot(saturated_linear_regression)
+```
+
+
+```{r, echo = FALSE}
+model.empty = lm(price_doc ~ 1, data = complete_stand_data) #The model with an intercept ONLY.
+model.full = lm(price_doc ~ ., data = complete_stand_data) #The model with ALL variables.
+scope = list(lower = formula(model.empty), upper = formula(model.full))
+
+forwardAIC = step(model.empty, scope, direction = "forward", k = 2)
+#backwardAIC = step(model.full, scope, direction = "backward", k = 2)
+#bothAIC.empty = step(model.empty, scope, direction = "both", k = 2)
+#bothAIC.full = step(model.full, scope, direction = "both", k = 2)
+```
+
+
+```{r, echo = TRUE}
+summary(forwardAIC)
+#summary(backwardAIC)
+
+```
+
+
+R-squared barely lower than the original saturated model.  After making different modifications, this selection set seems to be unstable.  I'm beginning to wonder how much dimensionality really can create sub-optimal effects on the modeling process.
+
+VIF appears to rate the micex_rgbi_tr series as an equally important factor. 
+The forward step regression failed to select rent after the variable was appropriately assigned.
+
+
+*VIF:*
+
+```{r, echo = FALSE}
+vif(forwardAIC)
+#vif(backwardAIC)
+```
+
+
+And the plots for the forward stepwise model.  Take note of the Influence Plot.  Despite the standardized data, there are some *serious* outlier issues with this data set.  This has to be contributing to the serious under-performance of the regression model.  For an economic valuation time series (value of a real estate asset), 40% variance explained is rather low...even for a noisy economic process:
+
+```{r, echo = FALSE}
+plot(forwardAIC)
+influencePlot(forwardAIC)
+avPlots(forwardAIC)
+#plot(backwardAIC)
+#influencePlot(backwardAIC)
+#avPlots(backwardAIC)
+```
+
+
+
+
+The backward stepwise regression proved computationally very inefficient (I will run later if I can for this document).  It appears that regression is failing to extract signal from the macro data as it stands.
+
+I'm going to try one linear regression of my own choosing:
+
+```{r}
+saturated_linear_regression = lm(price_doc ~ full_sq + life_sq + floor + max_floor + gdp_quart + usdrub + oil_urals + micex_rgbi_tr + rent + mortgage_rate, complete_stand_data[,2:ncol(complete_stand_data)])
+summary(saturated_linear_regression)
+plot(saturated_linear_regression)
+```
+
+
+R squared remains the same but plenty of variables show statistical significance.  
+
+I will attempt a random forest for the first, more sophisticated, non-linear learner:
+
+```{r, echo = TRUE, cache = TRUE, eval = FALSE}
+set.seed(0)
+complete_stand_data$`rent_price_4+room_bus` = NULL
+#Re-name at a later point.
+rf.complete_stand_data = randomForest(price_doc ~ ., data = complete_stand_data[,2:ncol(complete_stand_data)])
+rf.complete_stand_data
+varImpPlot(rf.complete_stand_data)
+```
+*First, we improve our var. explained from 40 to 52.66%.*  The first five factors from the training set show the same outsized importance, along with the Micex bond index.
+
+*There are other variables finally showing importance that my intuitions say should offer plenty of worhtwhile signal for explaining variance.  Oil and exchange rates are becoming considered.  As well, rent prices, mortgage rates, and other mortgage factors are coming into the picture.*
+
+*The rent price should be able to explain much more variance when it's appropriately assigned to each property based on its relevance (2 BR to a 2BR, 3 BR to a 3 BR, etc...).  This should go on our immediate to do list.*
+
+Next, I attempt to train a neural network on the data:
+
+```{r, echo = TRUE, cache = TRUE, eval = FALSE}
+train.index = sample(1:13727, 13727*.50)
+test.index = -train.index
+n <- names(complete_data[,2:ncol(complete_data)])
+f <- as.formula(paste("price_doc ~", paste(n[!n %in% "price_doc"], collapse = " + ")))
+nn <- neuralnet(f,data=complete_data[,2:ncol(complete_data)],hidden=c(5,3),linear.output=T)
+plot(nn)
+
+```
+Which sadly, the neural net did not converge on a regression value after training for over 45 minutes on my Macbook Pro.  This likely relates to some tuning on the neuron configuration side and further transformation or paring of the data.
+
+I'll instead attempt an SVM that allows for non-linearity, which should produce similar performance to a neural net.  Let's first look at the linear SVM performance on 50% of the data:
+
+```{r, cache = TRUE, eval = FALSE}
+train.index = sample(1:13727, 13727*.50)
+test.index = -train.index
+
+svm.mmc.linear = svm(price_doc ~ .,
+                     data = complete_data,
+                     subset = train.index,
+                     kernel = "linear",
+                     cost = 1)
+summary(svm.mmc.linear)
+SVM_predicted = predict(svm.mmc.linear, )
+```
+
+Final notes:  I attempted PCA transformation and ICA selection of variables to improve linear regression.  My variance explained actually became worse.
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
+
+
+```{r}
+
+```
+
