@@ -1,0 +1,61 @@
+{% extends 'ratings/base.html' %}
+{% load staticfiles %}
+
+{% block title_block %}
+    equityRating
+{% endblock %}
+
+{% block chart_block %}
+    <div style="padding:3px 2px 5px 2px;">
+        <ul class="nav nav-tabs" style="background-color:rgb(242, 242, 242);">
+            <li class="active" style="width:30%;text-align:center;"><a id="scatter"  href="#line" >Stock</a></li>
+            <li style="width:30%;text-align:center;"><a id="candlestick" href="#candle" >CandleStick</a></li>
+            <li style="width:30%;text-align:center;"><a id="fillingList" href="#rHistory" >Rating History</a></li>
+        </ul>
+        <div class="tab-content" style="height:475px; background-color:rgb(242, 242, 242);">
+            <div id="line" class="tab-pane fade in active" style="height:435px;width:100%;background-color:white;"></div>
+            <div id="candle" class="tab-pane fade" style="height:435px;width:100%;background-color:white;"></div>
+            <div id="rHistory" class="tab-pane fade" style="height:435px;width:100%;background-color:white;"></div>
+            <div class="histChart" style="padding:5px 0px 0px 20px;">
+                <ul class="list-inline">
+                <!--
+                    <li>Date: <input type="text" id="datepicker1">&nbsp&nbsp&nbspTo</li>
+                    <li><input type="text" id="datepicker2"></li>
+                    <li><input type="submit" value="Submit"></li>
+                -->
+                    <li>
+                        <form class="form-inline" action="#">
+                            <div class="form-group">
+                              <label for="email">Date:</label>
+                              <input type="date" class="form-control" id="date1" name="date1">
+                            </div>
+                            <div class="form-group">
+                              <label for="pwd">To</label>
+                              <input type="date" class="form-control" id="date2" name="date2">
+                            </div>
+                            <button type="submit" class="btn btn-default">Submit</button>
+                         </form>
+                    </li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li><a id="d1" href="#">1D</a></li>
+                    <li><a id="d5" href="#">5D</a></li>
+                    <li><a id="m1" href="#">1M</a></li>
+                    <li><a id="m6" href="#">6M</a></li>
+                    <li><a id="y1" href="#">1Y</a></li>
+                    
+                 
+                </ul>
+            </div>
+        </div>
+    </div>      
+    
+                 
+            
+   
+    
+{% endblock %}
+
+ 
